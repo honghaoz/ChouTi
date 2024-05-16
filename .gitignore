@@ -13,7 +13,7 @@ Icon?
 **/xcuserdata/*.xcuserdatad/xcschemes
 
 ## Xcode Bookmarks
-!**/xcuserdata/*.xcuserdatad/Bookmarks 
+!**/xcuserdata/*.xcuserdatad/Bookmarks
 
 ## compatibility with Xcode 8 and earlier (ignoring not required starting Xcode 9)
 *.xcscmblueprint
@@ -91,6 +91,11 @@ vendor
 
 # ===== Environment =====
 .env
+
+# ===== Binaries =====
+bin/swiftformat
+bin/swiftlint
+bin/xcbeautify
 
 # ===== Temp =====
 .temp
