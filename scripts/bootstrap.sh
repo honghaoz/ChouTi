@@ -14,7 +14,7 @@ REPO_ROOT=$(git rev-parse --show-toplevel)
 
 cd "$REPO_ROOT" || exit 1
 
-echo "🚀 Bootstrap the development environment..."
+echo "🚀 Bootstrap development environment..."
 git submodule update --init --recursive
 
 OS=$(uname -s)
@@ -24,9 +24,17 @@ case "$OS" in
   case "$CPU" in
   'arm64') # on Apple Silicon Mac
     # download bins
+    echo ""
+    echo "📦 Download bins..."
     "$REPO_ROOT/scripts/download-bin/download-bins.sh"
 
+    # git hooks
+    echo ""
+    echo "🪝 Install git hooks..."
+    "$REPO_ROOT/scripts/git/install-git-hooks.sh"
 
+    echo ""
+    echo "🎉 Done."
     ;;
   'x86_64') # on Intel Mac
     echo "Does not support Intel Mac."

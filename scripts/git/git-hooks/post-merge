@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -e
+
+safe_tput() {
+  if [ -n "$TERM" ] && [ "$TERM" != "dumb" ]; then
+    tput "$@"
+  fi
+}
+CYAN=$(safe_tput setaf 6)
+RESET=$(safe_tput sgr0)
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+
+echo "${CYAN}[post-merge]${RESET} Running download-bins."
+"$REPO_ROOT/scripts/download-bin/download-bins.sh"
