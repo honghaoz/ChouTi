@@ -1,5 +1,7 @@
 # ChouTiTest
 
+[![codecov](https://codecov.io/github/honghaoz/ChouTi/branch/master/graph/badge.svg?token=BWWP0ROG2A)](https://codecov.io/github/honghaoz/ChouTi)
+
 ## Overview
 
 A testing framework.

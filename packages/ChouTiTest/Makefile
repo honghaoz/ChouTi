@@ -17,7 +17,8 @@ build-release: # Build with release configuration.
 .Phony: test
 test: # Run tests.
 	@echo test: $(MAKEFILE_DIR_NAME)
-	swift test | $(REPO_ROOT)/bin/xcbeautify
+	swift test --enable-code-coverage | $(REPO_ROOT)/bin/xcbeautify
+	xcrun llvm-cov export -format="lcov" .build/debug/ChouTiTestPackageTests.xctest/Contents/MacOS/ChouTiTestPackageTests -instr-profile .build/debug/codecov/default.profdata > .build/debug/codecov/coverage.lcov
 
 .Phony: clean
 clean: # Clean build data.
@@ -27,3 +28,8 @@ clean: # Clean build data.
 .Phony: help
 help:
 	@awk 'BEGIN {FS = ":.*?# "}; /^[a-zA-Z_-]+:.*?# .*$$/ && $$1 != "help" {system("tput bold; tput setaf 6"); printf "%-20s", $$1; system("tput sgr0"); print $$2}' $(MAKEFILE_LIST)
+
+# Reference:
+# Codecov with Swift Package
+# - https://stackoverflow.com/questions/73164621/codecov-with-swift-package
+# - https://community.codecov.com/t/swift-package-support/675/4
