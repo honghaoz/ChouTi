@@ -40,7 +40,7 @@ jobs:
         run: make bootstrap
       - name: Test package "ChouTiTest"
         if: success() || failure()
-        run: make test -C packages/ChouTiTest
+        run: make test-codecov -C packages/ChouTiTest
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4.0.1
         with:

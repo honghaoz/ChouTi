@@ -17,6 +17,11 @@ build-release: # Build with release configuration.
 .Phony: test
 test: # Run tests.
 	@echo test: $(MAKEFILE_DIR_NAME)
+	swift test | $(REPO_ROOT)/bin/xcbeautify
+
+.Phony: test-codecov
+test-codecov: # Run tests with code coverage.
+	@echo test with code coverage: $(MAKEFILE_DIR_NAME)
 	swift test --enable-code-coverage | $(REPO_ROOT)/bin/xcbeautify
 	xcrun llvm-cov export -format="lcov" .build/debug/ChouTiTestPackageTests.xctest/Contents/MacOS/ChouTiTestPackageTests -instr-profile .build/debug/codecov/default.profdata > .build/debug/codecov/coverage.lcov
 
@@ -33,3 +38,4 @@ help:
 # Codecov with Swift Package
 # - https://stackoverflow.com/questions/73164621/codecov-with-swift-package
 # - https://community.codecov.com/t/swift-package-support/675/4
+# - https://community.codecov.com/t/badges-for-flags/270/6
