@@ -12,6 +12,7 @@ GREEN=$(safe_tput setaf 2)
 RESET=$(safe_tput sgr0)
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
+FILE_NAME=$(basename "$0")
 
 function check_error {
   if [ $? -ne 0 ]; then
@@ -20,19 +21,19 @@ function check_error {
 }
 
 if test -z "$(git ls-files --exclude-standard --others)" && git diff-files --quiet; then
-  # no unstaged changes, run format
-  echo "${CYAN}[pre-commit]${RESET} 🧹 Running code formatter..."
+  # no unstaged changes, run formater
+  echo "${CYAN}[$FILE_NAME]${RESET} 🧹 Running code formatter..."
   pushd "$REPO_ROOT" >/dev/null 2>&1 || exit 0
   make format
   check_error
   popd >/dev/null 2>&1 || exit 0
 
   if ! ( test -z "$(git ls-files --exclude-standard --others)" && git diff-files --quiet ); then
-    echo "${CYAN}[pre-commit]${RESET} ⚠️  Code formatted, please stage the changes and commit again."
+    echo "${CYAN}[$FILE_NAME]${RESET} ⚠️  Code formatted, please stage the changes and commit again."
     exit 1
   fi
 else
-  echo "${CYAN}[pre-commit]${RESET} ⚠️  Unstaged changes detected, please stage them before committing."
-  echo "${CYAN}[pre-commit]${RESET} 💡 If you want to commit without formatting, use ${GREEN}git commit --no-verify${RESET}."
+  echo "${CYAN}[$FILE_NAME]${RESET} ⚠️  Unstaged changes detected, please stage them before committing."
+  echo "${CYAN}[$FILE_NAME]${RESET} 💡 If you want to commit without formatting, use ${GREEN}git commit --no-verify${RESET}."
   exit 1
 fi

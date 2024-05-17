@@ -2,6 +2,11 @@
 
 set -e
 
+# change to the directory in which this script is located
+pushd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
+
+# ===------ BEGIN ------===
+
 safe_tput() {
   if [ -n "$TERM" ] && [ "$TERM" != "dumb" ]; then
     tput "$@"
@@ -10,9 +15,8 @@ safe_tput() {
 CYAN=$(safe_tput setaf 6)
 RESET=$(safe_tput sgr0)
 
-REPO_ROOT=$(git rev-parse --show-toplevel)
+TAG="ChouTi"
 GIT_DIR=$(git rev-parse --git-dir)
-cd "$REPO_ROOT/$GIT_DIR" || return
 
 if [[ ! -d "hooks" ]]; then
   mkdir hooks
@@ -21,6 +25,7 @@ fi
 function write-hook-script-content() {
   HOOK_NAME="$1"
 
+  cd "$GIT_DIR" || return
   HOOK_SCRIPT="./hooks/$HOOK_NAME"
 
   # 1) prepare empty hook script file if needed
@@ -39,12 +44,13 @@ function write-hook-script-content() {
     echo "✅ ${CYAN}$HOOK_NAME${RESET} is already installed."
   else
     echo "" >> "$HOOK_SCRIPT"
-    echo "# ChouTi $HOOK_NAME" >> "$HOOK_SCRIPT"
+    echo "# [$TAG] $HOOK_NAME" >> "$HOOK_SCRIPT"
     echo $COMMAND_CONTENT >> "$HOOK_SCRIPT"
     echo "✅ ${CYAN}$HOOK_NAME${RESET} is installed."
   fi
 }
 
+# declare a string array of all the hooks we want to install
 declare -a HOOK_NAMES=("pre-commit" "post-checkout" "post-merge")
 
 # read the array values with space

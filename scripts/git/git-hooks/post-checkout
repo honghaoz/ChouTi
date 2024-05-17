@@ -11,6 +11,7 @@ CYAN=$(safe_tput setaf 6)
 RESET=$(safe_tput sgr0)
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
+FILE_NAME=$(basename "$0")
 
-echo "${CYAN}[post-checkout]${RESET} Running download-bins."
+echo "${CYAN}[$FILE_NAME]${RESET} Downloading binaries..."
 "$REPO_ROOT/scripts/download-bin/download-bins.sh"

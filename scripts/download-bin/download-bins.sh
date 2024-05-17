@@ -9,6 +9,14 @@ pushd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
 
 # OVERVIEW: Download bins to /bin, based on .versions.
 
+safe_tput() {
+  if [ -n "$TERM" ] && [ "$TERM" != "dumb" ]; then
+    tput "$@"
+  fi
+}
+CYAN=$(safe_tput setaf 6)
+RESET=$(safe_tput sgr0)
+
 CURRENT_DIR=$(pwd)
 REPO_ROOT=$(git rev-parse --show-toplevel)
 BIN_DIR="$REPO_ROOT/bin"
@@ -42,7 +50,7 @@ download_and_install() {
     installed_version=$(echo "$installed_version" | sed 's/Version: //g')
 
     if [ "$installed_version" == "$version" ]; then
-      echo "✅ $name ($version) already installed."
+      echo "✅ ${CYAN}$name ($version)${RESET} is already installed."
       return
     fi
   fi
@@ -63,7 +71,7 @@ download_and_install() {
     mv "$BIN_DIR/$name" "$BIN_DIR/$name.backup"
   fi
 
-  echo "Downloading $name version $version..."
+  echo "Downloading ${CYAN}$name ($version)${RESET}..."
   "$CURRENT_DIR/download-$name.sh" --version "$version" --to-folder "$BIN_DIR"
 
   # make sure the binary is executable
@@ -76,7 +84,7 @@ download_and_install() {
     rm -rf "$BIN_DIR/$name.backup"
   fi
 
-  echo "✅ $name version $version installed."
+  echo "✅ ${CYAN}$name ($version)${RESET} is installed."
 }
 
 # Read the versions file and download binaries
