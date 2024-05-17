@@ -1,8 +1,8 @@
 # ChouTi
 
+[![build](https://github.com/honghaoz/ChouTi/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/honghaoz/ChouTi/actions/workflows/build.yml?query=branch%3Amaster)
 ![](https://img.shields.io/badge/Swift-5.8-F05138.svg)
 ![](https://img.shields.io/badge/platforms-iOS%2013%20%7C%20macOS%2010.5-007fea.svg)
-
 
 ## Overview
 
