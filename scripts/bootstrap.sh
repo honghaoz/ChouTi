@@ -17,19 +17,6 @@ cd "$REPO_ROOT" || exit 1
 echo "🚀 Bootstrap the development environment..."
 git submodule update --init --recursive
 
-# updated on 2022-08-21:
-# - deprecates git lfs for large files
-# - replace git lfs with artifact command
-
-# # Git LFS
-# if ! command-exists "git-lfs" ; then
-#   echo "➡️  Install Git LFS"
-#   brew install git-lfs
-# fi
-#
-# git lfs install
-# git lfs pull
-
 OS=$(uname -s)
 case "$OS" in
 'Darwin') # macOS
@@ -38,9 +25,11 @@ case "$OS" in
   'arm64') # on Apple Silicon Mac
     # download bins
     "$REPO_ROOT/scripts/download-bin/download-bins.sh"
+
+
     ;;
   'x86_64') # on Intel Mac
-    echo "Does not support Intel Mac yet."
+    echo "Does not support Intel Mac."
     ;;
   *)
     echo "Unknown CPU: $CPU"
@@ -48,6 +37,7 @@ case "$OS" in
   esac
   ;;
 'Linux') # on Ubuntu
+  echo "Does not support Linux."
   ;;
 *)
   echo "Unknown OS: $OS"
