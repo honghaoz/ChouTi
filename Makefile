@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-REPO_DIR = $(shell git rev-parse --show-toplevel)
+REPO_ROOT = $(shell git rev-parse --show-toplevel)
 MAKEFILE_DIR = $(shell cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 .Phony: bootstrap

@@ -10,9 +10,9 @@ pushd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
 # OVERVIEW:
 # This script is used to bootstrap the development environment.
 
-REPO_DIR=$(git rev-parse --show-toplevel)
+REPO_ROOT=$(git rev-parse --show-toplevel)
 
-cd "$REPO_DIR" || exit 1
+cd "$REPO_ROOT" || exit 1
 
 echo "🚀 Bootstrap the development environment..."
 git submodule update --init --recursive
@@ -37,7 +37,7 @@ case "$OS" in
   case "$CPU" in
   'arm64') # on Apple Silicon Mac
     # download bins
-    "$REPO_DIR/scripts/download-bin/download-bins.sh"
+    "$REPO_ROOT/scripts/download-bin/download-bins.sh"
     ;;
   'x86_64') # on Intel Mac
     echo "Does not support Intel Mac yet."
