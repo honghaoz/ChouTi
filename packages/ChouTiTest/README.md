@@ -2,11 +2,7 @@
 
 [![codecov](https://codecov.io/github/honghaoz/ChouTi/branch/master/graph/badge.svg?token=BWWP0ROG2A&flag=ChouTiTest&&precision=2)](https://codecov.io/github/honghaoz/ChouTi/tree/master/packages%2FChouTiTest%2FSources?flags%5B0%5D=ChouTiTest&displayType=list)
 
-## Overview
-
-A testing framework.
-
-Write tests with a simple and expressive syntax.
+**ChouTiTest** is a Swift testing framework for writing tests with simple, expressive syntax.
 
 ```swift
 import XCTest

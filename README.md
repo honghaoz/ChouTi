@@ -1,12 +1,10 @@
 # ChouTi
 
 [![build](https://github.com/honghaoz/ChouTi/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/honghaoz/ChouTi/actions/workflows/build.yml?query=branch%3Amaster)
-![](https://img.shields.io/badge/Swift-5.8-F05138.svg)
-![](https://img.shields.io/badge/platforms-iOS%2013%20%7C%20macOS%2010.5-007fea.svg)
+![swift](https://img.shields.io/badge/Swift-5.8-F05138.svg)
+![platforms](https://img.shields.io/badge/platforms-iOS%2013%20%7C%20macOS%2010.5-007fea.svg)
 
-## Overview
-
-**ChouTi** is a Swift package that provides extensions and utilities to enhance Apple platform development.
+**ChouTi** is a repository of Swift packages that provides extensions, utilities and frameworks to enhance development on iOS and macOS.
 
 ## Packages
 
@@ -14,9 +12,7 @@
 
 [![codecov](https://codecov.io/github/honghaoz/ChouTi/branch/master/graph/badge.svg?token=BWWP0ROG2A&flag=ChouTiTest&&precision=2)](https://codecov.io/github/honghaoz/ChouTi/tree/master/packages%2FChouTiTest%2FSources?flags%5B0%5D=ChouTiTest&displayType=list)
 
-A testing framework.
-
-Write tests with a simple and expressive syntax.
+**ChouTiTest** is a Swift testing framework for writing tests with simple, expressive syntax.
 
 ```swift
 import XCTest
