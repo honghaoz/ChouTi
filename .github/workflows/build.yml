@@ -46,6 +46,6 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: packages/ChouTiTest/.build/debug/codecov/*.lcov
-          flags: unittests
+          flags: ChouTiTest
           name: ChouTiTest
           fail_ci_if_error: true
