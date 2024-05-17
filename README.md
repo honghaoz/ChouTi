@@ -6,7 +6,7 @@
 
 ## Overview
 
-**ChouTi** is a Swift package that provides a collection of extensions and utilities that enhance development on Apple platforms.
+**ChouTi** is a Swift package that provides extensions and utilities to enhance Apple platform development.
 
 ## Packages
 
