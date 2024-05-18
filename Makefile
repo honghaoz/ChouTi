@@ -7,6 +7,11 @@ MAKEFILE_DIR = $(shell cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd
 bootstrap: # Bootstrap the environment.
 	@scripts/bootstrap.sh
 
+.PHONY: build
+build: # Build the package.
+	@echo build: $(MAKEFILE_DIR_NAME)
+	swift build -c release
+
 .PHONY: format
 format: # Format the code.
 	@bin/swiftformat .

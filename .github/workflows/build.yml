@@ -49,3 +49,6 @@ jobs:
           flags: ChouTiTest
           name: ChouTiTest
           fail_ci_if_error: true
+      - name: Build root package
+        if: success() || failure()
+        run: make build
