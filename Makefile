@@ -10,11 +10,11 @@ bootstrap: # Bootstrap the environment.
 .Phony: format
 format: # Format the code.
 	@bin/swiftformat .
-	@bin/swiftlint --autocorrect --config "$(REPO_ROOT)/.swiftlint.autocorrect.yml"
+	@bin/swiftlint --autocorrect --config "$(REPO_ROOT)/.swiftlint.autocorrect.yml" --cache-path "$(REPO_ROOT)/.temp/swiftlint-cache"
 
 .Phony: lint
 lint: # Lint the code.
-	@bin/swiftlint lint
+	@bin/swiftlint lint --cache-path "$(REPO_ROOT)/.temp/swiftlint-cache"
 
 .PHONY: help
 help:
