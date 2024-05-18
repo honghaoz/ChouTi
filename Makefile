@@ -3,16 +3,16 @@
 REPO_ROOT = $(shell git rev-parse --show-toplevel)
 MAKEFILE_DIR = $(shell cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-.Phony: bootstrap
+.PHONY: bootstrap
 bootstrap: # Bootstrap the environment.
 	@scripts/bootstrap.sh
 
-.Phony: format
+.PHONY: format
 format: # Format the code.
 	@bin/swiftformat .
 	@bin/swiftlint --autocorrect --config "$(REPO_ROOT)/.swiftlint.autocorrect.yml" --cache-path "$(REPO_ROOT)/.temp/swiftlint-cache"
 
-.Phony: lint
+.PHONY: lint
 lint: # Lint the code.
 	@bin/swiftlint lint --cache-path "$(REPO_ROOT)/.temp/swiftlint-cache"
 
