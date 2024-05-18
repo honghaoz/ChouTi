@@ -4,6 +4,30 @@
 
 **ChouTiTest** is a Swift testing framework for writing tests with simple, expressive syntax.
 
+## Installation
+
+### Swift Package Manager
+
+Add the following to your `Package.swift` file:
+
+```swift
+dependencies: [
+  // add the package to your package dependencies
+  .package(url: "https://github.com/honghaoz/ChouTi", from: "0.0.1"),
+],
+targets: [
+  // add products to your target dependencies
+  .testTarget(
+    name: "MyTargetTests",
+    dependencies: [
+      .product(name: "ChouTiTest", package: "ChouTi"),
+    ]
+  ),
+]
+```
+
+## Usage
+
 ```swift
 import XCTest
 import ChouTiTest
