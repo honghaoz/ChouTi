@@ -46,7 +46,7 @@ disabled_rules:
   - function_body_length
   - function_parameter_count
   - identifier_name
-  - inclusive_language # oh politics
+  - inclusive_language
   - large_tuple
   - line_length
   - mark
