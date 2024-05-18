@@ -13,10 +13,6 @@ let package = Package(
   ],
   dependencies: [],
   targets: [
-    .target(
-      name: "ChouTiTest",
-      dependencies: [],
-      path: "packages/ChouTiTest/Sources"
-    ),
+    .target(name: "ChouTiTest", dependencies: [], path: "packages/ChouTiTest/Sources"),
   ]
 )

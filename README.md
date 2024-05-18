@@ -6,6 +6,28 @@
 
 **ChouTi** is a repository of Swift packages that provides extensions, utilities and frameworks to enhance development on iOS and macOS.
 
+## Installation
+
+### Swift Package Manager
+
+Add the following to your `Package.swift` file:
+
+```swift
+dependencies: [
+  // add the package to your package dependencies
+  .package(url: "https://github.com/honghaoz/ChouTi", from: "0.0.1"),
+],
+targets: [
+  // add products to your target dependencies
+  .testTarget(
+    name: "MyTargetTests",
+    dependencies: [
+      .product(name: "ChouTiTest", package: "ChouTi"),
+    ]
+  ),
+]
+```
+
 ## Packages
 
 ### ChouTiTest
