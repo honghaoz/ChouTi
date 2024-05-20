@@ -19,6 +19,12 @@ dependencies: [
 ],
 targets: [
   // add products to your target dependencies
+  .target(
+    name: "MyTarget",
+    dependencies: [
+      .product(name: "ChouTi", package: "ChouTi"),
+    ]
+  ),
   .testTarget(
     name: "MyTargetTests",
     dependencies: [
@@ -29,6 +35,18 @@ targets: [
 ```
 
 ## Packages
+
+### ChouTi
+
+[![codecov](https://codecov.io/github/honghaoz/ChouTi/branch/master/graph/badge.svg?token=BWWP0ROG2A&flag=ChouTi&&precision=2)](https://codecov.io/github/honghaoz/ChouTi/tree/master/packages%2FChouTi%2FSources?flags%5B0%5D=ChouTi&displayType=list)
+
+**ChouTi** is a Swift framework that provides core extensions and utilities to enhance development on iOS and macOS.
+
+```swift
+import ChouTi
+
+...
+```
 
 ### ChouTiTest
 

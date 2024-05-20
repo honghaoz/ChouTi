@@ -38,10 +38,25 @@ jobs:
         uses: actions/checkout@v4
       - name: Bootstrap
         run: make bootstrap
+      # ChouTi
+      - name: Build package "ChouTi"
+        run: make build-release -C packages/ChouTi
+      - name: Test package "ChouTi"
+        if: success() || failure()
+        run: make test-codecov -C packages/ChouTi
+      - name: Upload coverage reports to Codecov (ChouTi)
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: packages/ChouTi/.build/debug/codecov/*.lcov
+          flags: ChouTi
+          name: ChouTi
+          fail_ci_if_error: true
+      # ChouTiTest
       - name: Test package "ChouTiTest"
         if: success() || failure()
         run: make test-codecov -C packages/ChouTiTest
-      - name: Upload coverage reports to Codecov
+      - name: Upload coverage reports to Codecov (ChouTiTest)
         uses: codecov/codecov-action@v4.0.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

@@ -1,0 +1,180 @@
+//
+//  Assert.swift
+//
+//  Created by Honghao Zhang on 7/18/21.
+//  Copyright © 2024 ChouTi. All rights reserved.
+//
+
+import Foundation
+
+#if canImport(XCTest)
+import XCTest
+#endif
+
+#if DEBUG
+public enum Assert {
+
+  /// If assertions are enabled. Set this flag to `false` to disable assertions.
+  public static var _isAssertEnabled = true
+
+  /// If should write assertion failure logs to `~/Documents/assertion_failures`.
+  public static var _shouldWriteErrorLog = true
+
+  /// The assertion failure handler for testing.
+  public static var _testAssertionHandler = __defaultTestAssertionHandler
+
+  static let __defaultTestAssertionHandler: ((_ message: String, _ metadata: OrderedDictionary<String, String>, _ file: StaticString, _ line: UInt, _ column: UInt) -> Void)? = { message, metadata, file, line, column in
+    let message = """
+    🛑 Assertion Failure 🛑 💾 Source: \(file):\(line):\(column), 🗯️ Message: "\(message)"\(makeMetadataDescription(metadata: metadata))
+    """
+    #if canImport(XCTest)
+    XCTFail(message, file: file, line: line)
+    #else
+    print(message)
+    #endif
+  }
+
+  public static let __logDateFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSSSSSZ"
+    formatter.locale = .enUSPOSIX
+    return formatter
+  }()
+
+  /// A flag indicates if should pause execution when assertion fails.
+  public static let __assertionShouldPause: Bool = _isAssertEnabled && isDebuggingUsingXcode
+}
+#endif
+
+#if DEBUG
+@usableFromInline
+let ChouTi_AssertLogger = Logger(logLevel: .debug, displayOptions: [.time, .queue, .function, .file])
+#endif
+
+@inlinable
+@inline(__always)
+public func assert(_ condition: @autoclosure () -> Bool,
+                   _ message: @autoclosure () -> String = String(),
+                   metadata: @autoclosure () -> OrderedDictionary<String, String> = [:],
+                   failureBlock: BlockVoid? = nil,
+                   file: StaticString = #fileID,
+                   line: UInt = #line,
+                   column: UInt = #column,
+                   function: StaticString = #function)
+{
+  #if DEBUG
+  if !condition() {
+    assertFailure(message(), metadata: metadata(), failureBlock: failureBlock, file: file, line: line, column: column, function: function)
+  }
+  #endif
+}
+
+@inlinable
+@inline(__always)
+public func assertFailure(_ message: @autoclosure () -> String = String(),
+                          metadata: @autoclosure () -> OrderedDictionary<String, String> = [:],
+                          failureBlock: BlockVoid? = nil,
+                          file: StaticString = #fileID,
+                          line: UInt = #line,
+                          column: UInt = #column,
+                          function: StaticString = #function)
+{
+  #if DEBUG
+  if Thread.current.isRunningXCTest {
+    Assert._testAssertionHandler?(message(), metadata(), file, line, column)
+  } else {
+
+    let message: LogMessage = """
+    🛑 Assertion Failure 🛑
+    ----------------------------------------------------------------------------------------------------------------------
+    🗯️ Message: "\(message())"\(makeMetadataDescription(metadata: metadata()))
+    ----------------------------------------------------------------------------------------------------------------------
+    🥞 Stack Trace:
+    \(Thread.callStackSymbolsString(dropFirst: 2))
+    """
+
+    ChouTi_AssertLogger.debug(message, file: file, line: line, column: column, function: function)
+    failureBlock?()
+
+    writeError(message: message.materializedString(), file: file, line: line, column: column, function: function)
+
+    if Assert.__assertionShouldPause {
+      raise(SIGABRT)
+    }
+  }
+  #endif
+}
+
+#if DEBUG
+@inlinable
+@inline(__always)
+func makeMetadataDescription(metadata: OrderedDictionary<String, String>) -> String {
+  guard !metadata.isEmpty else {
+    return ""
+  }
+
+  var string = """
+
+  ----------------------------------------------------------------------------------------------------------------------
+  📝 Metadata:
+
+  """
+
+  for (key, value) in metadata {
+    string += "- \(key): \(value)\n"
+  }
+  // remove last newline
+  if !string.isEmpty {
+    string.removeLast()
+  }
+  return string
+}
+
+@inlinable
+@inline(__always)
+func writeError(message: String,
+                file: StaticString = #fileID,
+                line: UInt = #line,
+                column: UInt = #column,
+                function: StaticString = #function)
+{
+  // TODO: [iOS] should show the error to UI
+
+  do {
+    let documents = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+
+    // create errors folder
+    let errorFolder = documents.appendingPathComponent("assertion_failures")
+    try FileManager.default.createDirectory(at: errorFolder, withIntermediateDirectories: true, attributes: nil)
+
+    // create error file
+    let now = Date()
+    let errorFile = errorFolder.appendingPathComponent("\(now.timeIntervalSince1970).log")
+    guard FileManager.default.createFile(atPath: errorFile.path, contents: nil, attributes: nil) else {
+      ChouTi_AssertLogger.error("unable to create assertion error log file: \(errorFile.path)")
+      return
+    }
+
+    let part1 = Assert.__logDateFormatter.string(from: now)
+
+    let fileName = file.description.components(separatedBy: "/").last ?? "Unknown"
+    let part2 = "[\(DispatchQueue.currentQueueLabelOrNil ?? "Unknown")][\(fileName):\(line):\(column)][\(function)]"
+
+    let logText: String = "\(part1) \(part2) ➜ \(message)"
+
+    // write to file
+    try logText.write(to: errorFile, atomically: true, encoding: .utf8)
+
+    print("----------------------------------------------------------------------------------------------------------------------\n💾 Error Log File:\n\(errorFile.path)\n----------------------------------------------------------------------------------------------------------------------")
+  } catch {
+    ChouTi_AssertLogger.error("write file error: [\(file):\(line):\(column)][\(function)] \(message)")
+  }
+}
+#endif
+
+/*
+ References:
+ - https://developer.apple.com/swift/blog/?id=4
+ - https://www.pointfree.co/blog/posts/70-unobtrusive-runtime-warnings-for-libraries
+ - https://dsa.cs.tsinghua.edu.cn/oj/static/unix_signal.html
+ */

@@ -16,7 +16,7 @@ dependencies: [
   .package(url: "https://github.com/honghaoz/ChouTi", from: "0.0.1"),
 ],
 targets: [
-  // add products to your target dependencies
+  // add ChouTiTest to your test target dependencies
   .testTarget(
     name: "MyTargetTests",
     dependencies: [
