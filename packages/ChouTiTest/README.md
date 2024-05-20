@@ -1,6 +1,6 @@
 # ChouTiTest
 
-[![codecov](https://codecov.io/github/honghaoz/ChouTi/branch/master/graph/badge.svg?token=BWWP0ROG2A&flag=ChouTiTest&&precision=2)](https://codecov.io/github/honghaoz/ChouTi/tree/master/packages%2FChouTiTest%2FSources?flags%5B0%5D=ChouTiTest&displayType=list)
+[![codecov](https://img.shields.io/codecov/c/github/honghaoz/ChouTi/master?token=BWWP0ROG2A&flag=ChouTiTest&style=flat&label=code%20coverage&color=59B31D)](https://codecov.io/github/honghaoz/ChouTi/tree/master/packages%2FChouTiTest%2FSources?flags%5B0%5D=ChouTiTest&displayType=list)
 
 **ChouTiTest** is a Swift testing framework for writing tests with simple, expressive syntax.
 

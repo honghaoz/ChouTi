@@ -7,7 +7,6 @@ pushd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
 
 # ===------ BEGIN ------===
 
-# Function to display help information
 print_help() {
   echo "OVERVIEW: Download xcbeautify CLI (macOS, arm64)."
   echo ""

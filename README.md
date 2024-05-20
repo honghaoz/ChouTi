@@ -38,9 +38,9 @@ targets: [
 
 ### ChouTi
 
-[![codecov](https://codecov.io/github/honghaoz/ChouTi/branch/master/graph/badge.svg?token=BWWP0ROG2A&flag=ChouTi&&precision=2)](https://codecov.io/github/honghaoz/ChouTi/tree/master/packages%2FChouTi%2FSources?flags%5B0%5D=ChouTi&displayType=list)
+[![codecov](https://img.shields.io/codecov/c/github/honghaoz/ChouTi/master?token=BWWP0ROG2A&flag=ChouTi&style=flat&label=code%20coverage&color=59B31D)](https://codecov.io/github/honghaoz/ChouTi/tree/master/packages%2FChouTi%2FSources?flags%5B0%5D=ChouTi&displayType=list)
 
-**ChouTi** is a Swift framework that provides core extensions and utilities to enhance development on iOS and macOS.
+[**ChouTi**](packages/ChouTi/README.md) is a Swift framework that provides common utilities and extensions to enhance development on iOS and macOS.
 
 ```swift
 import ChouTi
@@ -50,9 +50,9 @@ import ChouTi
 
 ### ChouTiTest
 
-[![codecov](https://codecov.io/github/honghaoz/ChouTi/branch/master/graph/badge.svg?token=BWWP0ROG2A&flag=ChouTiTest&&precision=2)](https://codecov.io/github/honghaoz/ChouTi/tree/master/packages%2FChouTiTest%2FSources?flags%5B0%5D=ChouTiTest&displayType=list)
+[![codecov](https://img.shields.io/codecov/c/github/honghaoz/ChouTi/master?token=BWWP0ROG2A&flag=ChouTiTest&style=flat&label=code%20coverage&color=59B31D)](https://codecov.io/github/honghaoz/ChouTi/tree/master/packages%2FChouTiTest%2FSources?flags%5B0%5D=ChouTiTest&displayType=list)
 
-**ChouTiTest** is a Swift testing framework for writing tests with simple, expressive syntax.
+[**ChouTiTest**](packages/ChouTiTest/README.md) is a Swift testing framework for writing tests with simple, expressive syntax.
 
 ```swift
 import XCTest

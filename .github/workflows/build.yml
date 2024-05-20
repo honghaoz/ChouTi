@@ -48,7 +48,8 @@ jobs:
         uses: codecov/codecov-action@v4.0.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: packages/ChouTi/.build/debug/codecov/*.lcov
+          file: packages/ChouTi/.build/debug/codecov/coverage.lcov
+          disable_search: true
           flags: ChouTi
           name: ChouTi
           fail_ci_if_error: true
@@ -60,7 +61,8 @@ jobs:
         uses: codecov/codecov-action@v4.0.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: packages/ChouTiTest/.build/debug/codecov/*.lcov
+          file: packages/ChouTiTest/.build/debug/codecov/coverage.lcov
+          disable_search: true
           flags: ChouTiTest
           name: ChouTiTest
           fail_ci_if_error: true
