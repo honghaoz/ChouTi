@@ -4,7 +4,7 @@
 ![swift](https://img.shields.io/badge/Swift-5.9-F05138.svg)
 ![platforms](https://img.shields.io/badge/platforms-iOS%2013%20%7C%20macOS%2010.5-007fea.svg)
 
-**ChouTi** is a repository of Swift packages that provides extensions, utilities and frameworks to enhance development on iOS and macOS.
+**ChouTi** is a repository of Swift packages that provides frameworks, utilities and extensions to enhance development on iOS and macOS.
 
 ## Installation
 
@@ -15,7 +15,7 @@ Add the following to your `Package.swift` file:
 ```swift
 dependencies: [
   // add the package to your package dependencies
-  .package(url: "https://github.com/honghaoz/ChouTi", from: "0.0.1"),
+  .package(url: "https://github.com/honghaoz/ChouTi", from: "0.0.2"),
 ],
 targets: [
   // add products to your target dependencies
