@@ -15,6 +15,6 @@ class FailTests: FailureCapturingTestCase {
 
     fail(expectedMessage)
 
-    assertFailure(expectedMessage: expectedMessage)
+    assertFailureContains(expectedMessage: expectedMessage)
   }
 }

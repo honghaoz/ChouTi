@@ -22,7 +22,7 @@ public func unwrap<T>(_ expression: @autoclosure () throws -> T?, _ description:
     if let description = description() {
       XCTFail("expect a non-nil value of \"\(description)\" (\(T.self))", file: file, line: line)
     } else {
-      XCTFail("expect a non-nil value of type \(T.self) ", file: file, line: line)
+      XCTFail("expect a non-nil value of type \(T.self)", file: file, line: line)
     }
     throw UnwrapError.nilValue
   }
