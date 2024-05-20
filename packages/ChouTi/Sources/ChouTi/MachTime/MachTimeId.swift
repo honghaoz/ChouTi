@@ -1,5 +1,5 @@
 //
-//  MachTime.swift
+//  MachTimeId.swift
 //
 //  Created by Honghao Zhang on 5/22/21.
 //  Copyright © 2024 ChouTi. All rights reserved.
@@ -15,6 +15,22 @@ public typealias MachTimeId = UInt64
 public extension MachTimeId {
 
   /// Make a new id based on mach absolute time.
+  ///
+  /// This is generally the fastest way to get a unique id within the same app run.
+  ///
+  /// - Warning: For consecutive calls, the returned ids maybe the same. For this case, you may need to use a variable to store the last id to guarantee the uniqueness. For example:
+  /// ```swift
+  /// var lastId: MachTimeId = 0
+  ///
+  /// for _ in 1...100 {
+  ///   var newId = MachTimeId.id()
+  ///   if newId <= lastId {
+  ///     newId = lastId + 1
+  ///   }
+  ///   lastId = newId
+  ///   print(newId)
+  /// }
+  /// ```
   @inlinable
   @inline(__always)
   static func id() -> MachTimeId {
@@ -22,6 +38,22 @@ public extension MachTimeId {
   }
 
   /// Make a new id string based on mach absolute time.
+  ///
+  /// This is generally the fastest way to get a unique id within the same app run.
+  ///
+  /// - Warning: For consecutive calls, the returned ids maybe the same. For this case, you may need to use a variable to store the last id to guarantee the uniqueness. For example:
+  /// ```swift
+  /// var lastId: String = ""
+  ///
+  /// for _ in 1...100 {
+  ///   var newId = MachTimeId.idString()
+  ///   if newId <= lastId {
+  ///     newId = lastId + "1"
+  ///   }
+  ///   lastId = newId
+  ///   print(newId)
+  /// }
+  /// ```
   @inlinable
   @inline(__always)
   static func idString() -> String {

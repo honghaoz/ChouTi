@@ -17,7 +17,7 @@ class TypeNameTests: XCTestCase {
   private struct Foo: Hashable {}
 
   func testTypeName() {
-    XCTAssertEqual(typeName(Foo.self), "Foo")
+    expect(typeName(Foo.self)) == "Foo"
     XCTAssertEqual(typeName(Foo()), "Foo")
 
     XCTAssertEqual(typeName([Foo].self), "Array<Foo>")

@@ -16,14 +16,14 @@ import UIKit
 
 public enum Device {
 
-  enum DeviceType {
+  public enum DeviceType {
     case iPhone
     case iPad
     case mac
     // case vision
   }
 
-  static let deviceType: DeviceType = {
+  public static let deviceType: DeviceType = {
     #if os(macOS)
     return .mac
     #elseif os(iOS)
@@ -116,7 +116,7 @@ public enum Device {
   #endif
 
   /// Get the free disk space in bytes.
-  static var freeDiskSpaceInBytes: Int64 {
+  public static var freeDiskSpaceInBytes: Int64 {
     do {
       if #available(iOS 11.0, *) {
         let freeSpace = try URL(fileURLWithPath: NSHomeDirectory() as String).resourceValues(forKeys: [URLResourceKey.volumeAvailableCapacityForImportantUsageKey]).volumeAvailableCapacityForImportantUsage

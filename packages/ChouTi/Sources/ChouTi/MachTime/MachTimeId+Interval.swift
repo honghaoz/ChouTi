@@ -1,5 +1,5 @@
 //
-//  MachTime+Interval.swift
+//  MachTimeId+Interval.swift
 //
 //  Created by Honghao Zhang on 5/22/21.
 //  Copyright © 2024 ChouTi. All rights reserved.
