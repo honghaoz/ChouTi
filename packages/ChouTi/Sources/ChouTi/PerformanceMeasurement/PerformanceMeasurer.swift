@@ -202,6 +202,7 @@ public extension PerformanceMeasurer {
       - repeatCount: The repeat count to run the block.
       - block: The block to measure.
    */
+  @discardableResult
   static func measure(tag: String? = nil,
                       tagLength: Int? = nil,
                       tagPad: Character? = nil,

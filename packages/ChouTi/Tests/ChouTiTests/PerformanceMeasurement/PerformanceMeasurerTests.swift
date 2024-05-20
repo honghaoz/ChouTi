@@ -29,7 +29,7 @@ final class PerformanceMeasurerTests: XCTestCase {
       XCTAssertGreaterThan(elapsedTime, 0)
     }
 
-    expect(consoleOutput) == ""
+    expect(consoleOutput, consoleOutput).to(beEmpty())
   }
 
   func testInstanceUnbalancedEndCall() {
@@ -40,7 +40,7 @@ final class PerformanceMeasurerTests: XCTestCase {
       XCTAssertEqual(elapsedTime, 0)
     }
 
-    expect(consoleOutput.contains("Unbalanced end() call.")) == true
+    expect(consoleOutput.contains("Unbalanced end() call."), consoleOutput) == true
   }
 
   func testInstanceMeasurement_printWithoutMeasurement() {
@@ -57,7 +57,7 @@ final class PerformanceMeasurerTests: XCTestCase {
       measurer.print(tag: "TestTag")
     }
 
-    expect(consoleOutput.contains("No elapsed time yet")) == true
+    expect(consoleOutput.contains("No elapsed time yet"), consoleOutput) == true
   }
 
   func testInstanceMeasurement_print() {
@@ -77,29 +77,29 @@ final class PerformanceMeasurerTests: XCTestCase {
       let consoleOutput = captureConsoleOutput {
         measurer.print(tag: "TestTag")
       }
-      expect(consoleOutput.contains("[TestTag] Elapsed time: ")) == true
+      expect(consoleOutput.contains("[TestTag] Elapsed time: "), consoleOutput) == true
     }
 
     do {
       let consoleOutput = captureConsoleOutput {
         measurer.print(tag: "TestTag", tagLength: 12)
       }
-      expect(consoleOutput.contains("[TestTag     ] Elapsed time: ")) == true
+      expect(consoleOutput.contains("[TestTag     ] Elapsed time: "), consoleOutput) == true
     }
 
     do {
       let consoleOutput = captureConsoleOutput {
         measurer.print(tag: "TestTag", tagLength: 12, tagPad: "*")
       }
-      expect(consoleOutput.contains("[TestTag*****] Elapsed time: ")) == true
+      expect(consoleOutput.contains("[TestTag*****] Elapsed time: "), consoleOutput) == true
     }
 
     do {
       let consoleOutput = captureConsoleOutput {
         measurer.print(tag: "TestTag", tagLength: 12, tagPad: "*", useScientificNumber: true)
       }
-      expect(consoleOutput.contains("[TestTag*****] Elapsed time: ")) == true
-      expect(consoleOutput.contains("e-")) == true
+      expect(consoleOutput.contains("[TestTag*****] Elapsed time: "), consoleOutput) == true
+      expect(consoleOutput.contains("e-"), consoleOutput) == true
     }
   }
 
@@ -118,14 +118,14 @@ final class PerformanceMeasurerTests: XCTestCase {
       XCTAssertGreaterThan(timeElapsed, 0)
     }
 
-    expect(consoleOutput) == ""
+    expect(consoleOutput, consoleOutput).to(beEmpty())
   }
 
   func testUnbalancedEndCall() {
     let consoleOutput = captureConsoleOutput {
       PerformanceMeasurer.end()
     }
-    expect(consoleOutput.contains("Unbalanced end() call. Call start() first.")) == true
+    expect(consoleOutput.contains("Unbalanced end() call. Call start() first."), consoleOutput) == true
   }
 
   // MARK: - Blocks
@@ -141,7 +141,7 @@ final class PerformanceMeasurerTests: XCTestCase {
       XCTAssertGreaterThan(timeElapsed, 0)
     }
 
-    expect(consoleOutput) == ""
+    expect(consoleOutput, consoleOutput).to(beEmpty())
   }
 
   func testMeasureBlockReturnValue() {
@@ -157,7 +157,7 @@ final class PerformanceMeasurerTests: XCTestCase {
       XCTAssertGreaterThan(timeElapsed, 0)
     }
 
-    expect(consoleOutput) == ""
+    expect(consoleOutput, consoleOutput).to(beEmpty())
   }
 
   func testMeasureBlockReturnValueThrow() {
@@ -180,7 +180,7 @@ final class PerformanceMeasurerTests: XCTestCase {
       XCTAssertGreaterThan(timeElapsed, 0)
     }
 
-    expect(consoleOutput) == ""
+    expect(consoleOutput, consoleOutput).to(beEmpty())
   }
 
   // MARK: - Repeat
@@ -201,7 +201,7 @@ final class PerformanceMeasurerTests: XCTestCase {
       }
       XCTAssertGreaterThan(timeElapsed, 0)
     }
-    expect(consoleOutput) == ""
+    expect(consoleOutput, consoleOutput).to(beEmpty())
   }
 
   func testMeasureRepeatWithPrint() {
@@ -221,7 +221,7 @@ final class PerformanceMeasurerTests: XCTestCase {
         }
         XCTAssertGreaterThan(timeElapsed, 0)
       }
-      expect(consoleOutput.contains("[TestTag] Elapsed time: ")) == true
+      expect(consoleOutput.contains("[TestTag] Elapsed time: "), consoleOutput) == true
     }
 
     do {
@@ -231,7 +231,7 @@ final class PerformanceMeasurerTests: XCTestCase {
         }
         XCTAssertGreaterThan(timeElapsed, 0)
       }
-      expect(consoleOutput.contains("[TestTag     ] Elapsed time: ")) == true
+      expect(consoleOutput.contains("[TestTag     ] Elapsed time: "), consoleOutput) == true
     }
 
     do {
@@ -241,7 +241,7 @@ final class PerformanceMeasurerTests: XCTestCase {
         }
         XCTAssertGreaterThan(timeElapsed, 0)
       }
-      expect(consoleOutput.contains("[TestTag*****] Elapsed time: ")) == true
+      expect(consoleOutput.contains("[TestTag*****] Elapsed time: "), consoleOutput) == true
     }
 
     do {
@@ -251,8 +251,8 @@ final class PerformanceMeasurerTests: XCTestCase {
         }
         XCTAssertGreaterThan(timeElapsed, 0)
       }
-      expect(consoleOutput.contains("[TestTag*****] Elapsed time: ")) == true
-      expect(consoleOutput.contains("e-")) == true
+      expect(consoleOutput.contains("[TestTag*****] Elapsed time: "), consoleOutput) == true
+      expect(consoleOutput.contains("e-"), consoleOutput) == true
     }
   }
 
