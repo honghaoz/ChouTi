@@ -12,7 +12,7 @@ import ChouTiTest
 
 class OrderedDictionaryTests: XCTestCase {
 
-  var dict: OrderedDictionary<String, Int>!
+  private var dict: OrderedDictionary<String, Int>!
 
   override func setUp() {
     super.setUp()
@@ -31,6 +31,11 @@ class OrderedDictionaryTests: XCTestCase {
     XCTAssertEqual(dict.count, 3)
     XCTAssertEqual(dict.keys, ["a", "b", "c"])
     XCTAssertEqual(dict.values, [1, 2, 3])
+
+    dict = OrderedDictionary<String, Int>()
+    expect(dict.isEmpty) == true
+    expect(dict.keys.isEmpty) == true
+    expect(dict.values.isEmpty) == true
   }
 
   func testBadInit() {
@@ -75,6 +80,74 @@ class OrderedDictionaryTests: XCTestCase {
     dict["b"] = 12
     XCTAssertEqual(dict["b"], 12)
     XCTAssertEqual(dict.keys, ["a", "b", "c", "e"])
+  }
+
+  func testAppend() {
+    dict.append(value: 1, forKey: "a")
+    XCTAssertEqual(dict["a"], 1)
+    XCTAssertEqual(dict.count, 1)
+    XCTAssertEqual(dict.keys, ["a"])
+    XCTAssertEqual(dict.values, [1])
+
+    dict.append(value: 2, forKey: "b")
+    XCTAssertEqual(dict["b"], 2)
+    XCTAssertEqual(dict.count, 2)
+    XCTAssertEqual(dict.keys, ["a", "b"])
+    XCTAssertEqual(dict.values, [1, 2])
+
+    dict.append(value: 3, forKey: "c")
+    XCTAssertEqual(dict["c"], 3)
+    XCTAssertEqual(dict.count, 3)
+    XCTAssertEqual(dict.keys, ["a", "b", "c"])
+    XCTAssertEqual(dict.values, [1, 2, 3])
+  }
+
+  func testPopLast() {
+    dict.append(value: 1, forKey: "a")
+    dict.append(value: 2, forKey: "b")
+    dict.append(value: 3, forKey: "c")
+
+    let removed = dict.popLast()
+    XCTAssertEqual(removed?.0, "c")
+    XCTAssertEqual(removed?.1, 3)
+    XCTAssertEqual(dict.count, 2)
+    XCTAssertEqual(dict.keys, ["a", "b"])
+    XCTAssertEqual(dict.values, [1, 2])
+
+    let removed2 = dict.popLast()
+    XCTAssertEqual(removed2?.0, "b")
+    XCTAssertEqual(removed2?.1, 2)
+    XCTAssertEqual(dict.count, 1)
+    XCTAssertEqual(dict.keys, ["a"])
+    XCTAssertEqual(dict.values, [1])
+
+    let removed3 = dict.popLast()
+    XCTAssertEqual(removed3?.0, "a")
+    XCTAssertEqual(removed3?.1, 1)
+    XCTAssertEqual(dict.count, 0)
+    XCTAssertEqual(dict.keys, [])
+    XCTAssertEqual(dict.values, [])
+
+    let removed4 = dict.popLast()
+    XCTAssertNil(removed4)
+  }
+
+  func testHasKey() {
+    dict["a"] = 1
+    XCTAssertTrue(dict.hasKey("a"))
+    XCTAssertFalse(dict.hasKey("b"))
+  }
+
+  func testHasNoKey() {
+    dict.append(value: 1, forKey: "a")
+    XCTAssertFalse(dict.hasNoKey("a"))
+    XCTAssertTrue(dict.hasNoKey("b"))
+  }
+
+  func testReserveCapacity() {
+    dict.removeAll(keepingCapacity: false)
+    dict.reserveCapacity(10)
+    XCTAssertGreaterThanOrEqual(dict.capacity, 10, "dictionary should have at least capacity of 10")
   }
 
   func testBasicOperations() {
@@ -201,10 +274,25 @@ class OrderedDictionaryTests: XCTestCase {
     XCTAssertEqual(dict.count, 2)
   }
 
-  func testHasKey() {
-    dict["a"] = 1
-    XCTAssertTrue(dict.hasKey("a"))
-    XCTAssertFalse(dict.hasKey("b"))
+  func testCollection() {
+    dict = [
+      "a": 1,
+      "b": 2,
+      "c": 3,
+    ]
+
+    XCTAssertEqual(dict.count, 3)
+    XCTAssertEqual(dict.startIndex, 0)
+    XCTAssertEqual(dict.endIndex, 3)
+    XCTAssertEqual(dict.index(before: 2), 1)
+    XCTAssertEqual(dict.index(after: 0), 1)
+    XCTAssertEqual(dict.index(dict.startIndex, offsetBy: 2), 2)
+    XCTAssertEqual(dict[0].0, "a")
+    XCTAssertEqual(dict[0].1, 1)
+    XCTAssertEqual(dict[1].0, "b")
+    XCTAssertEqual(dict[1].1, 2)
+    XCTAssertEqual(dict[2].0, "c")
+    XCTAssertEqual(dict[2].1, 3)
   }
 
   func testSequence() {

@@ -23,7 +23,7 @@ class BoxTests: XCTestCase {
   }
 
   func testBoxInStruct() {
-    var value = TestStruct(aBox: Box<Int>(1))
+    let value = TestStruct(aBox: Box<Int>(1))
 
     XCTAssertEqual(value.aBox.value, 1, "initial value of the box should be 1")
 

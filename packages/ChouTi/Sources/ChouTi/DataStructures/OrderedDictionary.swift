@@ -141,11 +141,11 @@ public struct OrderedDictionary<KeyType: Hashable, ValueType> {
   /// Remove and return the last key-value pair.
   /// - Returns: The key-value pair that was removed or `nil` if the dictionary is empty.
   @discardableResult
-  public mutating func popLast() -> ValueType? {
-    guard let key = keys.popLast() else {
+  public mutating func popLast() -> (KeyType, ValueType)? {
+    guard let key = keys.popLast(), let value = dictionary.removeValue(forKey: key) else {
       return nil
     }
-    return dictionary.removeValue(forKey: key)
+    return (key, value)
   }
 
   /// Remove and return the value for the key.
@@ -178,6 +178,13 @@ public struct OrderedDictionary<KeyType: Hashable, ValueType> {
   /// - Returns: `true` if the key is not in the dictionary.
   public func hasNoKey(_ key: Key) -> Bool {
     dictionary[key] == nil
+  }
+
+  /// The total number of key-value pairs that the dictionary can contain without allocating new storage.
+  public var capacity: Int {
+    // it's possible that keys and dictionary have different capacity
+    // but both should be larger than the reserved capacity
+    return Swift.max(keys.capacity, dictionary.capacity)
   }
 
   /// Reserve enough space to store the specified number of values.
@@ -271,6 +278,12 @@ extension OrderedDictionary: Collection {
   public func index(after i: Int) -> Int {
     keys.index(after: i)
   }
+
+  @inlinable
+  @inline(__always)
+  public func index(before i: Int) -> Int {
+    keys.index(before: i)
+  }
 }
 
 // MARK: - ExpressibleByDictionaryLiteral
@@ -318,7 +331,7 @@ extension OrderedDictionary: Sequence {
       if let key = keys.next() {
         guard let value = values.next() else {
           #if DEBUG
-          ChouTi.assertFailure("keys and values count must match")
+          ChouTi.assertFailure("keys and values count must match", metadata: ["keys": "\(keys)", "values": "\(values)"])
           #endif
           return nil
         }
