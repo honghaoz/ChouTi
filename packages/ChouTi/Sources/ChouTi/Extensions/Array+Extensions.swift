@@ -55,9 +55,6 @@ public extension Array where Element: Equatable {
   /// - Returns: `true` if all elements are equal or is an empty array.
   func allEqual() -> Bool {
     /// From: https://stackoverflow.com/a/50806159/3164091
-    if isEmpty {
-      return true
-    }
     guard let last else {
       return true
     }

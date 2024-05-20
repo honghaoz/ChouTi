@@ -27,14 +27,27 @@ class ObjectIdentifierTests: XCTestCase {
 
     expect("\(ChouTi.rawPointer(object1))") != "\(ChouTi.rawPointer(object2))"
 
-    // var struct1 = FooStrut()
-    // var struct1Copy = struct1
-    // var struct2 = FooStrut()
+    expect(memoryAddress(ChouTi.rawPointer(object1))) != 0
+
+    var struct1 = FooStrut()
+    var struct1Copy = struct1
+    var struct2 = FooStrut()
+
+    expect(memoryAddress(&struct1)) != memoryAddress(&struct1Copy)
+    expect(memoryAddress(&struct1)) != memoryAddress(&struct2)
+
     // print(_memoryAddress(&struct1))
     // print(_memoryAddress(&struct1Copy))
     // print(_memoryAddress(&struct2))
     // 6132956592
     // 6132956584
     // 6132956576
+
+    let object = NSObject()
+    expect(object.objectIdentifier()) == ObjectIdentifier(object)
+    expect(object.objectIdentifier()) != self.objectIdentifier()
+
+    expect(object.rawPointer()) == Unmanaged.passUnretained(object).toOpaque()
+    expect(object.rawPointer()) != self.rawPointer()
   }
 }

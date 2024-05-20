@@ -13,8 +13,16 @@ import ChouTiTest
 class LogMessageTests: XCTestCase {
 
   func testSimpleString() {
-    let message: LogMessage = "test"
-    expect(message.materializedString()) == "test"
+    do {
+      let message: LogMessage = "test"
+      expect(message.materializedString()) == "test"
+      expect(message.materializedString()) == "test"
+    }
+
+    do {
+      let message = LogMessage("test")
+      expect(message.materializedString()) == "test"
+    }
   }
 
   func testNumberInterpolation() {
@@ -36,6 +44,7 @@ class LogMessageTests: XCTestCase {
     let message: LogMessage = "test: \(foo)"
     let string = "test: \(foo)"
     expect(message.materializedString()) == string
+    expect(message.materializedString()) == string
   }
 
   func testStructInterpolation() {
@@ -55,13 +64,14 @@ class LogMessageTests: XCTestCase {
     }
 
     let foo = Foo()
-    let message: LogMessage = "test: \(foo, privacy: .private)"
-    expect(message.materializedString()) == "test: <private>"
+    let message: LogMessage = "test: \(foo, privacy: .private), \(foo, privacy: .public)"
+    expect(message.materializedString()) == #"test: <private>, Foo(bar: ["yes"])"#
   }
 
   func testDefault() {
     let nilValue: Int? = nil
-    let message: LogMessage = "test: \(nilValue, default: "default")"
-    expect(message.materializedString()) == "test: default"
+    let validValue: Int? = 1
+    let message: LogMessage = "test: \(validValue, default: "default"), test: \(nilValue, default: "default")"
+    expect(message.materializedString()) == "test: 1, test: default"
   }
 }

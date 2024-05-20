@@ -354,6 +354,7 @@ extension OrderedDictionary: Hashable where Value: Hashable {
 public extension OrderedDictionary where Value: Equatable {
 
   /// Get first key for provided value.
+  ///
   /// ⚠️ The dictionary should contains unique key for value, otherwise, the returned key can vary.
   subscript(firstKeyFor value: Value) -> Key? {
     dictionary.first { $0.value == value }?.key

@@ -6,6 +6,8 @@
 //
 
 import XCTest
+import ChouTiTest
+
 import ChouTi
 
 class Array_ExtensionsTests: XCTestCase {
@@ -43,7 +45,7 @@ class Array_ExtensionsTests: XCTestCase {
     XCTAssertTrue(equalIntegers.allEqual())
 
     let empty: [Int] = []
-    XCTAssertTrue(empty.allUnique())
+    XCTAssertTrue(empty.allEqual())
   }
 
   func testAsSet() {
@@ -71,9 +73,32 @@ class Array_ExtensionsTests: XCTestCase {
     XCTAssertNil(array.popFirst())
   }
 
+  func testCompacted() {
+    do {
+      let array: [Int?] = [1, 2, 3, 4, 5]
+      expect(array.compacted()) == [1, 2, 3, 4, 5]
+    }
+
+    do {
+      let array: [Int?] = [1, 2, nil, 4, 5, nil]
+      expect(array.compacted()) == [1, 2, 4, 5]
+    }
+
+    do {
+      let array: [Int?] = [nil, nil, nil, nil]
+      expect(array.compacted()) == []
+    }
+
+    do {
+      let array: [Int?] = []
+      expect(array.compacted()) == []
+    }
+  }
+
   func testChunked() {
     let emptyArray: [Int] = []
-    XCTAssertEqual(emptyArray.count, 0)
+    XCTAssertEqual(emptyArray.chunked(0), [])
+    XCTAssertEqual(emptyArray.chunked(1), [])
 
     let array = [1, 2, 3, 4, 5, 6, 7, 8, 9]
     let result0 = array.chunked(0)
