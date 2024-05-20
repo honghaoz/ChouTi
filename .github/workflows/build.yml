@@ -39,8 +39,6 @@ jobs:
       - name: Bootstrap
         run: make bootstrap
       # ChouTi
-      - name: Build package "ChouTi"
-        run: make build-release -C packages/ChouTi
       - name: Test package "ChouTi"
         if: success() || failure()
         run: make test-codecov -C packages/ChouTi
