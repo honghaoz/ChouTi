@@ -9,7 +9,6 @@ import Foundation
 
 public extension Thread {
 
-  #if DEBUG
   /// Check if the current thread is running XCTest.
   var isRunningXCTest: Bool {
     /// https://stackoverflow.com/a/59732115/3164091
@@ -72,7 +71,6 @@ public extension Thread {
     // alternative:
     // let isRunningUnitTests = NSClassFromString("XCTest") != nil
   }
-  #endif
 
   /// Get a prettified call stack symbols string.
   /// - Parameter k: The number of call stack symbols to drop.
