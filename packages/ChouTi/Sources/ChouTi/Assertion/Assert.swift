@@ -7,7 +7,8 @@
 
 import Foundation
 
-#if canImport(XCTest)
+/// Run test with `swift test -Xswiftc -DTEST` to enable `import XCTest`.
+#if TEST
 import XCTest
 #endif
 
@@ -47,7 +48,7 @@ public enum Assert {
     let message = """
     🛑 Assertion Failure 🛑 💾 Source: \(file):\(line):\(column), 🗯️ Message: "\(message)"\(makeMetadataDescription(metadata: metadata))
     """
-    #if canImport(XCTest)
+    #if TEST
     XCTFail(message, file: file, line: line)
     #else
     print(message)
