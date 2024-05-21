@@ -15,15 +15,35 @@ import XCTest
 public enum Assert {
 
   /// If assertions are enabled. Set this flag to `false` to disable assertions.
-  public static var _isAssertEnabled = true
+  public static var isAssertEnabled = true
 
   /// If should write assertion failure logs to `~/Documents/assertion_failures`.
-  public static var _shouldWriteErrorLog = true
+  public static var shouldWriteErrorLog = true
+
+  // MARK: - Testing
+
+  /// The test assertion failure type.
+  public typealias TestAssertionFailureHandler = (_ message: String, _ metadata: OrderedDictionary<String, String>, _ file: StaticString, _ line: UInt, _ column: UInt) -> Void
 
   /// The assertion failure handler for testing.
-  public static var _testAssertionHandler = __defaultTestAssertionHandler
+  ///
+  /// Default handler will fail the test.
+  /// You can call `setTestAssertionFailureHandler(_:)` to set your own handler to customize the behavior.
+  /// Call `resetTestAssertionFailureHandler()` to reset the handler to the default handler.
+  public static var testAssertionFailureHandler: TestAssertionFailureHandler? = __defaultTestAssertionFailureHandler
 
-  static let __defaultTestAssertionHandler: ((_ message: String, _ metadata: OrderedDictionary<String, String>, _ file: StaticString, _ line: UInt, _ column: UInt) -> Void)? = { message, metadata, file, line, column in
+  /// Set the test assertion failure handler.
+  /// - Parameter handler: The test assertion failure handler.
+  public static func setTestAssertionFailureHandler(_ handler: TestAssertionFailureHandler?) {
+    testAssertionFailureHandler = handler
+  }
+
+  /// Reset the test assertion failure handler to the default handler.
+  public static func resetTestAssertionFailureHandler() {
+    testAssertionFailureHandler = __defaultTestAssertionFailureHandler
+  }
+
+  static let __defaultTestAssertionFailureHandler: TestAssertionFailureHandler? = { message, metadata, file, line, column in
     let message = """
     🛑 Assertion Failure 🛑 💾 Source: \(file):\(line):\(column), 🗯️ Message: "\(message)"\(makeMetadataDescription(metadata: metadata))
     """
@@ -40,9 +60,6 @@ public enum Assert {
     formatter.locale = .enUSPOSIX
     return formatter
   }()
-
-  /// A flag indicates if should pause execution when assertion fails.
-  public static let __assertionShouldPause: Bool = _isAssertEnabled && isDebuggingUsingXcode
 }
 #endif
 
@@ -81,7 +98,7 @@ public func assertFailure(_ message: @autoclosure () -> String = String(),
 {
   #if DEBUG
   if Thread.current.isRunningXCTest {
-    Assert._testAssertionHandler?(message(), metadata(), file, line, column)
+    Assert.testAssertionFailureHandler?(message(), metadata(), file, line, column)
   } else {
 
     let message: LogMessage = """
@@ -96,9 +113,11 @@ public func assertFailure(_ message: @autoclosure () -> String = String(),
     ChouTi_AssertLogger.debug(message, file: file, line: line, column: column, function: function)
     failureBlock?()
 
-    writeError(message: message.materializedString(), file: file, line: line, column: column, function: function)
+    if Assert.shouldWriteErrorLog {
+      writeError(message: message.materializedString(), file: file, line: line, column: column, function: function)
+    }
 
-    if Assert.__assertionShouldPause {
+    if Assert.isAssertEnabled && isDebuggingUsingXcode {
       raise(SIGABRT)
     }
   }

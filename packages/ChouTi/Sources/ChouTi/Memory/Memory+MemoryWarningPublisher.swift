@@ -34,6 +34,8 @@ public extension Memory {
 
 // MARK: - Mac
 
+import AppKit
+
 public extension Memory {
 
   /// To trigger a memory warning on Mac:
