@@ -117,7 +117,7 @@ public func assertFailure(_ message: @autoclosure () -> String = String(),
       writeError(message: message.materializedString(), file: file, line: line, column: column, function: function)
     }
 
-    if Assert.isAssertEnabled && isDebuggingUsingXcode {
+    if Assert.isAssertEnabled, isDebuggingUsingXcode {
       raise(SIGABRT)
     }
   }
