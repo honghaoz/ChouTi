@@ -24,16 +24,18 @@ public enum Device {
   }
 
   public static let deviceType: DeviceType = {
-    #if os(macOS)
-    return .mac
-    #elseif os(iOS)
+    #if os(iOS)
     if UIDevice.current.userInterfaceIdiom == .pad {
       return .iPad
     } else {
       return .iPhone
     }
+    #elseif os(macOS)
+    return .mac
+    #elseif os(visionOS)
+    return .iPhone // TODO: support vision
     #else
-    ChouTiExt.assertFailure("Unknown device type.")
+    ChouTi.assertFailure("Unsupported device type.")
     return .iPhone
     #endif
   }()

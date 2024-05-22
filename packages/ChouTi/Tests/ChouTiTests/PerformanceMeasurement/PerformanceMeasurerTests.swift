@@ -40,7 +40,7 @@ final class PerformanceMeasurerTests: XCTestCase {
       XCTAssertEqual(elapsedTime, 0)
     }
 
-    if !isCI {
+    if !isCommandLine {
       expect(consoleOutput.contains("Unbalanced end() call."), consoleOutput) == true
     }
   }
@@ -59,7 +59,7 @@ final class PerformanceMeasurerTests: XCTestCase {
       measurer.print(tag: "TestTag")
     }
 
-    if !isCI {
+    if !isCommandLine {
       expect(consoleOutput.contains("No elapsed time yet"), consoleOutput) == true
     }
   }
@@ -81,7 +81,7 @@ final class PerformanceMeasurerTests: XCTestCase {
       let consoleOutput = captureConsoleOutput {
         measurer.print(tag: "TestTag")
       }
-      if !isCI {
+      if !isCommandLine {
         expect(consoleOutput.contains("[TestTag] Elapsed time: "), consoleOutput) == true
       }
     }
@@ -90,7 +90,7 @@ final class PerformanceMeasurerTests: XCTestCase {
       let consoleOutput = captureConsoleOutput {
         measurer.print(tag: "TestTag", tagLength: 12)
       }
-      if !isCI {
+      if !isCommandLine {
         expect(consoleOutput.contains("[TestTag     ] Elapsed time: "), consoleOutput) == true
       }
     }
@@ -99,7 +99,7 @@ final class PerformanceMeasurerTests: XCTestCase {
       let consoleOutput = captureConsoleOutput {
         measurer.print(tag: "TestTag", tagLength: 12, tagPad: "*")
       }
-      if !isCI {
+      if !isCommandLine {
         expect(consoleOutput.contains("[TestTag*****] Elapsed time: "), consoleOutput) == true
       }
     }
@@ -108,7 +108,7 @@ final class PerformanceMeasurerTests: XCTestCase {
       let consoleOutput = captureConsoleOutput {
         measurer.print(tag: "TestTag", tagLength: 12, tagPad: "*", useScientificNumber: true)
       }
-      if !isCI {
+      if !isCommandLine {
         expect(consoleOutput.contains("[TestTag*****] Elapsed time: "), consoleOutput) == true
         expect(consoleOutput.contains("e-"), consoleOutput) == true
       }
@@ -137,7 +137,7 @@ final class PerformanceMeasurerTests: XCTestCase {
     let consoleOutput = captureConsoleOutput {
       PerformanceMeasurer.end()
     }
-    if !isCI {
+    if !isCommandLine {
       expect(consoleOutput.contains("Unbalanced end() call. Call start() first."), consoleOutput) == true
     }
   }
@@ -235,7 +235,7 @@ final class PerformanceMeasurerTests: XCTestCase {
         }
         XCTAssertGreaterThan(timeElapsed, 0)
       }
-      if !isCI {
+      if !isCommandLine {
         expect(consoleOutput.contains("[TestTag] Elapsed time: "), consoleOutput) == true
       }
     }
@@ -247,7 +247,7 @@ final class PerformanceMeasurerTests: XCTestCase {
         }
         XCTAssertGreaterThan(timeElapsed, 0)
       }
-      if !isCI {
+      if !isCommandLine {
         expect(consoleOutput.contains("[TestTag     ] Elapsed time: "), consoleOutput) == true
       }
     }
@@ -259,7 +259,7 @@ final class PerformanceMeasurerTests: XCTestCase {
         }
         XCTAssertGreaterThan(timeElapsed, 0)
       }
-      if !isCI {
+      if !isCommandLine {
         expect(consoleOutput.contains("[TestTag*****] Elapsed time: "), consoleOutput) == true
       }
     }
@@ -271,15 +271,20 @@ final class PerformanceMeasurerTests: XCTestCase {
         }
         XCTAssertGreaterThan(timeElapsed, 0)
       }
-      if !isCI {
+      if !isCommandLine {
         expect(consoleOutput.contains("[TestTag*****] Elapsed time: "), consoleOutput) == true
         expect(consoleOutput.contains("e-"), consoleOutput) == true
       }
     }
   }
 
-  private var isCI: Bool {
-    return ProcessInfo.processInfo.environment["CI"] != nil
+  private var isCommandLine: Bool {
+    #if TEST
+    // TEST flag is set via `swift test -Xswiftc -DTEST`
+    return true
+    #else
+    return false
+    #endif
   }
 
   private func captureConsoleOutput(_ block: () throws -> Void) -> String {

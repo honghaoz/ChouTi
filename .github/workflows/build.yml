@@ -41,6 +41,9 @@ jobs:
       # ChouTi
       - name: Test package "ChouTi"
         if: success() || failure()
+        run: make test -C packages/ChouTi
+      - name: Test package "ChouTi" with Codecov
+        if: success() || failure()
         run: make test-codecov -C packages/ChouTi
       - name: Upload coverage reports to Codecov (ChouTi)
         uses: codecov/codecov-action@v4.0.1

@@ -23,13 +23,27 @@ final class DeviceTests: XCTestCase {
     #if os(macOS)
     expect(Device.deviceType) == .mac
     #elseif os(iOS)
-    if UIDevice.current.userInterfaceIdiom == .pad {
-      expect(Device.deviceType) == .iPad
-    } else {
+    switch UIDevice.current.userInterfaceIdiom {
+    case .phone:
       expect(Device.deviceType) == .iPhone
+    case .pad:
+      expect(Device.deviceType) == .iPad
+    case .unspecified:
+      fail("Unsupported device type")
+    case .tv:
+      fail("Unsupported device type")
+    case .carPlay:
+      fail("Unsupported device type")
+    case .mac:
+      fail("Unsupported device type")
+    case .vision:
+      fail("Unsupported device type")
+    @unknown default:
+      fail("Unsupported device type")
     }
+    #elseif os(visionOS)
     #else
-    fail("Unknown device type")
+    fail("Unsupported device type")
     #endif
   }
 
