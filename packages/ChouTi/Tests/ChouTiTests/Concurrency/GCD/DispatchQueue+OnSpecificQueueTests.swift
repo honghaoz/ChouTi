@@ -42,11 +42,11 @@ final class DispatchQueue_OnSpecificQueueTests: XCTestCase {
     print("DEBUG[\(#function)][\(Thread.current)][\(DispatchQueue.currentQueueLabel)] after async on shared queue")
     XCTAssertFalse(hasRun)
     print("DEBUG[\(#function)][\(Thread.current)][\(DispatchQueue.currentQueueLabel)] before wait")
-    wait(timeout: 0.05)
+    wait(timeout: 0.1)
     print("DEBUG[\(#function)][\(Thread.current)][\(DispatchQueue.currentQueueLabel)] after wait")
     XCTAssertTrue(hasRun)
 
-    // Output:
+    // Local output:
     // DEBUG[testRunOnBackground()][<_NSMainThread: 0x600001710000>{number = 1, name = main}][com.apple.main-thread] before async on shared queue
     // DEBUG[testRunOnBackground()][<_NSMainThread: 0x600001710000>{number = 1, name = main}][com.apple.main-thread] after async on shared queue
     // DEBUG[testRunOnBackground()][<NSThread: 0x60000174ac00>{number = 2, name = (null)}][io.chouti.queue.qos-default] before async on self queue
@@ -55,6 +55,16 @@ final class DispatchQueue_OnSpecificQueueTests: XCTestCase {
     // DEBUG[testRunOnBackground()][<NSThread: 0x60000174ac00>{number = 2, name = (null)}][test-queue] on self queue
     // DEBUG[testRunOnBackground()][<NSThread: 0x60000174ac00>{number = 2, name = (null)}][test-queue] on self queue executed
     // DEBUG[testRunOnBackground()][<_NSMainThread: 0x600001710000>{number = 1, name = main}][com.apple.main-thread] after wait
+
+    // CI output:
+    // DEBUG[testRunOnBackground()][<_NSMainThread: 0x600003f2c080>{number = 1, name = main}][com.apple.main-thread] before async on shared queue
+    // DEBUG[testRunOnBackground()][<_NSMainThread: 0x600003f2c080>{number = 1, name = main}][com.apple.main-thread] after async on shared queue
+    // DEBUG[testRunOnBackground()][<_NSMainThread: 0x600003f2c080>{number = 1, name = main}][com.apple.main-thread] before wait
+    // DEBUG[testRunOnBackground()][<NSThread: 0x600003f66e00>{number = 2, name = (null)}][io.chouti.queue.qos-default] before async on self queue
+    // DEBUG[testRunOnBackground()][<NSThread: 0x600003f66e00>{number = 2, name = (null)}][io.chouti.queue.qos-default] after async on self queue
+    // DEBUG[testRunOnBackground()][<NSThread: 0x600003f66e00>{number = 2, name = (null)}][test-queue] on self queue
+    // DEBUG[testRunOnBackground()][<NSThread: 0x600003f66e00>{number = 2, name = (null)}][test-queue] on self queue executed
+    // DEBUG[testRunOnBackground()][<_NSMainThread: 0x600003f2c080>{number = 1, name = main}][com.apple.main-thread] after wait
   }
 
   func testRunOnQueueWithDelay() {

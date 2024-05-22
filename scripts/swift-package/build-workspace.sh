@@ -150,6 +150,8 @@ DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME"
 set -o pipefail && xcodebuild build -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -configuration "$CONFIGURATION" | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
 
 if [ $ERROR_CODE -ne 0 ]; then
-  echo "Build failed."
+  echo "🛑 Build failed."
   exit $ERROR_CODE
+else
+  echo "✅ Build succeeded."
 fi
