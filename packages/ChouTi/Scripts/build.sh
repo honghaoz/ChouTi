@@ -43,6 +43,11 @@ fi
 REPO_ROOT=$(git rev-parse --show-toplevel)
 ERROR_CODE=0
 
+echo "Swift Version: $(swift --version)"
+echo "Xcode Version: $(xcodebuild -version)"
+echo "Available Simulators:"
+xcrun simctl list devices available
+
 cd ..
 
 WORKSPACE="Project.xcworkspace"
