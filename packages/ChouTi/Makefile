@@ -7,17 +7,17 @@ MAKEFILE_DIR_NAME = $(shell basename $(MAKEFILE_DIR))
 .PHONY: build
 build: # Build with debug configuration.
 	@echo build: $(MAKEFILE_DIR_NAME)
-	@./Scripts/build.sh --configuration Debug
+	@$(REPO_ROOT)/scripts/swift-package/build-workspace.sh --workspace-path "Project.xcworkspace" --scheme "ChouTi" --configuration "Debug"
 
 .PHONY: build-release
 build-release: # Build with release configuration.
 	@echo build release: $(MAKEFILE_DIR_NAME)
-	@./Scripts/build.sh --configuration Release
+	@$(REPO_ROOT)/scripts/swift-package/build-workspace.sh --workspace-path "Project.xcworkspace" --scheme "ChouTi" --configuration "Release"
 
 .PHONY: test
 test: # Run tests.
 	@echo test: $(MAKEFILE_DIR_NAME)
-	@./Scripts/test.sh
+	@$(REPO_ROOT)/scripts/swift-package/test-workspace.sh --workspace-path "Project.xcworkspace" --scheme "ChouTi"
 
 .PHONY: test-codecov
 test-codecov: # Run tests with code coverage.
