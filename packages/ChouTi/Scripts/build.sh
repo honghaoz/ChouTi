@@ -53,8 +53,11 @@ cd ..
 WORKSPACE="Project.xcworkspace"
 SCHEME="ChouTi"
 
+echo "ℹ️  $WORKSPACE, Scheme: $SCHEME, available destinations:"
+xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -showdestinations
+
 # For macOS
-echo "➡️  [1/2] Building for macOS..."
+echo "➡️  [1/2] Building for macOS ($CONFIGURATION)..."
 SWIFT_BUILD_CONFIG="debug"
 if [ "$CONFIGURATION" == "Release" ]; then
   SWIFT_BUILD_CONFIG="release"
@@ -63,7 +66,7 @@ set -o pipefail && swift build -c "$SWIFT_BUILD_CONFIG" || ERROR_CODE=$?
 
 # For iOS
 echo ""
-echo "➡️  [2/2] Building for iOS..."
+echo "➡️  [2/2] Building for iOS ($CONFIGURATION)..."
 SIMULATOR_NAME=$(xcrun simctl list devices available | grep 'iPhone' | grep -Eo 'iPhone \d+' | sort -t ' ' -k 2 -nr | head -1)
 PLATFORM="iOS Simulator"
 DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME"
@@ -71,7 +74,7 @@ set -o pipefail && xcodebuild build -workspace "$WORKSPACE" -scheme "$SCHEME" -d
 
 # For visionOS
 echo ""
-echo "➡️  [3/3] Building for visionOS..."
+echo "➡️  [3/3] Building for visionOS ($CONFIGURATION)..."
 SIMULATOR_NAME=$(xcrun simctl list devices available | grep "Apple Vision" | head -n 1 | awk -F'(' '{print $1}' | xargs)
 PLATFORM="visionOS Simulator"
 DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME"

@@ -19,7 +19,10 @@ xcrun simctl list devices available
 cd ..
 
 WORKSPACE="Project.xcworkspace"
-SCHEME="ChouTi (Test)"
+SCHEME="ChouTi"
+
+echo "ℹ️  $WORKSPACE, Scheme: $SCHEME, available destinations:"
+xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -showdestinations
 
 # For macOS
 echo "➡️  [1/2] Running tests for macOS..."
@@ -55,10 +58,7 @@ else
   echo "✅ Tests passed."
 fi
 
-# to show all destinations
-# xcodebuild -workspace ChouTi.xcworkspace -scheme ChouTiExt -showdestinations
-
-# can also omit the workspace, but looks like using workspace can get code coverage.
+# can omit the workspace, but looks like using workspace can get code coverage.
 # https://www.jessesquires.com/blog/2021/11/03/swift-package-ios-tests/
 
 # ===------ END ------===
