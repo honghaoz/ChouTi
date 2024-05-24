@@ -87,6 +87,14 @@ download_and_install() {
   echo "✅ ${CYAN}$name ($version)${RESET} is installed."
 }
 
+cleanup() {
+  # if backup exists, restore the binary
+  if [ -e "$BIN_DIR/$name.backup" ]; then
+    mv "$BIN_DIR/$name.backup" "$BIN_DIR/$name"
+  fi
+}
+trap cleanup EXIT
+
 # Read the versions file and download binaries
 while IFS=" " read -r name version; do
   # skips empty lines

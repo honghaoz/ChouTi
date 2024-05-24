@@ -55,8 +55,7 @@ binary_name="swiftformat"
 # Define download URL and temporary directory
 url="https://github.com/chouti-dev/SwiftFormat/releases/download/$version-chouti/$binary_name-arm64.zip"
 temp_dir=$(mktemp -d)
-echo "temp_dir: $temp_dir"
-# trap 'rm -rf $temp_dir' EXIT
+trap 'rm -rf $temp_dir' EXIT
 
 # Download the binary
 set +e
