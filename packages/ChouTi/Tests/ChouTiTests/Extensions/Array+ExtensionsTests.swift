@@ -37,6 +37,10 @@ class Array_ExtensionsTests: XCTestCase {
     XCTAssertTrue(empty.allUnique())
   }
 
+  func testAsSet() {
+    XCTAssertEqual(["a", "b", "c", "c"].asSet(), Set(["a", "b", "c"]))
+  }
+
   func testAllEqual() {
     let nonEqualIntegers = [1, 2, 2, 1, 3, 4, 5, 3, 4, 5]
     XCTAssertFalse(nonEqualIntegers.allEqual())
@@ -48,8 +52,50 @@ class Array_ExtensionsTests: XCTestCase {
     XCTAssertTrue(empty.allEqual())
   }
 
-  func testAsSet() {
-    XCTAssertEqual(["a", "b", "c", "c"].asSet(), Set(["a", "b", "c"]))
+  func removingFirstElement() {
+    expect(["ni", "hao", "ma", "?"].removingFirstElement("hao")) == ["ni", "ma", "?"]
+    expect(["ni", "hao", "ma", "?"].removingFirstElement("hao")) == ["ni", "ma", "?"]
+
+    // duplicated elements
+    expect(["1", "2", "3", "2", "4", "2"].removingFirstElement("2")) == ["1", "3", "2", "4", "2"]
+
+    // empty array
+    expect([String]().removingFirstElement("2")) == []
+
+    // element not found
+    expect(["1", "2", "3", "2", "4", "2"].removingFirstElement("5")) == ["1", "2", "3", "2", "4", "2"]
+  }
+
+  func testRemoveElement() {
+    do {
+      var array = ["hello", "world", "!"]
+      array.removeFirstElement("world")
+      expect(array) == ["hello", "!"]
+    }
+
+    do {
+      var array = [1, 3, 2, 3, 4, 5]
+      array.removeFirstElement(3)
+      expect(array) == [1, 2, 3, 4, 5]
+    }
+
+    do {
+      var array: [Int] = []
+      array.removeFirstElement(3)
+      expect(array) == []
+    }
+
+    do {
+      var array = [1, 3, 2, 3, 4, 5]
+      array.removeFirstElement(6)
+      expect(array) == [1, 3, 2, 3, 4, 5]
+    }
+
+    do {
+      var array = [1]
+      array.removeFirstElement(1)
+      expect(array) == []
+    }
   }
 
   func testFirstOfType() {

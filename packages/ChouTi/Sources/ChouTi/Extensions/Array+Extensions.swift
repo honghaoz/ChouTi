@@ -60,6 +60,25 @@ public extension Array where Element: Equatable {
     }
     return dropLast().allSatisfy { $0 == last }
   }
+
+  /// Returns a new array with the first specified element removed.
+  /// - Parameter element: The element to remove. Only the first equal element is removed.
+  /// - Returns: A new array.
+  func removingFirstElement(_ element: Element) -> Self {
+    var new = self
+    if let index = new.firstIndex(of: element) {
+      new.remove(at: index)
+    }
+    return new
+  }
+
+  /// Removes the first specified element from the array.
+  /// - Parameter element: The element to remove. Only the first equal element is removed.
+  mutating func removeFirstElement(_ element: Element) {
+    if let index = firstIndex(of: element) {
+      remove(at: index)
+    }
+  }
 }
 
 public extension Array {
