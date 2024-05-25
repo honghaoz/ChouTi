@@ -36,6 +36,7 @@ jobs:
       - name: Lint
         run: make lint
       - name: Create Pull Request
+        if: success() || failure()
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}

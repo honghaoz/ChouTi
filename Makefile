@@ -14,12 +14,11 @@ build: # Build the package.
 
 .PHONY: format
 format: # Format the code.
-	@bin/swiftformat .
-	@bin/swiftlint --autocorrect --config "$(REPO_ROOT)/.swiftlint.autocorrect.yml" --cache-path "$(REPO_ROOT)/.temp/swiftlint-cache"
+	@"$(REPO_ROOT)/scripts/format.sh" --all
 
 .PHONY: lint
 lint: # Lint the code.
-	@bin/swiftlint lint --cache-path "$(REPO_ROOT)/.temp/swiftlint-cache"
+	@"$(REPO_ROOT)/scripts/lint.sh" --all
 
 .PHONY: help
 help:
