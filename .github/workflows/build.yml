@@ -1,8 +1,6 @@
 name: build
 on:
   push:
-    branches:
-      - "**" # any branch
     branches-ignore:
       - "github-actions/**" # ignore github-actions branches
       - "dependabot/**" # ignore dependabot branches
