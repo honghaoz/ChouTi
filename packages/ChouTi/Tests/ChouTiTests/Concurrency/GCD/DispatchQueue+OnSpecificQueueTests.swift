@@ -21,30 +21,41 @@ final class DispatchQueue_OnSpecificQueueTests: XCTestCase {
         dispatchPrecondition(condition: .onQueue(self.queue))
         hasRun = true
       }
-      XCTAssertTrue(hasRun) // should run immediately
+      expect(hasRun) == true // should run immediately
     }
   }
 
   func testRunOnBackground() {
     var hasRun = false
-    print("DEBUG[\(#function)][\(Thread.current)][\(DispatchQueue.currentQueueLabel)] before async on shared queue")
     DispatchQueue.shared().async {
-      print("DEBUG[\(#function)][\(Thread.current)][\(DispatchQueue.currentQueueLabel)] before async on self queue")
       DispatchQueue.onQueueAsync(queue: self.queue) {
-        print("DEBUG[\(#function)][\(Thread.current)][\(DispatchQueue.currentQueueLabel)] on self queue")
         dispatchPrecondition(condition: .onQueue(self.queue))
         hasRun = true
-        print("DEBUG[\(#function)][\(Thread.current)][\(DispatchQueue.currentQueueLabel)] on self queue executed")
       }
-      print("DEBUG[\(#function)][\(Thread.current)][\(DispatchQueue.currentQueueLabel)] after async on self queue")
-      XCTAssertFalse(hasRun)
+      expect(hasRun) == false
     }
-    print("DEBUG[\(#function)][\(Thread.current)][\(DispatchQueue.currentQueueLabel)] after async on shared queue")
-    XCTAssertFalse(hasRun)
-    print("DEBUG[\(#function)][\(Thread.current)][\(DispatchQueue.currentQueueLabel)] before wait")
-    wait(timeout: 0.1)
-    print("DEBUG[\(#function)][\(Thread.current)][\(DispatchQueue.currentQueueLabel)] after wait")
-    XCTAssertTrue(hasRun)
+    expect(hasRun) == false
+    expect(hasRun).toEventually(beTrue())
+
+    // var hasRun = false
+    // print("DEBUG[\(#function)][\(Thread.current)][\(DispatchQueue.currentQueueLabel)] before async on shared queue")
+    // DispatchQueue.shared().async {
+    //   print("DEBUG[\(#function)][\(Thread.current)][\(DispatchQueue.currentQueueLabel)] before async on self queue")
+    //   DispatchQueue.onQueueAsync(queue: self.queue) {
+    //     print("DEBUG[\(#function)][\(Thread.current)][\(DispatchQueue.currentQueueLabel)] on self queue")
+    //     dispatchPrecondition(condition: .onQueue(self.queue))
+    //     hasRun = true
+    //     print("DEBUG[\(#function)][\(Thread.current)][\(DispatchQueue.currentQueueLabel)] on self queue executed")
+    //   }
+    //   print("DEBUG[\(#function)][\(Thread.current)][\(DispatchQueue.currentQueueLabel)] after async on self queue")
+    //   XCTAssertFalse(hasRun)
+    // }
+    // print("DEBUG[\(#function)][\(Thread.current)][\(DispatchQueue.currentQueueLabel)] after async on shared queue")
+    // XCTAssertFalse(hasRun)
+    // print("DEBUG[\(#function)][\(Thread.current)][\(DispatchQueue.currentQueueLabel)] before wait")
+    // wait(timeout: 0.1)
+    // print("DEBUG[\(#function)][\(Thread.current)][\(DispatchQueue.currentQueueLabel)] after wait")
+    // XCTAssertTrue(hasRun)
 
     // Local output:
     // DEBUG[testRunOnBackground()][<_NSMainThread: 0x600001710000>{number = 1, name = main}][com.apple.main-thread] before async on shared queue
@@ -73,9 +84,8 @@ final class DispatchQueue_OnSpecificQueueTests: XCTestCase {
       dispatchPrecondition(condition: .onQueue(self.queue))
       hasRun = true
     }
-    XCTAssertFalse(hasRun)
-    wait(timeout: 0.05)
-    XCTAssertTrue(hasRun)
+    expect(hasRun) == false
+    expect(hasRun).toEventually(beTrue())
   }
 
   func testRunOnQueueSync() {
@@ -85,7 +95,7 @@ final class DispatchQueue_OnSpecificQueueTests: XCTestCase {
         dispatchPrecondition(condition: .onQueue(self.queue))
         hasRun = true
       }
-      XCTAssertTrue(hasRun)
+      expect(hasRun) == true
     }
   }
 
