@@ -76,6 +76,15 @@ class SomeTests: XCTestCase {
 
     // any error
     expect(try expression()).to(throwAnError())
+    
+    // eventually
+    expect(expression).toEventually(beTrue())
+    expect(expression).toEventually(beEmpty())
+    expect(expression).toEventually(beEqual(to: 2))
+    expect(expression).toEventually(beIdentical(to: object))
+    
+    expect(expression).toEventuallyNot(beTrue())
+    expect(expression).toEventuallyNot(beEmpty())
   }
 }
 ```

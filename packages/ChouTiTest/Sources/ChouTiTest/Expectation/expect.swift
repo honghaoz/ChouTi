@@ -40,3 +40,14 @@ public func expect<T>(_ expression: @autoclosure () throws -> T?, _ description:
     return OptionalExpression(value: { fatalError("unexpected") }, thrownError: error, description: description, file: file, line: line)
   }
 }
+
+/// Make an expression to be used to evaluate by an expectation.
+/// - Parameters:
+///   - expression: An expression to be evaluated.
+///   - description: A human readable description of the expression.
+///   - file: The file where the failure occurs. The default is the filename of the test case where you call this function.
+///   - line: The line number where the failure occurs. The default is the line number where you call this function.
+/// - Returns: An expression.
+public func expect<T>(_ expression: @autoclosure @escaping () throws -> T, _ description: @autoclosure @escaping () -> String? = nil, file: StaticString = #filePath, line: UInt = #line) -> EscapingExpression<T> {
+  EscapingExpression(expression: expression, description: description, file: file, line: line)
+}
