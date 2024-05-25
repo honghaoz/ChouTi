@@ -75,7 +75,7 @@ class SomeTests: XCTestCase {
     expect(try expression()).to(throwErrorOfType(SomeError.self))
 
     // any error
-    expect(try expression()).to(throwSomeError())
+    expect(try expression()).to(throwAnError())
   }
 }
 ```

@@ -6,6 +6,7 @@
 //
 
 import XCTest
+import ChouTiTest
 
 /// Helper class to capture XCTFail messages
 class FailureCapturingTestCase: XCTestCase {
@@ -24,13 +25,13 @@ class FailureCapturingTestCase: XCTestCase {
 
   func assertFailure(expectedMessage: String, file: StaticString = #filePath, line: UInt = #line) {
     shouldRecord = true
-    XCTAssertEqual(failureMessage, expectedMessage, file: file, line: line)
+    expect(failureMessage ?? "", file: file, line: line) == expectedMessage
     shouldRecord = false
   }
 
   func assertFailureContains(expectedMessage: String, file: StaticString = #filePath, line: UInt = #line) {
     shouldRecord = true
-    XCTAssertTrue(failureMessage?.contains(expectedMessage) == true, file: file, line: line)
+    expect((failureMessage ?? "").contains(expectedMessage), file: file, line: line) == true
     shouldRecord = false
   }
 }

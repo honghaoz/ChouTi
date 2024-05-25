@@ -21,7 +21,7 @@ final class TypeAliasTests: XCTestCase {
   // Test BlockThrowsVoid
   func testBlockThrowsVoid() {
     let block: BlockThrowsVoid = {}
-    expect(try block()).toNot(throwSomeError())
+    expect(try block()).toNot(throwAnError())
   }
 
   // Test BlockAsyncVoid
@@ -56,7 +56,7 @@ final class TypeAliasTests: XCTestCase {
     let block: BlockThrowsBool = { parameter in
       result = parameter
     }
-    expect(try block(true)).toNot(throwSomeError())
+    expect(try block(true)).toNot(throwAnError())
     expect(result) == true
   }
 }

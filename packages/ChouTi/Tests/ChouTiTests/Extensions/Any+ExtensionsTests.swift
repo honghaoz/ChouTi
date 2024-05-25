@@ -50,12 +50,9 @@ class Any_ExtensionsTests: XCTestCase {
     }
     let object: Any = MyStruct(value: 1)
     var hasher = Hasher()
-    expect(try ChouTi.hash(object, into: &hasher))
-      .to(throwErrorOfType(HashAnyError.self))
-    expect(try ChouTi.hash(object, into: &hasher))
-      .to(throwErrorOfType(Swift.Error.self))
-    expect(try ChouTi.hash(object, into: &hasher))
-      .to(throwSomeError())
+    expect(try ChouTi.hash(object, into: &hasher)).to(throwErrorOfType(HashAnyError.self))
+    expect(try ChouTi.hash(object, into: &hasher)).to(throwErrorOfType(Swift.Error.self))
+    expect(try ChouTi.hash(object, into: &hasher)).to(throwAnError())
 
     do {
       try ChouTi.hash(object, into: &hasher)
@@ -113,8 +110,7 @@ class Any_ExtensionsTests: XCTestCase {
       let value: Int
     }
     let object: Any = MyStruct(value: 1)
-    expect(try ChouTi.hashValue(object))
-      .to(throwSomeError())
+    expect(try ChouTi.hashValue(object)).to(throwAnError())
   }
 
   func test_hashValue_hashableStruct() throws {

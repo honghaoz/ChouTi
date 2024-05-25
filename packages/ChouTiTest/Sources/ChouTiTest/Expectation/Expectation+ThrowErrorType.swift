@@ -35,9 +35,3 @@ public struct ThrowErrorTypeExpectation<E: Swift.Error>: Expectation {
 public func throwErrorOfType<E: Swift.Error>(_ error: E.Type) -> ThrowErrorTypeExpectation<E> {
   ThrowErrorTypeExpectation()
 }
-
-/// Make an expectation that the expression throws some error.
-/// - Returns: An expectation.
-public func throwSomeError() -> ThrowErrorTypeExpectation<Swift.Error> {
-  ThrowErrorTypeExpectation()
-}

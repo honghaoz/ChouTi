@@ -36,20 +36,16 @@ public struct OptionalExpression<T> {
   /// Evaluate the expression with an expectation.
   /// - Parameter expectation: The expectation to evaluate.
   public func to(_ expectation: some OptionalExpectation<T, Never>) {
-    if let thrownError {
+    guard thrownError == nil else {
+      fatalError("Impossible to throw error") // swiftlint:disable:this fatal_error
+    }
+
+    let value = value()
+    if !expectation.evaluate(value) {
       if let description = description() {
-        XCTFail("expression \"\(description)\" throws error: \(thrownError)", file: file, line: line)
+        XCTFail("expect \"\(description)\" (\"\(value ??? "nil")\") to \(expectation.description)", file: file, line: line)
       } else {
-        XCTFail("expression throws error: \(thrownError)", file: file, line: line)
-      }
-    } else {
-      let value = value()
-      if !expectation.evaluate(value) {
-        if let description = description() {
-          XCTFail("expect \"\(description)\" (\"\(value ??? "nil")\") to \(expectation.description)", file: file, line: line)
-        } else {
-          XCTFail("expect \"\(value ??? "nil")\" to \(expectation.description)", file: file, line: line)
-        }
+        XCTFail("expect \"\(value ??? "nil")\" to \(expectation.description)", file: file, line: line)
       }
     }
   }
@@ -59,20 +55,16 @@ public struct OptionalExpression<T> {
   /// Evaluate the expression to **not** meet the expectation.
   /// - Parameter expectation: The expectation to evaluate.
   public func toNot(_ expectation: some OptionalExpectation<T, Never>) {
-    if let thrownError {
+    guard thrownError == nil else {
+      fatalError("Impossible to throw error") // swiftlint:disable:this fatal_error
+    }
+
+    let value = value()
+    if expectation.evaluate(value) {
       if let description = description() {
-        XCTFail("expression \"\(description)\" throws error: \(thrownError)", file: file, line: line)
+        XCTFail("expect \"\(description)\" (\"\(value ??? "nil")\") to not \(expectation.description)", file: file, line: line)
       } else {
-        XCTFail("expression throws error: \(thrownError)", file: file, line: line)
-      }
-    } else {
-      let value = value()
-      if expectation.evaluate(value) {
-        if let description = description() {
-          XCTFail("expect \"\(description)\" (\"\(value ??? "nil")\") to not \(expectation.description)", file: file, line: line)
-        } else {
-          XCTFail("expect \"\(value ??? "nil")\" to not \(expectation.description)", file: file, line: line)
-        }
+        XCTFail("expect \"\(value ??? "nil")\" to not \(expectation.description)", file: file, line: line)
       }
     }
   }

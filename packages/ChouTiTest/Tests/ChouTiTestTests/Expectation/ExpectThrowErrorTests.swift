@@ -18,19 +18,28 @@ class ExpectThrowErrorTests: XCTestCase {
       case error2
     }
 
+    enum BarError: Swift.Error, Equatable {
+      case error1
+      case error2
+    }
+
     func noThrowErrorFunc() throws -> Int {
       1
     }
 
-    func throwError1Func() throws -> Int {
+    func throwFooError1Func() throws -> Int {
       throw FooError.error1
     }
 
-    expect(try throwError1Func()).to(throwError(FooError.error1))
-    expect(try throwError1Func()).toNot(throwError(FooError.error2))
+    expect(try throwFooError1Func()).to(throwError(FooError.error1))
+    expect(try throwFooError1Func()).toNot(throwError(FooError.error2))
+    expect(try throwFooError1Func()).toNot(throwError(BarError.error1))
+    expect(try throwFooError1Func()).toNot(throwError(BarError.error2))
 
     expect(try noThrowErrorFunc()).toNot(throwError(FooError.error1))
     expect(try noThrowErrorFunc()).toNot(throwError(FooError.error2))
+    expect(try noThrowErrorFunc()).toNot(throwError(BarError.error1))
+    expect(try noThrowErrorFunc()).toNot(throwError(BarError.error2))
   }
 
   func testThrowNonEquatableError() {
@@ -75,7 +84,7 @@ class ExpectThrowErrorTests: XCTestCase {
       case error2
     }
 
-    enum FooError2: Swift.Error {
+    enum BarError: Swift.Error {
       case error1
       case error2
     }
@@ -84,19 +93,21 @@ class ExpectThrowErrorTests: XCTestCase {
       1
     }
 
-    func throwError1Func() throws -> Int {
+    func throwFooError1Func() throws -> Int {
       throw FooError.error1
     }
 
-    expect(try throwError1Func()).to(throwErrorOfType(FooError.self))
-    expect(try throwError1Func()).toNot(throwErrorOfType(FooError2.self))
+    expect(try throwFooError1Func()).to(throwErrorOfType(FooError.self))
+    expect(try throwFooError1Func()).to(throwErrorOfType(Swift.Error.self))
+    expect(try throwFooError1Func()).toNot(throwErrorOfType(BarError.self))
 
-    expect(try throwError1Func()).toNot(throwErrorOfType(FooError2.self))
     expect(try noThrowErrorFunc()).toNot(throwErrorOfType(FooError.self))
+    expect(try noThrowErrorFunc()).toNot(throwErrorOfType(BarError.self))
+    expect(try noThrowErrorFunc()).toNot(throwErrorOfType(Swift.Error.self))
   }
 
-  func testThrowSomeError() {
-    enum SomeError: Swift.Error, Equatable {
+  func testThrowAnError() {
+    enum FooError: Swift.Error, Equatable {
       case error
     }
 
@@ -104,11 +115,11 @@ class ExpectThrowErrorTests: XCTestCase {
       1
     }
 
-    func throwError1Func() throws -> Int {
-      throw SomeError.error
+    func throwFooError1Func() throws -> Int {
+      throw FooError.error
     }
 
-    expect(try throwError1Func()).to(throwSomeError())
-    expect(try noThrowErrorFunc()).toNot(throwSomeError())
+    expect(try throwFooError1Func()).to(throwAnError())
+    expect(try noThrowErrorFunc()).toNot(throwAnError())
   }
 }

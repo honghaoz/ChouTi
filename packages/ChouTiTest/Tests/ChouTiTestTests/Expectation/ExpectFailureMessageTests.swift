@@ -74,27 +74,305 @@ class ExpectFailureMessageTests: FailureCapturingTestCase {
     assertFailure(expectedMessage: expectedMessage)
   }
 
-  func testThrow() {
+  // MARK: - Throw Error
+
+  func testThrowEquatableError() {
+    enum FooError: Swift.Error {
+      case error1
+      case error2
+    }
+
+    enum BarError: Swift.Error {
+      case error1
+      case error2
+    }
+
+    do {
+      func noThrowErrorFunc() throws -> Int {
+        1
+      }
+
+      let expectedMessage = #"failed - expect to throw an error"#
+      expect(try noThrowErrorFunc()).to(throwError(FooError.error1))
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      func throwFooError1Func() throws -> Int {
+        throw FooError.error1
+      }
+
+      let expectedMessage = #"failed - expect "error1" to be "error2""#
+      expect(try throwFooError1Func()).to(throwError(FooError.error2))
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      func throwFooError1Func() throws -> Int {
+        throw FooError.error1
+      }
+
+      let expectedMessage = #"failed - expect "error1" to be a type of "BarError""#
+      expect(try throwFooError1Func()).to(throwError(BarError.error1))
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
+  func testThrowEquatableError_withDescription() {
+    enum FooError: Swift.Error {
+      case error1
+      case error2
+    }
+
+    enum BarError: Swift.Error {
+      case error1
+      case error2
+    }
+
+    do {
+      func noThrowErrorFunc() throws -> Int {
+        1
+      }
+
+      let expectedMessage = #"failed - expect "noThrowErrorFunc" to throw an error"#
+      expect(try noThrowErrorFunc(), "noThrowErrorFunc").to(throwError(FooError.error1))
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      func throwFooError1Func() throws -> Int {
+        throw FooError.error1
+      }
+
+      let expectedMessage = #"failed - expect "throwFooError1Func"'s thrown error ("error1") to be "error2""#
+      expect(try throwFooError1Func(), "throwFooError1Func").to(throwError(FooError.error2))
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      func throwFooError1Func() throws -> Int {
+        throw FooError.error1
+      }
+
+      let expectedMessage = #"failed - expect "throwFooError1Func"'s thrown error ("error1") to be a type of "BarError""#
+      expect(try throwFooError1Func(), "throwFooError1Func").to(throwError(BarError.error1))
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
+  func testThrowNonEquatableError() {
+    enum FooError: Swift.Error {
+      case error1(String)
+      case error2(String)
+    }
+
+    func throwError1Func() throws -> Int {
+      throw FooError.error1("foo")
+    }
+
+    let expectedMessage = #"failed - expect "error1("foo")" to be "error2("foo")""#
+    expect(try throwError1Func()).to(throwError(FooError.error2("foo"), isErrorMatched: { _, _ in false }))
+    assertFailure(expectedMessage: expectedMessage)
+  }
+
+  func testThrowNonEquatableError_withDescription() {
+    enum FooError: Swift.Error {
+      case error1(String)
+      case error2(String)
+    }
+
+    func throwError1Func() throws -> Int {
+      throw FooError.error1("foo")
+    }
+
+    let expectedMessage = #"failed - expect "ThrowErrorFunc"'s thrown error ("error1("foo")") to be "error2("foo")""#
+    expect(try throwError1Func(), "ThrowErrorFunc").to(throwError(FooError.error2("foo"), isErrorMatched: { _, _ in false }))
+    assertFailure(expectedMessage: expectedMessage)
+  }
+
+  func testThrowErrorType() {
+    enum FooError: Swift.Error {
+      case error1
+      case error2
+    }
+
+    enum FooError2: Swift.Error {
+      case error1
+      case error2
+    }
+
+    do {
+      func noThrowErrorFunc() throws -> Int {
+        1
+      }
+
+      let expectedMessage = #"failed - expect to throw an error"#
+      expect(try noThrowErrorFunc()).to(throwErrorOfType(FooError.self))
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      func throwError1Func() throws -> Int {
+        throw FooError.error1
+      }
+
+      let expectedMessage = #"failed - expect "error1" to be a type of "FooError2""#
+      expect(try throwError1Func()).to(throwErrorOfType(FooError2.self))
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
+  func testThrowErrorType_withDescription() {
+    enum FooError: Swift.Error {
+      case error1
+      case error2
+    }
+
+    enum FooError2: Swift.Error {
+      case error1
+      case error2
+    }
+
+    do {
+      func noThrowErrorFunc() throws -> Int {
+        1
+      }
+
+      let expectedMessage = #"failed - expect "noThrowErrorFunc" to throw an error"#
+      expect(try noThrowErrorFunc(), "noThrowErrorFunc").to(throwErrorOfType(FooError.self))
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      func throwError1Func() throws -> Int {
+        throw FooError.error1
+      }
+
+      let expectedMessage = #"failed - expect "ThrowErrorFunc"'s thrown error ("error1") to be a type of "FooError2""#
+      expect(try throwError1Func(), "ThrowErrorFunc").to(throwErrorOfType(FooError2.self))
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
+  func testThrowAnError() {
     func noThrowErrorFunc() throws -> Int {
       1
     }
 
     let expectedMessage = "failed - expect to throw an error"
-    expect(try noThrowErrorFunc()).to(throwSomeError())
+    expect(try noThrowErrorFunc()).to(throwAnError())
     assertFailure(expectedMessage: expectedMessage)
   }
 
-  func testThrow_withDescription() {
+  func testThrowAnError_withDescription() {
     func noThrowErrorFunc() throws -> Int {
       1
     }
 
     let expectedMessage = "failed - expect \"noThrowFunc\" to throw an error"
-    expect(try noThrowErrorFunc(), "noThrowFunc").to(throwSomeError())
+    expect(try noThrowErrorFunc(), "noThrowFunc").to(throwAnError())
     assertFailure(expectedMessage: expectedMessage)
   }
 
-  func testNotThrow() {
+  // MARK: - Not Throw Error
+
+  func testNotThrowEquatableError() {
+    enum FooError: Swift.Error {
+      case error1
+      case error2
+    }
+
+    enum BarError: Swift.Error {
+      case error1
+      case error2
+    }
+
+    func throwFooError1Func() throws -> Int {
+      throw FooError.error1
+    }
+
+    do {
+      let expectedMessage = #"failed - expect "error1" to not be "error1""#
+      expect(try throwFooError1Func()).toNot(throwError(FooError.error1))
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
+  func testNotThrowEquatableError_withDescription() {
+    enum FooError: Swift.Error {
+      case error1
+      case error2
+    }
+
+    enum BarError: Swift.Error {
+      case error1
+      case error2
+    }
+
+    func throwFooError1Func() throws -> Int {
+      throw FooError.error1
+    }
+
+    let expectedMessage = #"failed - expect "throwFooError1Func"'s thrown error ("error1") to not be "error1""#
+    expect(try throwFooError1Func(), "throwFooError1Func").toNot(throwError(FooError.error1))
+    assertFailure(expectedMessage: expectedMessage)
+  }
+
+  func testNotThrowErrorType() {
+    enum FooError: Swift.Error {
+      case error1
+      case error2
+    }
+
+    do {
+      func noThrowErrorFunc() throws -> Int {
+        1
+      }
+
+      let expectedMessage = #"failed - expect to throw an error"#
+      expect(try noThrowErrorFunc()).to(throwErrorOfType(FooError.self))
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      func throwFooError1Func() throws -> Int {
+        throw FooError.error1
+      }
+
+      let expectedMessage = #"failed - expect "error1" to not be a type of "FooError""#
+      expect(try throwFooError1Func()).toNot(throwErrorOfType(FooError.self))
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
+  func testNotThrowErrorType_withDescription() {
+    enum FooError: Swift.Error {
+      case error1
+      case error2
+    }
+
+    do {
+      func noThrowErrorFunc() throws -> Int {
+        1
+      }
+
+      let expectedMessage = #"failed - expect "noThrowErrorFunc" to throw an error"#
+      expect(try noThrowErrorFunc(), "noThrowErrorFunc").to(throwErrorOfType(FooError.self))
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      func throwFooError1Func() throws -> Int {
+        throw FooError.error1
+      }
+
+      let expectedMessage = #"failed - expect "throwFooError1Func"'s thrown error ("error1") to not be a type of "FooError""#
+      expect(try throwFooError1Func(), "throwFooError1Func").toNot(throwErrorOfType(FooError.self))
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
+  func testNotThrowAnError() {
     enum FooError: Swift.Error {
       case error1
       case error2
@@ -104,12 +382,12 @@ class ExpectFailureMessageTests: FailureCapturingTestCase {
       throw FooError.error1
     }
 
-    let expectedMessage = "failed - expect \"error1\" to not be a type of \"Error\""
-    expect(try throwError1Func()).toNot(throwSomeError())
+    let expectedMessage = "failed - expect to not throw an error, but got: error1"
+    expect(try throwError1Func()).toNot(throwAnError())
     assertFailure(expectedMessage: expectedMessage)
   }
 
-  func testNotThrow_withDescription() {
+  func testNotThrowAnError_withDescription() {
     enum FooError: Swift.Error {
       case error1
       case error2
@@ -119,8 +397,8 @@ class ExpectFailureMessageTests: FailureCapturingTestCase {
       throw FooError.error1
     }
 
-    let expectedMessage = "failed - expect \"ThrowErrorFunc\" error (\"error1\") to not be a type of \"Error\""
-    expect(try throwError1Func(), "ThrowErrorFunc").toNot(throwSomeError())
+    let expectedMessage = #"failed - expect "ThrowErrorFunc" to not throw an error, but got: error1"#
+    expect(try throwError1Func(), "ThrowErrorFunc").toNot(throwAnError())
     assertFailure(expectedMessage: expectedMessage)
   }
 
