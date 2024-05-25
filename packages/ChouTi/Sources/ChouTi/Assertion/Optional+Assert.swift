@@ -28,7 +28,7 @@ public extension Optional {
       }
       return self
     }
-    return unwrapped
+    return   unwrapped
     #else
     return self
     #endif
