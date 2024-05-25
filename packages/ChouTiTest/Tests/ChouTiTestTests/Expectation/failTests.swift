@@ -8,7 +8,7 @@
 import XCTest
 import ChouTiTest
 
-class FailTests: FailureCapturingTestCase {
+class failTests: FailureCapturingTestCase {
 
   func test() {
     let expectedMessage = "Test failure message"

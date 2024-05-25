@@ -1,5 +1,5 @@
 //
-//  FailedExpectationTests.swift
+//  ExpectFailureMessageTests.swift
 //
 //  Created by Honghao Zhang on 5/19/24.
 //  Copyright © 2024 ChouTi. All rights reserved.
@@ -10,7 +10,9 @@ import XCTest
 
 import Foundation
 
-class FailedExpectationTests: FailureCapturingTestCase {
+class ExpectFailureMessageTests: FailureCapturingTestCase {
+
+  // MARK: - Non Optional
 
   func testEmpty() {
     let expectedMessage = "failed - expect \"[1]\" to be empty"
@@ -72,48 +74,6 @@ class FailedExpectationTests: FailureCapturingTestCase {
     assertFailure(expectedMessage: expectedMessage)
   }
 
-  func testNil() {
-    let expectedMessage = "failed - expect \"1\" to be nil"
-    expect(Optional(1)) == nil
-    assertFailure(expectedMessage: expectedMessage)
-  }
-
-  func testNil_withDescription() {
-    let expectedMessage = "failed - expect \"Number\" (\"1\") to be nil"
-    expect(Optional(1), "Number") == nil
-    assertFailure(expectedMessage: expectedMessage)
-  }
-
-  func testNotNil() {
-    let expectedMessage = "failed - expect \"nil\" to not be nil"
-    expect(nil as Int?) != nil
-    assertFailure(expectedMessage: expectedMessage)
-  }
-
-  func testNotNil_withDescription() {
-    let expectedMessage = "failed - expect \"Number\" (\"nil\") to not be nil"
-    expect(nil as Int?, "Number") != nil
-    assertFailure(expectedMessage: expectedMessage)
-  }
-
-  func testUnwrap_noDescription() {
-    let expectedMessage = "failed - expect a non-nil value of type Int"
-    do {
-      _ = try (nil as Int?).unwrap()
-    } catch {
-      assertFailure(expectedMessage: expectedMessage)
-    }
-  }
-
-  func testUnwrap_withDescription() {
-    let expectedMessage = "failed - expect a non-nil value of \"Number\" (Int)"
-    do {
-      _ = try (nil as Int?).unwrap(description: "Number")
-    } catch {
-      assertFailure(expectedMessage: expectedMessage)
-    }
-  }
-
   func testThrow() {
     func noThrowErrorFunc() throws -> Int {
       1
@@ -162,5 +122,51 @@ class FailedExpectationTests: FailureCapturingTestCase {
     let expectedMessage = "failed - expect \"ThrowErrorFunc\" error (\"error1\") to not be a type of \"Error\""
     expect(try throwError1Func(), "ThrowErrorFunc").toNot(throwSomeError())
     assertFailure(expectedMessage: expectedMessage)
+  }
+
+  // MARK: - Optional
+
+  func testNil() {
+    let expectedMessage = "failed - expect \"1\" to be nil"
+    expect(Optional(1)) == nil
+    assertFailure(expectedMessage: expectedMessage)
+  }
+
+  func testNil_withDescription() {
+    let expectedMessage = "failed - expect \"Number\" (\"1\") to be nil"
+    expect(Optional(1), "Number") == nil
+    assertFailure(expectedMessage: expectedMessage)
+  }
+
+  func testNotNil() {
+    let expectedMessage = "failed - expect \"nil\" to not be nil"
+    expect(nil as Int?) != nil
+    assertFailure(expectedMessage: expectedMessage)
+  }
+
+  func testNotNil_withDescription() {
+    let expectedMessage = "failed - expect \"Number\" (\"nil\") to not be nil"
+    expect(nil as Int?, "Number") != nil
+    assertFailure(expectedMessage: expectedMessage)
+  }
+
+  // MARK: - Unwrap
+
+  func testUnwrap_noDescription() {
+    let expectedMessage = "failed - expect a non-nil value of type Int"
+    do {
+      _ = try (nil as Int?).unwrap()
+    } catch {
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
+  func testUnwrap_withDescription() {
+    let expectedMessage = "failed - expect a non-nil value of \"Number\" (Int)"
+    do {
+      _ = try (nil as Int?).unwrap(description: "Number")
+    } catch {
+      assertFailure(expectedMessage: expectedMessage)
+    }
   }
 }

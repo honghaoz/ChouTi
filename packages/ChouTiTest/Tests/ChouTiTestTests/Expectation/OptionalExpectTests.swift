@@ -1,5 +1,5 @@
 //
-//  OptionalExpectationTests.swift
+//  OptionalExpectTests.swift
 //
 //  Created by Honghao Zhang on 11/12/23.
 //  Copyright © 2024 ChouTi. All rights reserved.
@@ -10,7 +10,7 @@ import XCTest
 
 import Foundation
 
-class OptionalExpectationTests: XCTestCase {
+class OptionalExpectTests: XCTestCase {
 
   func testBeNil() {
     let validValue: Int? = 1
@@ -53,52 +53,5 @@ class OptionalExpectationTests: XCTestCase {
 
     expect((beIdentical(to: foo1) as BeIdenticalOptionalExpectation<Foo>).description) == "be identical to \"Foo(1)\""
     expect((beIdentical(to: nilValue) as BeIdenticalOptionalExpectation<Foo>).description) == "be identical to nil"
-  }
-
-  func testThrowError() {
-    enum FooError: Swift.Error, Equatable {
-      case error1
-      case error2
-    }
-
-    func noThrowErrorFunc() throws -> Int? {
-      1
-    }
-
-    func throwError1Func() throws -> Int? {
-      throw FooError.error1
-    }
-
-    expect(try throwError1Func()).to(throwError(FooError.error1))
-    expect(try throwError1Func()).toNot(throwError(FooError.error2))
-
-    expect(try noThrowErrorFunc()).toNot(throwError(FooError.error1))
-    expect(try noThrowErrorFunc()).toNot(throwError(FooError.error2))
-  }
-
-  func testThrowErrorType() {
-    enum FooError: Swift.Error {
-      case error1
-      case error2
-    }
-
-    enum FooError2: Swift.Error {
-      case error1
-      case error2
-    }
-
-    func noThrowErrorFunc() throws -> Int? {
-      1
-    }
-
-    func throwError1Func() throws -> Int? {
-      throw FooError.error1
-    }
-
-    expect(try throwError1Func()).to(throwErrorOfType(FooError.self))
-    expect(try throwError1Func()).toNot(throwErrorOfType(FooError2.self))
-
-    expect(try throwError1Func()).toNot(throwErrorOfType(FooError2.self))
-    expect(try noThrowErrorFunc()).toNot(throwErrorOfType(FooError.self))
   }
 }
