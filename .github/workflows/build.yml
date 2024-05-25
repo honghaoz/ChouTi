@@ -3,6 +3,9 @@ on:
   push:
     branches:
       - "**" # any branch
+    branches-ignore:
+      - "github-actions/**" # ignore github-actions branches
+      - "dependabot/**" # ignore dependabot branches
   pull_request: # any pull request against any branch
   workflow_dispatch: # manual trigger to run workflow
   schedule:
