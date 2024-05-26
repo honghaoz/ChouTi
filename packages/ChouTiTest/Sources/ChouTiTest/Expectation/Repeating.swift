@@ -7,27 +7,6 @@
 
 import Foundation
 
-/// A token for a repeating task.
-protocol RepeatingTokenType: AnyObject {
-
-  /// Whether the repeating task is stopped.
-  var isStopped: Bool { get }
-
-  /// Stops the repeating task.
-  func stop()
-}
-
-/// A `RepeatingTokenType` implementation.
-private class RepeatingToken: RepeatingTokenType {
-
-  fileprivate var isStopped: Bool = false
-
-  fileprivate func stop() {
-    assert(!isStopped, "Repeating task is already stopped.")
-    isStopped = true
-  }
-}
-
 /// Repeats a block of code at a specified interval on a specified queue.
 /// - Parameters:
 ///   - interval: The interval at which to repeat the block.
@@ -35,22 +14,17 @@ private class RepeatingToken: RepeatingTokenType {
 ///   - queue: The queue on which to repeat the block.
 ///   - block: The block to repeat.
 /// - Returns: A token that can be used to stop the repeating task.
-@discardableResult
 func repeating(interval: TimeInterval,
                timeout: TimeInterval = .greatestFiniteMagnitude,
                queue: DispatchQueue = .main,
-               block: @escaping (Int) -> Bool) -> RepeatingTokenType
+               block: @escaping (Int) -> Bool)
 {
-  precondition(interval > 0, "interval must be > 0.")
-  precondition(timeout >= 0, "Timeout must be >= 0, not \(timeout)")
+  precondition(interval > 0, "interval must be greater than 0.")
+  precondition(timeout > interval, "timeout must be greater than interval.")
 
-  let token = RepeatingToken()
   var loopCount = 0
 
   func invoke() {
-    guard !token.isStopped else {
-      return
-    }
     if Double(loopCount) * interval > timeout {
       return
     }
@@ -67,6 +41,4 @@ func repeating(interval: TimeInterval,
   queue.async {
     invoke()
   }
-
-  return token
 }

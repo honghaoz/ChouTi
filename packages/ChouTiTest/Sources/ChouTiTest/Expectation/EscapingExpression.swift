@@ -35,10 +35,13 @@ public struct EscapingExpression<T> {
   ///   - interval: The repeating interval to evaluate the expression. Default is 0.01 seconds.
   ///   - timeout: The timeout to stop evaluating the expression. Default is 3 seconds.
   public func toEventually(_ expectation: some Expectation<T, Never>, interval: TimeInterval = 0.01, timeout: TimeInterval = 3) {
+  precondition(interval > 0, "interval must be greater than 0.")
+  precondition(timeout > interval, "timeout must be greater than interval.")
+
     let testExpectation = XCTestExpectation()
     var lastValue: T?
     var thrownError: Error?
-    let token = repeating(interval: interval, timeout: timeout, queue: .main) { _ in
+    repeating(interval: interval, timeout: timeout, queue: .main) { _ in
       do {
         let value = try expression()
         if expectation.evaluate(value) {
@@ -55,7 +58,6 @@ public struct EscapingExpression<T> {
     }
 
     let result = XCTWaiter.wait(for: [testExpectation], timeout: timeout)
-    token.stop()
 
     if let thrownError {
       if let description = description() {
@@ -80,6 +82,9 @@ public struct EscapingExpression<T> {
     }
   }
 
+  // TODO: support throw error expectation
+  // TODO: support throw error type expectation
+
   // MARK: - To Not
 
   /// Evaluate the expression with an expectation repeatedly until the expectation is **not** satisfied or timeout.
@@ -88,10 +93,13 @@ public struct EscapingExpression<T> {
   ///   - interval: The repeating interval to evaluate the expression. Default is 0.01 seconds.
   ///   - timeout: The timeout to stop evaluating the expression. Default is 3 seconds.
   public func toEventuallyNot(_ expectation: some Expectation<T, Never>, interval: TimeInterval = 0.01, timeout: TimeInterval = 3) {
+      precondition(interval > 0, "interval must be greater than 0.")
+  precondition(timeout > interval, "timeout must be greater than interval.")
+
     let testExpectation = XCTestExpectation()
     var lastValue: T?
     var thrownError: Error?
-    let token = repeating(interval: interval, timeout: timeout, queue: .main) { _ in
+    repeating(interval: interval, timeout: timeout, queue: .main) { _ in
       do {
         let value = try expression()
         if !expectation.evaluate(value) {
@@ -108,7 +116,6 @@ public struct EscapingExpression<T> {
     }
 
     let result = XCTWaiter.wait(for: [testExpectation], timeout: timeout)
-    token.stop()
 
     if let thrownError {
       if let description = description() {
