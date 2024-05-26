@@ -85,6 +85,14 @@ awk -v SUPPORT_COLOR=$SUPPORT_COLOR -v IS_GITHUB_ACTIONS="$IS_GITHUB_ACTIONS" -v
       print $0
     }
   }
+  # for "0/120 files formatted."
+  else if ($0 ~ /^[0-9]+\/[0-9]+ files formatted\.$/) {
+    if (IS_GITHUB_ACTIONS == 1) {
+      print ANNOTATION_PREFIX "notice::" $0
+    } else {
+      print $0
+    }
+  }
   else {
     count = split($0, array, ":")
     if (count > 4) {

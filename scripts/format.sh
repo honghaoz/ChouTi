@@ -67,7 +67,7 @@ if [[ "$FORMAT_ALL" == "true" ]]; then
   echo "➡️  Executing swiftformat..."
   start_time="$(perl -MTime::HiRes=time -e 'printf "%.9f\n", time')" # track start time
 
-  command "$REPO_ROOT/bin/swiftformat" --baseconfig "$REPO_ROOT/configs/.swiftformat" --cache "$REPO_ROOT/.temp/swiftformat-cache" "$REPO_ROOT"
+  command "$REPO_ROOT/bin/swiftformat" --baseconfig "$REPO_ROOT/configs/.swiftformat" --cache "$REPO_ROOT/.temp/swiftformat-cache" "$REPO_ROOT" 2>&1 | "$REPO_ROOT/scripts/swiftformat-beautify"
 
   end_time="$(perl -MTime::HiRes=time -e 'printf "%.9f\n", time')" # track end time
   time_diff=$(echo "$end_time - $start_time" | bc) # calculate time difference
