@@ -231,7 +231,7 @@ class OrderedDictionaryTests: XCTestCase {
     XCTAssertEqual(dict[2].1, 2)
     XCTAssertEqual(dict.count, 3)
 
-    var newDict = dict!
+    var newDict = dict! // swiftlint:disable:this force_unwrapping
     newDict.insert(value: 4, forKey: "apple", atIndex: 2)
     XCTAssertEqual(newDict["apple"], 4)
     XCTAssertEqual(newDict[0].0, "orange")
@@ -242,7 +242,7 @@ class OrderedDictionaryTests: XCTestCase {
     XCTAssertEqual(newDict[2].1, 4)
     XCTAssertEqual(newDict.count, 3)
 
-    newDict = dict!
+    newDict = dict! // swiftlint:disable:this force_unwrapping
     newDict.insert(value: 4, forKey: "apple", atIndex: 3)
     XCTAssertEqual(newDict["apple"], 4)
     XCTAssertEqual(newDict[0].0, "orange")
@@ -253,7 +253,7 @@ class OrderedDictionaryTests: XCTestCase {
     XCTAssertEqual(newDict[2].1, 4)
     XCTAssertEqual(newDict.count, 3)
 
-    newDict = dict!
+    newDict = dict! // swiftlint:disable:this force_unwrapping
     newDict.insert(value: 4, forKey: "apple", atIndex: 1)
     XCTAssertEqual(newDict["apple"], 4)
     XCTAssertEqual(newDict[0].0, "orange")

@@ -37,7 +37,7 @@ class TypeNameTests: XCTestCase {
 
     func foo<M: FooType>() -> M {
       XCTAssertFalse(isArrayType(M.self))
-      return 2 as! M
+      return 2 as! M // swiftlint:disable:this force_cast
     }
 
     let dummy: Int = foo()
@@ -48,7 +48,7 @@ class TypeNameTests: XCTestCase {
 
     func foo<M: FooType>() -> M {
       XCTAssertTrue(isArrayType(M.self))
-      return [2] as! M
+      return [2] as! M // swiftlint:disable:this force_cast
     }
 
     let dummy: [Int] = foo()
@@ -59,7 +59,7 @@ class TypeNameTests: XCTestCase {
 
     func foo<M: FooType>() -> M {
       XCTAssertTrue(isSetType(M.self))
-      return Set([2]) as! M
+      return Set([2]) as! M // swiftlint:disable:this force_cast
     }
 
     let dummy: Set<Int> = foo()
@@ -70,7 +70,7 @@ class TypeNameTests: XCTestCase {
 
     func foo<M: FooType>() -> M {
       XCTAssertTrue(isDictionaryType(M.self))
-      return [2: "a"] as! M
+      return [2: "a"] as! M // swiftlint:disable:this force_cast
     }
 
     let dummy: [Int: String] = foo()

@@ -299,6 +299,6 @@ final class PerformanceMeasurerTests: XCTestCase {
     let data = pipe.fileHandleForReading.readDataToEndOfFile()
     pipe.fileHandleForReading.closeFile()
 
-    return String(data: data, encoding: .utf8) ?? ""
+    return String(decoding: data, as: UTF8.self)
   }
 }
