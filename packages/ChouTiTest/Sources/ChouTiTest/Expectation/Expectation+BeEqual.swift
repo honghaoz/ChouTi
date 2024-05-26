@@ -19,7 +19,11 @@ public struct BeEqualExpectation<T: Equatable>: Expectation {
   }
 
   public var description: String {
-    "be equal to \"\(value)\""
+    if let optionalValue = value as? OptionalProtocol {
+      return "be equal to \"\(optionalValue.wrappedValueDescription)\""
+    } else {
+      return "be equal to \"\(value)\""
+    }
   }
 }
 

@@ -19,7 +19,11 @@ public struct BeIdenticalExpectation<T: AnyObject>: Expectation {
   }
 
   public var description: String {
-    "be identical to \"\(value)\""
+    if let optionalValue = value as? OptionalProtocol {
+      return "be identical to \"\(optionalValue.wrappedValueDescription)\""
+    } else {
+      return "be identical to \"\(value)\""
+    }
   }
 }
 

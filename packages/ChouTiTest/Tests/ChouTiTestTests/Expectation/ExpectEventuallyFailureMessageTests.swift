@@ -47,13 +47,20 @@ class ExpectEventuallyFailureMessageTests: FailureCapturingTestCase {
   }
 
   func testEventuallyEqualTimeout() {
-    func calculate() -> Int {
-      return 1
-    }
+    do {
+      func calculate() -> Int {
+        return 1
+      }
 
-    expect(calculate()).toEventually(beEqual(to: 2), timeout: 0.05)
-    let expectedMessage = "failed - expect \"1\" to be equal to \"2\" eventually"
-    assertFailure(expectedMessage: expectedMessage)
+      expect(calculate()).toEventually(beEqual(to: 2), timeout: 0.05)
+      let expectedMessage = #"failed - expect "1" to be equal to "2" eventually"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+    do {
+      expect(nil).toEventually(beEqual(to: 2), timeout: 0.05)
+      let expectedMessage = #"failed - expect "nil" to be equal to "2" eventually"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
   }
 
   func testEventuallyEqualTimeout_withDescription() {

@@ -40,7 +40,6 @@ public struct EscapingExpression<T> {
 
     let testExpectation = XCTestExpectation()
     var lastValue: T?
-    var thrownError: Error?
     repeating(interval: interval, timeout: timeout, queue: .main) { _ in
       do {
         let value = try expression()
@@ -52,21 +51,11 @@ public struct EscapingExpression<T> {
         lastValue = value
         return false
       } catch {
-        thrownError = error
-        return true
+        fatalError("Impossible to throw error") // swiftlint:disable:this fatal_error
       }
     }
 
     let result = XCTWaiter.wait(for: [testExpectation], timeout: timeout)
-
-    if let thrownError {
-      if let description = description() {
-        XCTFail("expression \"\(description)\" throws error: \(thrownError)", file: file, line: line)
-      } else {
-        XCTFail("expression throws error: \(thrownError)", file: file, line: line)
-      }
-      return
-    }
 
     switch result {
     case .completed:
@@ -98,7 +87,6 @@ public struct EscapingExpression<T> {
 
     let testExpectation = XCTestExpectation()
     var lastValue: T?
-    var thrownError: Error?
     repeating(interval: interval, timeout: timeout, queue: .main) { _ in
       do {
         let value = try expression()
@@ -110,21 +98,11 @@ public struct EscapingExpression<T> {
         lastValue = value
         return false
       } catch {
-        thrownError = error
-        return true
+        fatalError("Impossible to throw error") // swiftlint:disable:this fatal_error
       }
     }
 
     let result = XCTWaiter.wait(for: [testExpectation], timeout: timeout)
-
-    if let thrownError {
-      if let description = description() {
-        XCTFail("expression \"\(description)\" throws error: \(thrownError)", file: file, line: line)
-      } else {
-        XCTFail("expression throws error: \(thrownError)", file: file, line: line)
-      }
-      return
-    }
 
     switch result {
     case .completed:
