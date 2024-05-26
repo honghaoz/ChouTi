@@ -47,12 +47,17 @@ if [[ -t 1 ]]; then
   SUPPORT_COLOR=1
 fi
 
+# On GitHub Actions, GITHUB_ACTIONS is set to "true"
+# GITHUB_ACTIONS=true
+
+IS_GITHUB_ACTIONS=0
 GITHUB_ACTIONS_ANNOTATION_PREFIX=""
 if [[ -n "$GITHUB_ACTIONS" ]]; then
   GITHUB_ACTIONS_ANNOTATION_PREFIX="::"
+  IS_GITHUB_ACTIONS=1
 fi
 
-awk -v SUPPORT_COLOR=$SUPPORT_COLOR -v GITHUB_ACTIONS="$GITHUB_ACTIONS" -v ANNOTATION_PREFIX="$GITHUB_ACTIONS_ANNOTATION_PREFIX" -v RED="$RED" -v GREEN="$GREEN" -v YELLOW="$YELLOW" -v RESET="$RESET" \
+awk -v SUPPORT_COLOR=$SUPPORT_COLOR -v IS_GITHUB_ACTIONS="$IS_GITHUB_ACTIONS" -v ANNOTATION_PREFIX="$GITHUB_ACTIONS_ANNOTATION_PREFIX" -v RED="$RED" -v GREEN="$GREEN" -v YELLOW="$YELLOW" -v RESET="$RESET" \
 '
 {
   # strip out lines like: "Linting 'PreferencesWindow.swift' (486/648)"
@@ -67,7 +72,9 @@ awk -v SUPPORT_COLOR=$SUPPORT_COLOR -v GITHUB_ACTIONS="$GITHUB_ACTIONS" -v ANNOT
   else if ($0 ~ /Done linting/) {
     if ($4 == "0") {
       # no issues
-      if (SUPPORT_COLOR == 1) {
+      if (IS_GITHUB_ACTIONS == 1) {
+        print ANNOTATION_PREFIX "notice::" $0
+      } else if (SUPPORT_COLOR == 1) {
         print GREEN $0 RESET
       } else {
         print $0
@@ -75,14 +82,18 @@ awk -v SUPPORT_COLOR=$SUPPORT_COLOR -v GITHUB_ACTIONS="$GITHUB_ACTIONS" -v ANNOT
     } else {
       if ($6 == "0") {
         # no serious issues, print in yellow
-        if (SUPPORT_COLOR == 1) {
+        if (IS_GITHUB_ACTIONS == 1) {
+          print ANNOTATION_PREFIX "warning::" $0
+        } else if (SUPPORT_COLOR == 1) {
           print YELLOW $0 RESET
         } else {
           print $0
         }
       } else {
         # has serious issues, print in red
-        if (SUPPORT_COLOR == 1) {
+        if (IS_GITHUB_ACTIONS == 1) {
+          print ANNOTATION_PREFIX "error::" $0
+        } else if (SUPPORT_COLOR == 1) {
           print RED $0 RESET
         } else {
           print $0
@@ -91,21 +102,27 @@ awk -v SUPPORT_COLOR=$SUPPORT_COLOR -v GITHUB_ACTIONS="$GITHUB_ACTIONS" -v ANNOT
     }
   }
   else if ($0 ~ /Done correcting/) {
-    if (SUPPORT_COLOR == 1) {
+    if (IS_GITHUB_ACTIONS == 1) {
+      print ANNOTATION_PREFIX "notice::" $0
+    } else if (SUPPORT_COLOR == 1) {
       print GREEN $0 RESET
     } else {
       print $0
     }
   }
   else if ($0 ~ /Done inspecting/) {
-    if (SUPPORT_COLOR == 1) {
+    if (IS_GITHUB_ACTIONS == 1) {
+      print ANNOTATION_PREFIX "notice::" $0
+    } else if (SUPPORT_COLOR == 1) {
       print GREEN $0 RESET
     } else {
       print $0
     }
   }
   else if ($0 ~ /^.+Corrected .+$/) {
-    if (SUPPORT_COLOR == 1) {
+    if (IS_GITHUB_ACTIONS == 1) {
+      print ANNOTATION_PREFIX "notice::" $0
+    } else if (SUPPORT_COLOR == 1) {
       print GREEN $0 RESET
     } else {
       print $0
@@ -114,34 +131,7 @@ awk -v SUPPORT_COLOR=$SUPPORT_COLOR -v GITHUB_ACTIONS="$GITHUB_ACTIONS" -v ANNOT
   else {
     count = split($0, array, ":")
     if (count > 4) {
-      # For linting file issues
-      if (SUPPORT_COLOR == 1) {
-        printf RESET array[1] ":" array[2] ":" array[3] RESET
-      } else {
-        printf array[1] ":" array[2] ":" array[3]
-      }
-
-      if (array[4] == " warning") {
-        if (SUPPORT_COLOR == 1) {
-          printf YELLOW
-        }
-      } else {
-        if (SUPPORT_COLOR == 1) {
-          printf RED
-        }
-      }
-      for (i = 4; i <= count; i++) {
-        if (i < count) {
-          printf array[i] ":"
-        } else {
-          printf array[i]
-        }
-      }
-      if (SUPPORT_COLOR == 1) {
-        print RESET
-      }
-
-      if (GITHUB_ACTIONS == 1) {
+      if (IS_GITHUB_ACTIONS == 1) {
         file = array[1]
         line = array[2]
         col = array[3]
@@ -150,6 +140,33 @@ awk -v SUPPORT_COLOR=$SUPPORT_COLOR -v GITHUB_ACTIONS="$GITHUB_ACTIONS" -v ANNOT
           print ANNOTATION_PREFIX "warning file=" file ",line=" line ",col=" col "::" message
         } else {
           print ANNOTATION_PREFIX "error file=" file ",line=" line ",col=" col "::" message
+        }
+      } else {
+        # For linting file issues
+        if (SUPPORT_COLOR == 1) {
+          printf RESET array[1] ":" array[2] ":" array[3] RESET
+        } else {
+          printf array[1] ":" array[2] ":" array[3]
+        }
+
+        if (array[4] == " warning") {
+          if (SUPPORT_COLOR == 1) {
+            printf YELLOW
+          }
+        } else {
+          if (SUPPORT_COLOR == 1) {
+            printf RED
+          }
+        }
+        for (i = 4; i <= count; i++) {
+          if (i < count) {
+            printf array[i] ":"
+          } else {
+            printf array[i]
+          }
+        }
+        if (SUPPORT_COLOR == 1) {
+          print RESET
         }
       }
     } else {
