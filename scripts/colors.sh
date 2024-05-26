@@ -41,6 +41,7 @@ if [[ -t 1 ]]; then
   BG_LIGHTGRAY=$(tput setab 8)
 else
   NORMAL=""
+  RESET=$NORMAL
 
   BOLD=""
   DIM=""

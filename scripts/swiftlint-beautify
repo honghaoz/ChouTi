@@ -1,0 +1,178 @@
+#!/bin/bash
+
+set -e
+
+# define colors
+if [[ -t 1 ]]; then
+  RESET=$(tput sgr0)
+  BOLD=$(tput bold)
+  RED=$(tput setaf 1)
+  GREEN=$(tput setaf 2)
+  YELLOW=$(tput setaf 3)
+else
+  RESET=""
+  BOLD=""
+  RED=""
+  GREEN=""
+  YELLOW=""
+fi
+
+print_help() {
+  echo "${BOLD}OVERVIEW:${RESET}" Beautify the output of SwiftLint.
+  echo ""
+  echo "${BOLD}USAGE:${RESET}" "swiftlint 2>&1 | $0"
+  echo ""
+  echo "${BOLD}NOTE:${RESET}" "2>&1 is important to redirect stderr to stdout since swiftlint outputs to stderr weirdly."
+}
+
+while [[ "$#" -gt 0 ]]; do
+  case $1 in
+  --help | -h)
+    print_help
+    exit 0
+    ;;
+  *)
+    echo "🛑 Error: Unrecognized option '$1'"
+    echo ""
+    print_help
+    exit 1
+    ;;
+  esac
+done
+
+# =========--------- Main ---------=========
+
+SUPPORT_COLOR=0
+if [[ -t 1 ]]; then
+  SUPPORT_COLOR=1
+fi
+
+GITHUB_ACTIONS_ANNOTATION_PREFIX=""
+if [[ -n "$GITHUB_ACTIONS" ]]; then
+  GITHUB_ACTIONS_ANNOTATION_PREFIX="::"
+fi
+
+awk -v SUPPORT_COLOR=$SUPPORT_COLOR -v GITHUB_ACTIONS="$GITHUB_ACTIONS" -v ANNOTATION_PREFIX="$GITHUB_ACTIONS_ANNOTATION_PREFIX" -v RED="$RED" -v GREEN="$GREEN" -v YELLOW="$YELLOW" -v RESET="$RESET" \
+'
+{
+  # strip out lines like: "Linting 'PreferencesWindow.swift' (486/648)"
+  if ($0 ~ /^Linting .+$/) {
+    next
+  }
+  # strip out lines like: "Correcting 'RepeatExecutionPublisher.swift' (2/648)"
+  if ($0 ~ /^Correcting .+$/) {
+    next
+  }
+  # colorize the summary line
+  else if ($0 ~ /Done linting/) {
+    if ($4 == "0") {
+      # no issues
+      if (SUPPORT_COLOR == 1) {
+        print GREEN $0 RESET
+      } else {
+        print $0
+      }
+    } else {
+      if ($6 == "0") {
+        # no serious issues, print in yellow
+        if (SUPPORT_COLOR == 1) {
+          print YELLOW $0 RESET
+        } else {
+          print $0
+        }
+      } else {
+        # has serious issues, print in red
+        if (SUPPORT_COLOR == 1) {
+          print RED $0 RESET
+        } else {
+          print $0
+        }
+      }
+    }
+  }
+  else if ($0 ~ /Done correcting/) {
+    if (SUPPORT_COLOR == 1) {
+      print GREEN $0 RESET
+    } else {
+      print $0
+    }
+  }
+  else if ($0 ~ /Done inspecting/) {
+    if (SUPPORT_COLOR == 1) {
+      print GREEN $0 RESET
+    } else {
+      print $0
+    }
+  }
+  else if ($0 ~ /^.+Corrected .+$/) {
+    if (SUPPORT_COLOR == 1) {
+      print GREEN $0 RESET
+    } else {
+      print $0
+    }
+  }
+  else {
+    count = split($0, array, ":")
+    if (count > 4) {
+      # For linting file issues
+      if (SUPPORT_COLOR == 1) {
+        printf RESET array[1] ":" array[2] ":" array[3] RESET
+      } else {
+        printf array[1] ":" array[2] ":" array[3]
+      }
+
+      if (array[4] == " warning") {
+        if (SUPPORT_COLOR == 1) {
+          printf YELLOW
+        }
+      } else {
+        if (SUPPORT_COLOR == 1) {
+          printf RED
+        }
+      }
+      for (i = 4; i <= count; i++) {
+        if (i < count) {
+          printf array[i] ":"
+        } else {
+          printf array[i]
+        }
+      }
+      if (SUPPORT_COLOR == 1) {
+        print RESET
+      }
+
+      if (GITHUB_ACTIONS == 1) {
+        file = array[1]
+        line = array[2]
+        col = array[3]
+        message = substr($0, index($0, array[4]))
+        if (array[4] == " warning") {
+          print ANNOTATION_PREFIX "warning file=" file ",line=" line ",col=" col "::" message
+        } else {
+          print ANNOTATION_PREFIX "error file=" file ",line=" line ",col=" col "::" message
+        }
+      }
+    } else {
+      # for other lines
+      print $0
+    }
+  }
+}
+'
+
+# =========--------- End ---------=========
+
+# References:
+#
+# - bash colors
+#   - https://misc.flogisoft.com/bash/tip_colors_and_formatting
+# - awk examples:
+#   - https://www.tutorialspoint.com/awk/awk_basic_examples.htm
+# - awk substring:
+#   - https://unix.stackexchange.com/questions/107090/substring-only-the-first-column-in-awk
+# - awk split string:
+#   - https://stackoverflow.com/a/36211699/3164091
+# - awk for statement
+#   - https://www.gnu.org/software/gawk/manual/html_node/For-Statement.html
+# - awk pass variable to awk:
+#   - https://www.oreilly.com/library/view/linux-shell-scripting/9781785881985/26fde793-9686-43a3-bdec-aba5ffdc4038.xhtml
