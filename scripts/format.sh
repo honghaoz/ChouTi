@@ -30,41 +30,58 @@ function print_help() {
 }
 
 FORMAT_ALL=false
-case "$1" in
---help | -h)
-  print_help
-  exit 0
-  ;;
---all)
-  # Add the logic for --all option here
-  echo "➡️  Formatting all files..."
-  FORMAT_ALL=true
-  ;;
-# no arguments
-"")
-  # Add the logic for no arguments here
-  echo "➡️  Formatting staged files..."
-  FORMAT_ALL=false
-  ;;
-*)
-  # If an unrecognized option is provided, print help
-  echo "🛑 Error: Unrecognized option '$1'"
-  echo ""
-  print_help
-  exit 1
-  ;;
-esac
+while [[ "$#" -gt 0 ]]; do
+  case "$1" in
+  --help | -h)
+    print_help
+    exit 0
+    ;;
+  --all)
+    echo "➡️  Formatting all files..."
+    FORMAT_ALL=true
+    shift
+    ;;
+  # no arguments
+  "")
+    echo "➡️  Formatting staged files..."
+    FORMAT_ALL=false
+    ;;
+  *)
+    # If an unrecognized option is provided, print help
+    echo "🛑 Error: Unrecognized option '$1'"
+    echo ""
+    print_help
+    exit 1
+    ;;
+  esac
+done
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
 
 if [[ "$FORMAT_ALL" == "true" ]]; then
+  # swiftformat
   echo ""
   echo "➡️  Executing swiftformat..."
+  start_time="$(perl -MTime::HiRes=time -e 'printf "%.9f\n", time')" # track start time
+
   command "$REPO_ROOT/bin/swiftformat" --baseconfig "$REPO_ROOT/configs/.swiftformat" "$REPO_ROOT"
 
+  end_time="$(perl -MTime::HiRes=time -e 'printf "%.9f\n", time')" # track end time
+  time_diff=$(echo "$end_time - $start_time" | bc) # calculate time difference
+  formatted_time_diff=$(printf "%.3f" "$time_diff") # format time difference to 3 decimal places
+  printf "✅ swiftformat took $GREEN%s$NORMAL seconds.\n" "$formatted_time_diff"
+
+  # swiftlint
   echo ""
   echo "➡️  Executing swiftlint..."
-  command "$REPO_ROOT/bin/swiftlint" --autocorrect --config "$REPO_ROOT/configs/.swiftlint.autocorrect.yml" --cache-path "$REPO_ROOT/.temp/swiftlint-cache" --progress "$REPO_ROOT"
+  start_time="$(perl -MTime::HiRes=time -e 'printf "%.9f\n", time')" # track start time
+
+  command "$REPO_ROOT/bin/swiftlint" --autocorrect --config "$REPO_ROOT/configs/.swiftlint.autocorrect.yml" --cache-path "$REPO_ROOT/.temp/swiftlint-cache" "$REPO_ROOT" 2>&1 | "$REPO_ROOT/scripts/swiftlint-beautify"
+
+  end_time="$(perl -MTime::HiRes=time -e 'printf "%.9f\n", time')" # track end time
+  time_diff=$(echo "$end_time - $start_time" | bc) # calculate time difference
+  formatted_time_diff=$(printf "%.3f" "$time_diff") # format time difference to 3 decimal places
+  printf "✅ swiftlint took $GREEN%s$NORMAL seconds.\n" "$formatted_time_diff"
 else
-  echo "TODO: ..."
+  echo "TODO: Format staged files"
 fi

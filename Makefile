@@ -14,11 +14,11 @@ build: # Build the package.
 
 .PHONY: format
 format: # Format the code.
-	@"$(REPO_ROOT)/scripts/format.sh"
+	@"$(REPO_ROOT)/scripts/format.sh" --all
 
 .PHONY: lint
 lint: # Lint the code.
-	@"$(REPO_ROOT)/scripts/lint.sh"
+	@"$(REPO_ROOT)/scripts/lint.sh" --all
 
 .PHONY: help
 help:
