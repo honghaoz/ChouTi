@@ -58,6 +58,9 @@ done
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
 
+# make .temp directory if it doesn't exist
+mkdir -p "$REPO_ROOT/.temp"
+
 if [[ "$LINT_ALL" == "true" ]]; then
   ERROR_CODE=0
 
@@ -94,7 +97,7 @@ if [[ "$LINT_ALL" == "true" ]]; then
   echo "➡️  Executing swiftlint..."
   start_time="$(perl -MTime::HiRes=time -e 'printf "%.9f\n", time')" # track start time
 
-  # command "$REPO_ROOT/bin/swiftlint" lint --cache-path "$REPO_ROOT/.temp/swiftlint-cache" "$REPO_ROOT" 2>&1 | "$REPO_ROOT/scripts/swiftlint-beautify"
+  mkdir -p "$REPO_ROOT/.temp/swiftlint-cache"
   lint_output=$("$REPO_ROOT/bin/swiftlint" lint --cache-path "$REPO_ROOT/.temp/swiftlint-cache" "$REPO_ROOT" 2>&1)
   echo "$lint_output" | "$REPO_ROOT/scripts/swiftlint-beautify"
 

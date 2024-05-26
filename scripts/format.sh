@@ -58,6 +58,9 @@ done
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
 
+# make .temp directory if it doesn't exist
+mkdir -p "$REPO_ROOT/.temp"
+
 if [[ "$FORMAT_ALL" == "true" ]]; then
   # swiftformat
   echo ""
@@ -76,6 +79,7 @@ if [[ "$FORMAT_ALL" == "true" ]]; then
   echo "➡️  Executing swiftlint..."
   start_time="$(perl -MTime::HiRes=time -e 'printf "%.9f\n", time')" # track start time
 
+  mkdir -p "$REPO_ROOT/.temp/swiftlint-cache"
   command "$REPO_ROOT/bin/swiftlint" --autocorrect --config "$REPO_ROOT/configs/.swiftlint.autocorrect.yml" --cache-path "$REPO_ROOT/.temp/swiftlint-cache" "$REPO_ROOT" 2>&1 | "$REPO_ROOT/scripts/swiftlint-beautify"
 
   end_time="$(perl -MTime::HiRes=time -e 'printf "%.9f\n", time')" # track end time
