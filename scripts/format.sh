@@ -64,12 +64,12 @@ if [[ "$FORMAT_ALL" == "true" ]]; then
   echo "➡️  Executing swiftformat..."
   start_time="$(perl -MTime::HiRes=time -e 'printf "%.9f\n", time')" # track start time
 
-  command "$REPO_ROOT/bin/swiftformat" --baseconfig "$REPO_ROOT/configs/.swiftformat" "$REPO_ROOT"
+  command "$REPO_ROOT/bin/swiftformat" --baseconfig "$REPO_ROOT/configs/.swiftformat" --cache "$REPO_ROOT/.temp/swiftformat-cache" "$REPO_ROOT"
 
   end_time="$(perl -MTime::HiRes=time -e 'printf "%.9f\n", time')" # track end time
   time_diff=$(echo "$end_time - $start_time" | bc) # calculate time difference
   formatted_time_diff=$(printf "%.3f" "$time_diff") # format time difference to 3 decimal places
-  printf "✅ swiftformat took $GREEN%s$NORMAL seconds.\n" "$formatted_time_diff"
+  printf "⏱️  swiftformat took $GREEN%s$NORMAL seconds.\n" "$formatted_time_diff"
 
   # swiftlint
   echo ""
@@ -81,7 +81,7 @@ if [[ "$FORMAT_ALL" == "true" ]]; then
   end_time="$(perl -MTime::HiRes=time -e 'printf "%.9f\n", time')" # track end time
   time_diff=$(echo "$end_time - $start_time" | bc) # calculate time difference
   formatted_time_diff=$(printf "%.3f" "$time_diff") # format time difference to 3 decimal places
-  printf "✅ swiftlint took $GREEN%s$NORMAL seconds.\n" "$formatted_time_diff"
+  printf "⏱️  swiftlint took $GREEN%s$NORMAL seconds.\n" "$formatted_time_diff"
 else
   echo "TODO: Format staged files"
 fi

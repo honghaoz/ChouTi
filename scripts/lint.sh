@@ -59,6 +59,22 @@ done
 REPO_ROOT=$(git rev-parse --show-toplevel)
 
 if [[ "$LINT_ALL" == "true" ]]; then
+  ERROR_CODE=0
+
+  # swiftformat
+  echo ""
+  echo "➡️  Executing swiftformat..."
+  start_time="$(perl -MTime::HiRes=time -e 'printf "%.9f\n", time')" # track start time
+
+  set -o pipefail && "$REPO_ROOT/bin/swiftformat" --lint --baseconfig "$REPO_ROOT/configs/.swiftformat" --cache "$REPO_ROOT/.temp/swiftformat-cache" "$REPO_ROOT" 2>&1 | "$REPO_ROOT/scripts/swiftformat-beautify" || ERROR_CODE=$?
+
+  end_time="$(perl -MTime::HiRes=time -e 'printf "%.9f\n", time')" # track end time
+  time_diff=$(echo "$end_time - $start_time" | bc) # calculate time difference
+  formatted_time_diff=$(printf "%.3f" "$time_diff") # format time difference to 3 decimal places
+  printf "⏱️  swiftformat took $GREEN%s$NORMAL seconds.\n" "$formatted_time_diff"
+
+  # swiftlint
+
   # copy $REPO_ROOT/configs/swiftlint.yml to $REPO_ROOT/.swiftlint.yml
   # so that .swiftlint.yml in child directories can be nested
   cp "$REPO_ROOT/configs/.swiftlint.yml" "$REPO_ROOT/.swiftlint.yml"
@@ -82,19 +98,25 @@ if [[ "$LINT_ALL" == "true" ]]; then
   lint_output=$("$REPO_ROOT/bin/swiftlint" lint --cache-path "$REPO_ROOT/.temp/swiftlint-cache" "$REPO_ROOT" 2>&1)
   echo "$lint_output" | "$REPO_ROOT/scripts/swiftlint-beautify"
 
-  end_time="$(perl -MTime::HiRes=time -e 'printf "%.9f\n", time')" # track end time
-  time_diff=$(echo "$end_time - $start_time" | bc) # calculate time difference
-  formatted_time_diff=$(printf "%.3f" "$time_diff") # format time difference to 3 decimal places
-  printf "✅ swiftlint took $GREEN%s$NORMAL seconds.\n" "$formatted_time_diff"
-
-  cleanup
-
-  # if lint_output find non zero violations, exit with error.
+  # if lint_output find non zero violations, set ERROR_CODE to 1
   # Example of violation line: "Done linting! Found 8 violations, 0 serious in 120 files."
   # Example of non violation line: "Done linting! Found 0 violations, 0 serious in 120 files."
   if echo "$lint_output" | grep -q "Found [1-9][0-9]* violations"; then
-    echo "🛑 Found violations."
+    ERROR_CODE=1
+  fi
+
+  end_time="$(perl -MTime::HiRes=time -e 'printf "%.9f\n", time')" # track end time
+  time_diff=$(echo "$end_time - $start_time" | bc) # calculate time difference
+  formatted_time_diff=$(printf "%.3f" "$time_diff") # format time difference to 3 decimal places
+  printf "⏱️  swiftlint took $GREEN%s$NORMAL seconds.\n" "$formatted_time_diff"
+
+  cleanup
+
+  if [ "$ERROR_CODE" -ne 0 ]; then
+    echo "🛑 Found code style issues."
     exit 1
+  else
+    echo "✅ No code style issues found."
   fi
 else
   echo "TODO: Lint staged files"
