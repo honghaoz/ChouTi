@@ -35,8 +35,8 @@ public struct EscapingExpression<T> {
   ///   - interval: The repeating interval to evaluate the expression. Default is 0.01 seconds.
   ///   - timeout: The timeout to stop evaluating the expression. Default is 3 seconds.
   public func toEventually(_ expectation: some Expectation<T, Never>, interval: TimeInterval = 0.01, timeout: TimeInterval = 3) {
-  precondition(interval > 0, "interval must be greater than 0.")
-  precondition(timeout > interval, "timeout must be greater than interval.")
+    precondition(interval > 0, "interval must be greater than 0.")
+    precondition(timeout > interval, "timeout must be greater than interval.")
 
     let testExpectation = XCTestExpectation()
     var lastValue: T?
@@ -93,8 +93,8 @@ public struct EscapingExpression<T> {
   ///   - interval: The repeating interval to evaluate the expression. Default is 0.01 seconds.
   ///   - timeout: The timeout to stop evaluating the expression. Default is 3 seconds.
   public func toEventuallyNot(_ expectation: some Expectation<T, Never>, interval: TimeInterval = 0.01, timeout: TimeInterval = 3) {
-      precondition(interval > 0, "interval must be greater than 0.")
-  precondition(timeout > interval, "timeout must be greater than interval.")
+    precondition(interval > 0, "interval must be greater than 0.")
+    precondition(timeout > interval, "timeout must be greater than interval.")
 
     let testExpectation = XCTestExpectation()
     var lastValue: T?

@@ -131,33 +131,40 @@ awk -v SUPPORT_COLOR=$SUPPORT_COLOR -v IS_GITHUB_ACTIONS="$IS_GITHUB_ACTIONS" -v
   else {
     count = split($0, array, ":")
     if (count > 4) {
+      file = array[1]
+      line = array[2]
+      col = array[3]
+      message = substr($0, index($0, array[4]))
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", message) # trim leading and trailing spaces
+
       if (IS_GITHUB_ACTIONS == 1) {
-        file = array[1]
-        line = array[2]
-        col = array[3]
-        message = substr($0, index($0, array[4]))
-        if (array[4] == " warning") {
+        if (message ~ /^error/) {
+          print ANNOTATION_PREFIX "error file=" file ",line=" line ",col=" col "::" message
+        } else if (message ~ /^warning/) {
           print ANNOTATION_PREFIX "warning file=" file ",line=" line ",col=" col "::" message
         } else {
-          print ANNOTATION_PREFIX "error file=" file ",line=" line ",col=" col "::" message
+          print ANNOTATION_PREFIX "notice file=" file ",line=" line ",col=" col "::" message
         }
       } else {
         # For linting file issues
         if (SUPPORT_COLOR == 1) {
-          printf RESET array[1] ":" array[2] ":" array[3] RESET
+          printf RESET file ":" line ":" col RESET
         } else {
-          printf array[1] ":" array[2] ":" array[3]
+          printf file ":" line ":" col
         }
 
-        if (array[4] == " warning") {
-          if (SUPPORT_COLOR == 1) {
-            printf YELLOW
-          }
-        } else {
+        # colorize the message
+        if (message ~ /^error/) {
           if (SUPPORT_COLOR == 1) {
             printf RED
           }
+        } else if (message ~ /^warning/) {
+          if (SUPPORT_COLOR == 1) {
+            printf YELLOW
+          }
         }
+
+        # print the message
         for (i = 4; i <= count; i++) {
           if (i < count) {
             printf array[i] ":"
@@ -165,6 +172,8 @@ awk -v SUPPORT_COLOR=$SUPPORT_COLOR -v IS_GITHUB_ACTIONS="$IS_GITHUB_ACTIONS" -v
             printf array[i]
           }
         }
+
+        # reset color
         if (SUPPORT_COLOR == 1) {
           print RESET
         }
