@@ -14,18 +14,15 @@ public struct ThrowErrorTypeExpectation<E: Swift.Error>: Expectation {
   public typealias ThrownErrorType = E
 
   public func evaluate(_ actualValue: T) -> Bool {
-    assertionFailure("unexpected call")
-    return false
+    fatalError("unexpected call") // swiftlint:disable:this fatal_error
   }
 
   public func evaluateError(_ thrownError: ThrownErrorType) -> Bool {
-    assertionFailure("unexpected call")
-    return false
+    fatalError("unexpected call") // swiftlint:disable:this fatal_error
   }
 
   public var description: String {
-    assertionFailure("unexpected call")
-    return ""
+    fatalError("unexpected call") // swiftlint:disable:this fatal_error
   }
 }
 

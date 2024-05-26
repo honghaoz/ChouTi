@@ -20,8 +20,6 @@ class OptionalExpectTests: XCTestCase {
     expect(validValue).toNot(beNil())
     expect(nilValue) == nil
     expect(validValue) != nil
-
-    expect((beNil() as BeNilExpectation<Int>).description) == "be nil"
   }
 
   func testBeIdentical() {

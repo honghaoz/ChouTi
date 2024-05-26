@@ -31,15 +31,24 @@ class ExpectThrowErrorTests: XCTestCase {
       throw FooError.error1
     }
 
-    expect(try throwFooError1Func()).to(throwError(FooError.error1))
-    expect(try throwFooError1Func()).toNot(throwError(FooError.error2))
-    expect(try throwFooError1Func()).toNot(throwError(BarError.error1))
-    expect(try throwFooError1Func()).toNot(throwError(BarError.error2))
+    func throwFooError1OptionalFunc() throws -> Int? {
+      throw FooError.error1
+    }
 
     expect(try noThrowErrorFunc()).toNot(throwError(FooError.error1))
     expect(try noThrowErrorFunc()).toNot(throwError(FooError.error2))
     expect(try noThrowErrorFunc()).toNot(throwError(BarError.error1))
     expect(try noThrowErrorFunc()).toNot(throwError(BarError.error2))
+
+    expect(try throwFooError1Func()).to(throwError(FooError.error1))
+    expect(try throwFooError1Func()).toNot(throwError(FooError.error2))
+    expect(try throwFooError1Func()).toNot(throwError(BarError.error1))
+    expect(try throwFooError1Func()).toNot(throwError(BarError.error2))
+
+    expect(try throwFooError1Func()).to(throwError(FooError.error1))
+    expect(try throwFooError1OptionalFunc()).toNot(throwError(FooError.error2))
+    expect(try throwFooError1OptionalFunc()).toNot(throwError(BarError.error1))
+    expect(try throwFooError1OptionalFunc()).toNot(throwError(BarError.error2))
   }
 
   func testThrowNonEquatableError() {

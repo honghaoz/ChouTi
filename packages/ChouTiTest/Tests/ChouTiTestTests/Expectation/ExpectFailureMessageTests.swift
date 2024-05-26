@@ -405,25 +405,45 @@ class ExpectFailureMessageTests: FailureCapturingTestCase {
   // MARK: - Optional
 
   func testNil() {
-    let expectedMessage = "failed - expect \"1\" to be nil"
-    expect(Optional(1)) == nil
-    assertFailure(expectedMessage: expectedMessage)
+    do {
+      let expectedMessage = #"failed - expect "1" to be nil"#
+      expect(Optional(1)) == nil
+      assertFailure(expectedMessage: expectedMessage)
+    }
+    do {
+      class Foo: CustomStringConvertible {
+        var description: String = "Foo"
+      }
+      let expectedMessage = #"failed - expect "nil" to be identical to "Foo""#
+      expect(nil as Foo?).to(beIdentical(to: Foo()))
+      assertFailure(expectedMessage: expectedMessage)
+    }
   }
 
   func testNil_withDescription() {
-    let expectedMessage = "failed - expect \"Number\" (\"1\") to be nil"
-    expect(Optional(1), "Number") == nil
-    assertFailure(expectedMessage: expectedMessage)
+    do {
+      let expectedMessage = #"failed - expect "Number" ("1") to be nil"#
+      expect(Optional(1), "Number") == nil
+      assertFailure(expectedMessage: expectedMessage)
+    }
+    do {
+      class Foo: CustomStringConvertible {
+        var description: String = "Foo"
+      }
+      let expectedMessage = #"failed - expect "FooNil" ("nil") to be identical to "Foo""#
+      expect(nil as Foo?, "FooNil").to(beIdentical(to: Foo()))
+      assertFailure(expectedMessage: expectedMessage)
+    }
   }
 
   func testNotNil() {
-    let expectedMessage = "failed - expect \"nil\" to not be nil"
+    let expectedMessage = #"failed - expect "nil" to not be nil"#
     expect(nil as Int?) != nil
     assertFailure(expectedMessage: expectedMessage)
   }
 
   func testNotNil_withDescription() {
-    let expectedMessage = "failed - expect \"Number\" (\"nil\") to not be nil"
+    let expectedMessage = #"failed - expect "Number" ("nil") to not be nil"#
     expect(nil as Int?, "Number") != nil
     assertFailure(expectedMessage: expectedMessage)
   }
@@ -440,7 +460,7 @@ class ExpectFailureMessageTests: FailureCapturingTestCase {
   }
 
   func testUnwrap_withDescription() {
-    let expectedMessage = "failed - expect a non-nil value of \"Number\" (Int)"
+    let expectedMessage = #"failed - expect a non-nil value of "Number" (Int)"#
     do {
       _ = try (nil as Int?).unwrap(description: "Number")
     } catch {
