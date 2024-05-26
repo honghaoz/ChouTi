@@ -64,13 +64,60 @@ class ExpectEventuallyFailureMessageTests: FailureCapturingTestCase {
   }
 
   func testEventuallyEqualTimeout_withDescription() {
-    func calculate() -> Int {
-      return 1
-    }
+    do {
+      func calculate() -> Int {
+        return 1
+      }
 
-    expect(calculate(), "Number").toEventually(beEqual(to: 2), timeout: 0.05)
-    let expectedMessage = "failed - expect \"Number\" (\"1\") to be equal to \"2\" eventually"
-    assertFailure(expectedMessage: expectedMessage)
+      expect(calculate(), "Number").toEventually(beEqual(to: 2), timeout: 0.05)
+      let expectedMessage = "failed - expect \"Number\" (\"1\") to be equal to \"2\" eventually"
+      assertFailure(expectedMessage: expectedMessage)
+    }
+    do {
+      expect(nil, "Number").toEventually(beEqual(to: 2), timeout: 0.05)
+      let expectedMessage = "failed - expect \"Number\" (\"nil\") to be equal to \"2\" eventually"
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
+  func testEventuallyApproximatelyEqualTimeout() {
+    do {
+      func calculate() -> Double {
+        return 1.0
+      }
+
+      expect(calculate()).toEventually(beApproximatelyEqual(to: 2.0, within: 1e-5), timeout: 0.05)
+      let expectedMessage = #"failed - expect "1.0" to be approximately equal to "2.0 ± 1e-05" eventually"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+    do {
+      func calculate() -> Double? {
+        return nil
+      }
+      expect(try calculate().unwrap()).toEventually(beApproximatelyEqual(to: 2.0, within: 1e-5), timeout: 0.05)
+      let expectedMessage = #"failed - expression throws error: nilValue"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
+  func testEventuallyApproximatelyEqualTimeout_withDescription() {
+    do {
+      func calculate() -> Double {
+        return 1.0
+      }
+
+      expect(calculate(), "Number").toEventually(beApproximatelyEqual(to: 2.0, within: 1e-5), timeout: 0.05)
+      let expectedMessage = "failed - expect \"Number\" (\"1.0\") to be approximately equal to \"2.0 ± 1e-05\" eventually"
+      assertFailure(expectedMessage: expectedMessage)
+    }
+    do {
+      func calculate() -> Double? {
+        return nil
+      }
+      expect(try calculate().unwrap(), "Number").toEventually(beApproximatelyEqual(to: 2.0, within: 1e-5), timeout: 0.05)
+      let expectedMessage = #"failed - expression "Number" throws error: nilValue"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
   }
 
   // MARK: - To Not
@@ -87,23 +134,97 @@ class ExpectEventuallyFailureMessageTests: FailureCapturingTestCase {
     assertFailure(expectedMessage: expectedMessage)
   }
 
-  func testEventuallyNotEqualTimeout() {
-    func calculate() -> Int {
-      return 1
+  func testEventuallyNotTrueTimeout() {
+    func calculate() -> Bool {
+      return true
     }
 
-    expect(calculate()).toEventuallyNot(beEqual(to: 1), timeout: 0.05)
-    let expectedMessage = "failed - expect \"1\" to not be equal to \"1\" eventually"
+    expect(calculate()).toEventuallyNot(beTrue(), timeout: 0.05)
+    let expectedMessage = #"failed - expect "true" to not be "true" eventually"#
     assertFailure(expectedMessage: expectedMessage)
   }
 
-  func testEventuallyNotEqualTimeout_withDescription() {
-    func calculate() -> Int {
-      return 1
+  func testEventuallyNotTrueTimeout_withDescription() {
+    func calculate() -> Bool {
+      return true
     }
 
-    expect(calculate(), "Number").toEventuallyNot(beEqual(to: 1), timeout: 0.05)
-    let expectedMessage = "failed - expect \"Number\" (\"1\") to not be equal to \"1\" eventually"
+    expect(calculate(), "Boolean").toEventuallyNot(beTrue(), timeout: 0.05)
+    let expectedMessage = #"failed - expect "Boolean" ("true") to not be "true" eventually"#
     assertFailure(expectedMessage: expectedMessage)
+  }
+
+  func testEventuallyNotEqualTimeout() {
+    do {
+      func calculate() -> Int {
+        return 1
+      }
+
+      expect(calculate()).toEventuallyNot(beEqual(to: 1), timeout: 0.05)
+      let expectedMessage = "failed - expect \"1\" to not be equal to \"1\" eventually"
+      assertFailure(expectedMessage: expectedMessage)
+    }
+    do {
+      expect(nil).toEventuallyNot(beEqual(to: nil as Int?), timeout: 0.05)
+      let expectedMessage = #"failed - expect "nil" to not be equal to "nil" eventually"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
+  func testEventuallyNotEqualTimeout_withDescription() {
+    do {
+      func calculate() -> Int {
+        return 1
+      }
+
+      expect(calculate(), "Number").toEventuallyNot(beEqual(to: 1), timeout: 0.05)
+      let expectedMessage = "failed - expect \"Number\" (\"1\") to not be equal to \"1\" eventually"
+      assertFailure(expectedMessage: expectedMessage)
+    }
+    do {
+      expect(nil, "Number").toEventuallyNot(beEqual(to: nil as Int?), timeout: 0.05)
+      let expectedMessage = "failed - expect \"Number\" (\"nil\") to not be equal to \"nil\" eventually"
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
+  func testEventuallyNotApproximatelyEqualTimeout() {
+    do {
+      func calculate() -> Double {
+        return 1.0
+      }
+
+      expect(calculate()).toEventuallyNot(beApproximatelyEqual(to: 1.0, within: 1e-5), timeout: 0.05)
+      let expectedMessage = #"failed - expect "1.0" to not be approximately equal to "1.0 ± 1e-05" eventually"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+    do {
+      func calculate() -> Double? {
+        return nil
+      }
+      expect(try calculate().unwrap()).toEventuallyNot(beApproximatelyEqual(to: 2.0, within: 1e-5), timeout: 0.05)
+      let expectedMessage = #"failed - expression throws error: nilValue"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
+  func testEventuallyNotApproximatelyEqualTimeout_withDescription() {
+    do {
+      func calculate() -> Double {
+        return 1.0
+      }
+
+      expect(calculate(), "Number").toEventuallyNot(beApproximatelyEqual(to: 1.0, within: 1e-5), timeout: 0.05)
+      let expectedMessage = #"failed - expect "Number" ("1.0") to not be approximately equal to "1.0 ± 1e-05" eventually"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+    do {
+      func calculate() -> Double? {
+        return nil
+      }
+      expect(try calculate().unwrap(), "Number").toEventuallyNot(beApproximatelyEqual(to: 2.0, within: 1e-5), timeout: 0.05)
+      let expectedMessage = #"failed - expression "Number" throws error: nilValue"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
   }
 }

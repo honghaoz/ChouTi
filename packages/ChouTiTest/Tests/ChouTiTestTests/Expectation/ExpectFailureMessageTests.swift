@@ -27,9 +27,17 @@ class ExpectFailureMessageTests: FailureCapturingTestCase {
   }
 
   func testEqual() {
-    let expectedMessage = "failed - expect \"1\" to be equal to \"2\""
-    expect(1) == 2
-    assertFailure(expectedMessage: expectedMessage)
+    do {
+      let expectedMessage = "failed - expect \"1\" to be equal to \"2\""
+      expect(1) == 2
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      let expectedMessage = #"failed - expect "nil" to be equal to "6""#
+      expect(nil as Int?).to(beEqual(to: 6))
+      assertFailure(expectedMessage: expectedMessage)
+    }
   }
 
   func testEqual_withDescription() {
@@ -71,6 +79,18 @@ class ExpectFailureMessageTests: FailureCapturingTestCase {
   func testFalse_withDescription() {
     let expectedMessage = "failed - expect \"Boolean\" (\"false\") to be equal to \"true\""
     expect(false, "Boolean") == true
+    assertFailure(expectedMessage: expectedMessage)
+  }
+
+  func testBeApproximatelyEqual() {
+    let expectedMessage = "failed - expect \"1.1\" to be approximately equal to \"1.2 ± 0.01\""
+    expect(1.1).to(beApproximatelyEqual(to: 1.2, within: 0.01))
+    assertFailure(expectedMessage: expectedMessage)
+  }
+
+  func testBeApproximatelyEqual_withDescription() {
+    let expectedMessage = "failed - expect \"Number\" (\"1.1\") to be approximately equal to \"1.2 ± 0.01\""
+    expect(1.1, "Number").to(beApproximatelyEqual(to: 1.2, within: 0.01))
     assertFailure(expectedMessage: expectedMessage)
   }
 

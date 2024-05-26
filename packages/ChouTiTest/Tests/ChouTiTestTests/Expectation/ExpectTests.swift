@@ -65,4 +65,12 @@ class ExpectTests: XCTestCase {
 
     expect((beIdentical(to: foo1) as BeIdenticalExpectation<Foo>).description) == "be identical to \"Foo(1)\""
   }
+
+  func testBeApproximatelyEqual() {
+    expect(1.0).to(beApproximatelyEqual(to: 1.0, within: 0.1))
+    expect(1.0).to(beApproximatelyEqual(to: 1.2, within: 0.2))
+    expect(1.0).toNot(beApproximatelyEqual(to: 1.1, within: 0.01))
+    expect(1).to(beApproximatelyEqual(to: 1.001, within: 1e-3))
+    expect(1).toNot(beApproximatelyEqual(to: 1.001, within: 1e-4))
+  }
 }
