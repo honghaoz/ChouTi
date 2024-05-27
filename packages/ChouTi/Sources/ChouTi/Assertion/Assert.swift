@@ -41,6 +41,14 @@ public enum Assert {
   public static var testAssertionFailureHandler: TestAssertionFailureHandler? = __defaultTestAssertionFailureHandler
 
   /// Set the test assertion failure handler.
+  ///
+  /// Example:
+  /// ```swift
+  /// Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
+  ///   expect(message) == "assertion failure message"
+  /// }
+  /// ```
+  /// 
   /// - Parameter handler: The test assertion failure handler.
   public static func setTestAssertionFailureHandler(_ handler: TestAssertionFailureHandler?) {
     testAssertionFailureHandler = handler
@@ -58,8 +66,7 @@ public enum Assert {
     #if TEST
     XCTFail(message, file: file, line: line)
     #else
-    print(message)
-    raise(SIGABRT)
+    assertionFailure(message)
     #endif
   }
 
