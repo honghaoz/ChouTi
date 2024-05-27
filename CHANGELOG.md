@@ -1,4 +1,24 @@
 # Change Log
+## [0.0.3](https://github.com/honghaoz/ChouTi/releases/tag/0.0.3) (2024-05-26)
+
+- Framework `ChouTi`:
+  - Added various Box utilities
+  - Added `DelayTask` and various GCD (Grand Central Dispatch) utilities
+  - Added `Duration`
+  - Added `DispatchTimer`
+  - Added `MemoryWarningPublisher`
+  - Other various utilities and extensions
+  - Increased test coverage
+
+- Framework `ChouTiTest`:
+  - Added `toEventually(_:interval:timeout:)` expression operator
+  - Added `toEventuallyNot(_:interval:timeout:)` expression operator
+  - Added `beApproximatelyEqual(to:)` expectation
+  - Added `beGreaterThan(_:)` expectation
+  - Added `beGreaterThanOrEqual(to:)` expectation
+  - Added `beLessThan(_:)` expectation
+  - Added `beLessThanOrEqual(to:)` expectation
+  - Increased test coverage
 
 ## [0.0.2](https://github.com/honghaoz/ChouTi/releases/tag/0.0.2) (2024-05-20)
 

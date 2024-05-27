@@ -15,7 +15,7 @@ Add the following to your `Package.swift` file:
 ```swift
 dependencies: [
   // add the package to your package dependencies
-  .package(url: "https://github.com/honghaoz/ChouTi", from: "0.0.2"),
+  .package(url: "https://github.com/honghaoz/ChouTi", from: "0.0.3"),
 ],
 targets: [
   // add products to your target dependencies
@@ -79,6 +79,8 @@ class SomeTests: XCTestCase {
     expect(expression) == 2
     expect(expression).toNot(beEqual(to: 2))
     expect(expression) != 2
+    expect(expression).to(beApproximatelyEqual(to: 2, within: 1e-6))
+    expect(expression).toNot(beApproximatelyEqual(to: 2, within: 1e-6))
 
     // identical
     expect(expression).to(beIdentical(to: object))

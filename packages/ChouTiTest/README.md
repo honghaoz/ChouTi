@@ -13,7 +13,7 @@ Add the following to your `Package.swift` file:
 ```swift
 dependencies: [
   // add the package to your package dependencies
-  .package(url: "https://github.com/honghaoz/ChouTi", from: "0.0.2"),
+  .package(url: "https://github.com/honghaoz/ChouTi", from: "0.0.3"),
 ],
 targets: [
   // add ChouTiTest to your test target dependencies
@@ -53,6 +53,8 @@ class SomeTests: XCTestCase {
     expect(expression) == 2
     expect(expression).toNot(beEqual(to: 2))
     expect(expression) != 2
+    expect(expression).to(beApproximatelyEqual(to: 2, within: 1e-6))
+    expect(expression).toNot(beApproximatelyEqual(to: 2, within: 1e-6))
 
     // identical
     expect(expression).to(beIdentical(to: object))
@@ -76,13 +78,13 @@ class SomeTests: XCTestCase {
 
     // any error
     expect(try expression()).to(throwAnError())
-    
+
     // eventually
     expect(expression).toEventually(beTrue())
     expect(expression).toEventually(beEmpty())
     expect(expression).toEventually(beEqual(to: 2))
     expect(expression).toEventually(beIdentical(to: object))
-    
+
     expect(expression).toEventuallyNot(beTrue())
     expect(expression).toEventuallyNot(beEmpty())
   }
