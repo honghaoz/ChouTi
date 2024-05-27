@@ -48,7 +48,7 @@ public enum Assert {
   ///   expect(message) == "assertion failure message"
   /// }
   /// ```
-  /// 
+  ///
   /// - Parameter handler: The test assertion failure handler.
   public static func setTestAssertionFailureHandler(_ handler: TestAssertionFailureHandler?) {
     testAssertionFailureHandler = handler
