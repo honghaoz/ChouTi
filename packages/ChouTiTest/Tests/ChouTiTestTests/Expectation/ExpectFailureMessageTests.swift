@@ -83,6 +83,54 @@ class ExpectFailureMessageTests: FailureCapturingTestCase {
     assertFailure(expectedMessage: expectedMessage)
   }
 
+  func testGreaterThan() {
+    let expectedMessage = "failed - expect \"1\" to be greater than \"2\""
+    expect(1) > 2
+    assertFailure(expectedMessage: expectedMessage)
+  }
+
+  func testGreaterThan_withDescription() {
+    let expectedMessage = "failed - expect \"Number\" (\"1\") to be greater than \"2\""
+    expect(1, "Number") > 2
+    assertFailure(expectedMessage: expectedMessage)
+  }
+
+  func testGreaterThanOrEqual() {
+    let expectedMessage = "failed - expect \"1\" to be greater than or equal to \"2\""
+    expect(1) >= 2
+    assertFailure(expectedMessage: expectedMessage)
+  }
+
+  func testGreaterThanOrEqual_withDescription() {
+    let expectedMessage = "failed - expect \"Number\" (\"1\") to be greater than or equal to \"2\""
+    expect(1, "Number") >= 2
+    assertFailure(expectedMessage: expectedMessage)
+  }
+
+  func testLessThan() {
+    let expectedMessage = "failed - expect \"2\" to be less than \"1\""
+    expect(2) < 1
+    assertFailure(expectedMessage: expectedMessage)
+  }
+
+  func testLessThan_withDescription() {
+    let expectedMessage = "failed - expect \"Number\" (\"2\") to be less than \"1\""
+    expect(2, "Number") < 1
+    assertFailure(expectedMessage: expectedMessage)
+  }
+
+  func testLessThanOrEqual() {
+    let expectedMessage = "failed - expect \"2\" to be less than or equal to \"1\""
+    expect(2) <= 1
+    assertFailure(expectedMessage: expectedMessage)
+  }
+
+  func testLessThanOrEqual_withDescription() {
+    let expectedMessage = "failed - expect \"Number\" (\"2\") to be less than or equal to \"1\""
+    expect(2, "Number") <= 1
+    assertFailure(expectedMessage: expectedMessage)
+  }
+
   func testEmpty() {
     let expectedMessage = "failed - expect \"[1]\" to be empty"
     expect([1] as [Int]).to(beEmpty())

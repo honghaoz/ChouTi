@@ -44,6 +44,42 @@ class ExpectTests: XCTestCase {
     expect(1).toNot(beApproximatelyEqual(to: 1.001, within: 1e-4))
   }
 
+  func testBeGreaterThan() {
+    expect(2).to(beGreaterThan(1))
+    expect(1).toNot(beGreaterThan(2))
+    expect(2) > 1
+    expect(1) < 2
+    expect((beGreaterThan(1) as BeGreaterThanExpectation<Int>).description) == "be greater than \"1\""
+  }
+
+  func testBeGreaterThanOrEqual() {
+    expect(2).to(beGreaterThanOrEqual(to: 1))
+    expect(2).to(beGreaterThanOrEqual(to: 2))
+    expect(1).toNot(beGreaterThanOrEqual(to: 2))
+    expect(2) >= 1
+    expect(2) >= 2
+    expect(1) < 2
+    expect((beGreaterThanOrEqual(to: 1) as BeGreaterThanOrEqualExpectation<Int>).description) == "be greater than or equal to \"1\""
+  }
+
+  func testBeLessThan() {
+    expect(1).to(beLessThan(2))
+    expect(2).toNot(beLessThan(1))
+    expect(1) < 2
+    expect(2) > 1
+    expect((beLessThan(2) as BeLessThanExpectation<Int>).description) == "be less than \"2\""
+  }
+
+  func testBeLessThanOrEqual() {
+    expect(1).to(beLessThanOrEqual(to: 2))
+    expect(1).to(beLessThanOrEqual(to: 1))
+    expect(2).toNot(beLessThanOrEqual(to: 1))
+    expect(1) <= 2
+    expect(1) <= 1
+    expect(2) > 1
+    expect((beLessThanOrEqual(to: 2) as BeLessThanOrEqualExpectation<Int>).description) == "be less than or equal to \"2\""
+  }
+
   func testBeIdentical() {
     class Foo: CustomStringConvertible {
       let value: Int
@@ -73,5 +109,4 @@ class ExpectTests: XCTestCase {
     expect([1] as [Int]).toNot(beEmpty())
     expect((beEmpty() as BeEmptyExpectation<[Int]>).description) == "be empty"
   }
-
 }
