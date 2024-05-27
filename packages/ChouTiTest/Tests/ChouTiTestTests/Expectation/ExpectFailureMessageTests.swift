@@ -14,50 +14,6 @@ class ExpectFailureMessageTests: FailureCapturingTestCase {
 
   // MARK: - Non Optional
 
-  func testEmpty() {
-    let expectedMessage = "failed - expect \"[1]\" to be empty"
-    expect([1] as [Int]).to(beEmpty())
-    assertFailure(expectedMessage: expectedMessage)
-  }
-
-  func testEmpty_withDescription() {
-    let expectedMessage = "failed - expect \"Array\" (\"[1]\") to be empty"
-    expect([1] as [Int], "Array").to(beEmpty())
-    assertFailure(expectedMessage: expectedMessage)
-  }
-
-  func testEqual() {
-    do {
-      let expectedMessage = "failed - expect \"1\" to be equal to \"2\""
-      expect(1) == 2
-      assertFailure(expectedMessage: expectedMessage)
-    }
-
-    do {
-      let expectedMessage = #"failed - expect "nil" to be equal to "6""#
-      expect(nil as Int?).to(beEqual(to: 6))
-      assertFailure(expectedMessage: expectedMessage)
-    }
-  }
-
-  func testEqual_withDescription() {
-    let expectedMessage = "failed - expect \"Number\" (\"1\") to be equal to \"2\""
-    expect(1, "Number") == 2
-    assertFailure(expectedMessage: expectedMessage)
-  }
-
-  func testNotEqual() {
-    let expectedMessage = "failed - expect \"1\" to not be equal to \"1\""
-    expect(1) != 1
-    assertFailure(expectedMessage: expectedMessage)
-  }
-
-  func testNotEqual_withDescription() {
-    let expectedMessage = "failed - expect \"Number\" (\"1\") to not be equal to \"1\""
-    expect(1, "Number") != 1
-    assertFailure(expectedMessage: expectedMessage)
-  }
-
   func testTrue() {
     let expectedMessage = "failed - expect \"true\" to be equal to \"false\""
     expect(true) == false
@@ -82,6 +38,39 @@ class ExpectFailureMessageTests: FailureCapturingTestCase {
     assertFailure(expectedMessage: expectedMessage)
   }
 
+  func testEqual() {
+    do {
+      let expectedMessage = "failed - expect \"1\" to be equal to \"2\""
+      expect(1) == 2
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      let expectedMessage = #"failed - expect "nil" to be equal to "6""#
+      expect(nil as Int?).to(beEqual(to: 6))
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      let expectedMessage = "failed - expect \"1\" to not be equal to \"1\""
+      expect(1) != 1
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
+  func testEqual_withDescription() {
+    do {
+      let expectedMessage = "failed - expect \"Number\" (\"1\") to be equal to \"2\""
+      expect(1, "Number") == 2
+      assertFailure(expectedMessage: expectedMessage)
+    }
+    do {
+      let expectedMessage = "failed - expect \"Number\" (\"1\") to not be equal to \"1\""
+      expect(1, "Number") != 1
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
   func testBeApproximatelyEqual() {
     let expectedMessage = "failed - expect \"1.1\" to be approximately equal to \"1.2 ± 0.01\""
     expect(1.1).to(beApproximatelyEqual(to: 1.2, within: 0.01))
@@ -92,6 +81,64 @@ class ExpectFailureMessageTests: FailureCapturingTestCase {
     let expectedMessage = "failed - expect \"Number\" (\"1.1\") to be approximately equal to \"1.2 ± 0.01\""
     expect(1.1, "Number").to(beApproximatelyEqual(to: 1.2, within: 0.01))
     assertFailure(expectedMessage: expectedMessage)
+  }
+
+  func testEmpty() {
+    let expectedMessage = "failed - expect \"[1]\" to be empty"
+    expect([1] as [Int]).to(beEmpty())
+    assertFailure(expectedMessage: expectedMessage)
+  }
+
+  func testEmpty_withDescription() {
+    let expectedMessage = "failed - expect \"Array\" (\"[1]\") to be empty"
+    expect([1] as [Int], "Array").to(beEmpty())
+    assertFailure(expectedMessage: expectedMessage)
+  }
+
+  // MARK: - Optional
+
+  func testNil() {
+    do {
+      let expectedMessage = #"failed - expect "1" to be nil"#
+      expect(Optional(1)) == nil
+      assertFailure(expectedMessage: expectedMessage)
+    }
+    do {
+      class Foo: CustomStringConvertible {
+        var description: String = "Foo"
+      }
+      let expectedMessage = #"failed - expect "nil" to be identical to "Foo""#
+      expect(nil as Foo?).to(beIdentical(to: Foo()))
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      let expectedMessage = #"failed - expect "nil" to not be nil"#
+      expect(nil as Int?) != nil
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
+  func testNil_withDescription() {
+    do {
+      let expectedMessage = #"failed - expect "Number" ("1") to be nil"#
+      expect(Optional(1), "Number") == nil
+      assertFailure(expectedMessage: expectedMessage)
+    }
+    do {
+      class Foo: CustomStringConvertible {
+        var description: String = "Foo"
+      }
+      let expectedMessage = #"failed - expect "FooNil" ("nil") to be identical to "Foo""#
+      expect(nil as Foo?, "FooNil").to(beIdentical(to: Foo()))
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      let expectedMessage = #"failed - expect "Number" ("nil") to not be nil"#
+      expect(nil as Int?, "Number") != nil
+      assertFailure(expectedMessage: expectedMessage)
+    }
   }
 
   // MARK: - Throw Error
@@ -419,52 +466,6 @@ class ExpectFailureMessageTests: FailureCapturingTestCase {
 
     let expectedMessage = #"failed - expect "ThrowErrorFunc" to not throw an error, but got: error1"#
     expect(try throwError1Func(), "ThrowErrorFunc").toNot(throwAnError())
-    assertFailure(expectedMessage: expectedMessage)
-  }
-
-  // MARK: - Optional
-
-  func testNil() {
-    do {
-      let expectedMessage = #"failed - expect "1" to be nil"#
-      expect(Optional(1)) == nil
-      assertFailure(expectedMessage: expectedMessage)
-    }
-    do {
-      class Foo: CustomStringConvertible {
-        var description: String = "Foo"
-      }
-      let expectedMessage = #"failed - expect "nil" to be identical to "Foo""#
-      expect(nil as Foo?).to(beIdentical(to: Foo()))
-      assertFailure(expectedMessage: expectedMessage)
-    }
-  }
-
-  func testNil_withDescription() {
-    do {
-      let expectedMessage = #"failed - expect "Number" ("1") to be nil"#
-      expect(Optional(1), "Number") == nil
-      assertFailure(expectedMessage: expectedMessage)
-    }
-    do {
-      class Foo: CustomStringConvertible {
-        var description: String = "Foo"
-      }
-      let expectedMessage = #"failed - expect "FooNil" ("nil") to be identical to "Foo""#
-      expect(nil as Foo?, "FooNil").to(beIdentical(to: Foo()))
-      assertFailure(expectedMessage: expectedMessage)
-    }
-  }
-
-  func testNotNil() {
-    let expectedMessage = #"failed - expect "nil" to not be nil"#
-    expect(nil as Int?) != nil
-    assertFailure(expectedMessage: expectedMessage)
-  }
-
-  func testNotNil_withDescription() {
-    let expectedMessage = #"failed - expect "Number" ("nil") to not be nil"#
-    expect(nil as Int?, "Number") != nil
     assertFailure(expectedMessage: expectedMessage)
   }
 
