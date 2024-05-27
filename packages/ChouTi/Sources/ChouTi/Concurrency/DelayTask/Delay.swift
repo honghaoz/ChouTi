@@ -232,7 +232,8 @@ private final class PrivateDelayTask: DelayTaskType {
       return
     }
 
-    workItem.assert()?.cancel()
+    // workItem could be nil if not started yet
+    workItem?.cancel()
     isCanceled = true
 
     // cancel next task if has one

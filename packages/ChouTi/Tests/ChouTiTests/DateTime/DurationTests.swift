@@ -167,13 +167,10 @@ class DurationTests: XCTestCase {
   // MARK: - DispatchTimeInterval
 
   func testDispatchTimeInterval() {
-    var duration = Duration.nanoseconds(10)
-    XCTAssertEqual(duration.dispatchTimeInterval(), DispatchTimeInterval.nanoseconds(10))
-
-    duration = .zero
+    var duration = Duration.zero
     XCTAssertEqual(duration.dispatchTimeInterval(), DispatchTimeInterval.nanoseconds(0))
 
-    duration = Duration.nanoseconds(10.4)
+    duration = .nanoseconds(10)
     XCTAssertEqual(duration.dispatchTimeInterval(), DispatchTimeInterval.nanoseconds(10))
 
     duration = Duration.microseconds(10)
@@ -241,12 +238,12 @@ class DurationTests: XCTestCase {
 
     do {
       // not exact, nanoseconds
-      let duration = Duration.nanoseconds(0.12)
+      let duration = Duration.nanoseconds(10.4)
       Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
         expect(message) == "inaccurate nanoseconds conversion"
-        expect(metadata) == ["amount": "0.12"]
+        expect(metadata) == ["amount": "10.4"]
       }
-      XCTAssertEqual(duration.dispatchTimeInterval(assertIfNotExact: true), DispatchTimeInterval.nanoseconds(0))
+      XCTAssertEqual(duration.dispatchTimeInterval(assertIfNotExact: true), DispatchTimeInterval.nanoseconds(10))
       Assert.resetTestAssertionFailureHandler()
     }
 
