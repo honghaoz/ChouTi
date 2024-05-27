@@ -8,7 +8,7 @@
 import XCTest
 import ChouTiTest
 
-@testable import ChouTi
+import ChouTi
 
 class OrderedDictionaryTests: XCTestCase {
 

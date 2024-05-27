@@ -330,9 +330,7 @@ extension OrderedDictionary: Sequence {
     public mutating func next() -> (KeyType, ValueType)? {
       if let key = keys.next() {
         guard let value = values.next() else {
-          #if DEBUG
           ChouTi.assertFailure("keys and values count must match", metadata: ["keys": "\(keys)", "values": "\(values)"])
-          #endif
           return nil
         }
         return (key, value)

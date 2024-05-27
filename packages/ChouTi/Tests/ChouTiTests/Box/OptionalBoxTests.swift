@@ -1,13 +1,19 @@
 //
 //  OptionalBoxTests.swift
 //
-//  Created by Honghao Zhang on 2/27/23.
 //  Copyright © 2024 ChouTi. All rights reserved.
 //
 
-import ChouTi
-
+//
+//  OptionalBoxTests.swift
+//
+//  Created by Honghao Zhang on 2/27/23.
+//  Copyright © 2024 ChouTi. All rights reserved.
+//
 import XCTest
+import ChouTiTest
+
+import ChouTi
 
 class OptionalBoxTests: XCTestCase {
 
@@ -20,6 +26,8 @@ class OptionalBoxTests: XCTestCase {
 
     XCTAssertTrue(box.asAny().isNotSet)
 
+    expect(box.description) == "notSet"
+
     var box2: OptionalBox<Int> = .notSet
     XCTAssertEqual(box, box2)
 
@@ -28,6 +36,8 @@ class OptionalBoxTests: XCTestCase {
 
     box2 = .some(200)
     XCTAssertNotEqual(box, box2)
+
+    expect(box2.description) == "some(200)"
   }
 
   func test_whenNone() {
@@ -40,6 +50,8 @@ class OptionalBoxTests: XCTestCase {
     XCTAssertFalse(box.asAny().isNotSet)
     XCTAssertTrue(box.asAny().hasValue)
 
+    expect(box.description) == "none"
+
     var box2: OptionalBox<Int> = .notSet
     XCTAssertNotEqual(box, box2)
 
@@ -48,6 +60,8 @@ class OptionalBoxTests: XCTestCase {
 
     box2 = .some(200)
     XCTAssertNotEqual(box, box2)
+
+    expect(box2.description) == "some(200)"
   }
 
   func test_whenSome() {
@@ -63,6 +77,8 @@ class OptionalBoxTests: XCTestCase {
     box = (101 as Int?).wrapIntoOptionalBox()
     XCTAssertEqual(box.value, 101)
 
+    expect(box.description) == "some(101)"
+
     var box2: OptionalBox<Int> = .notSet
     XCTAssertNotEqual(box, box2)
 
@@ -74,6 +90,24 @@ class OptionalBoxTests: XCTestCase {
 
     box2 = .some(102)
     XCTAssertNotEqual(box, box2)
+
+    expect(box2.description) == "some(102)"
+  }
+
+  func test_wrap() {
+    let box: OptionalBox<Int> = .wrap(101)
+    XCTAssertEqual(box.value, 101)
+    XCTAssertFalse(box.isNotSet)
+    XCTAssertTrue(box.hasValue)
+
+    expect(box.description) == "some(101)"
+
+    let box2: OptionalBox<Int> = .wrap(nil)
+    XCTAssertNil(box2.value)
+    XCTAssertFalse(box2.isNotSet)
+    XCTAssertTrue(box2.hasValue)
+
+    expect(box2.description) == "none"
   }
 }
 

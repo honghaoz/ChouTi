@@ -6,7 +6,8 @@
 //
 
 import XCTest
-@testable import ChouTi
+
+import ChouTi
 
 final class UnfairLockTests: XCTestCase {
 

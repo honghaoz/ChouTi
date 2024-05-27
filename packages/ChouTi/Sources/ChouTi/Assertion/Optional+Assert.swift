@@ -15,7 +15,7 @@ public extension Optional {
   ///   - assertionMessage: The message to show when assertion fails.
   ///   - metadata: Metadata for the assertion failure.
   /// - Returns: The unwrapped value.
-  func assert(_ assertionMessage: @autoclosure () -> String = "unexpected nil value",
+  func assert(_ assertionMessage: @autoclosure () -> String = "Unexpected nil value",
               metadata: @autoclosure () -> OrderedDictionary<String, String> = [:],
               file: StaticString = #fileID,
               line: UInt = #line,
@@ -23,9 +23,7 @@ public extension Optional {
   {
     #if DEBUG
     guard let unwrapped = self else {
-      if !Thread.current.isRunningXCTest {
-        ChouTi.assertFailure(assertionMessage(), metadata: metadata(), file: file, line: line, function: function)
-      }
+      ChouTi.assertFailure(assertionMessage(), metadata: metadata(), file: file, line: line, function: function)
       return self
     }
     return unwrapped

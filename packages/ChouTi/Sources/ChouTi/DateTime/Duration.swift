@@ -95,7 +95,7 @@ public enum Duration: Comparable {
       return .nanoseconds(0)
     case .nanoseconds(let amount):
       guard let integer = Int(exactly: amount) else {
-        if !Thread.current.isRunningXCTest, assertIfNotExact {
+        if assertIfNotExact {
           ChouTi.assertFailure("inaccurate nanoseconds conversion", metadata: [
             "amount": "\(amount)",
           ])
@@ -107,7 +107,7 @@ public enum Duration: Comparable {
     case .microseconds(let amount):
       guard let integer = Int(exactly: amount) else {
         guard let nanosecondsInteger = Int(exactly: amount * 1e3) else {
-          if !Thread.current.isRunningXCTest, assertIfNotExact {
+          if assertIfNotExact {
             ChouTi.assertFailure("inaccurate microseconds conversion", metadata: [
               "amount": "\(amount)",
             ])
@@ -121,7 +121,7 @@ public enum Duration: Comparable {
     case .milliseconds(let amount):
       guard let integer = Int(exactly: amount) else {
         guard let nanosecondsInteger = Int(exactly: amount * 1e6) else {
-          if !Thread.current.isRunningXCTest, assertIfNotExact {
+          if assertIfNotExact {
             ChouTi.assertFailure("inaccurate milliseconds conversion", metadata: [
               "amount": "\(amount)",
             ])
@@ -135,7 +135,7 @@ public enum Duration: Comparable {
     case .seconds(let amount):
       guard let integer = Int(exactly: amount) else {
         guard let nanosecondsInteger = Int(exactly: amount * 1e9) else {
-          if !Thread.current.isRunningXCTest, assertIfNotExact {
+          if assertIfNotExact {
             ChouTi.assertFailure("inaccurate seconds conversion", metadata: [
               "amount": "\(amount)",
             ])
@@ -155,8 +155,8 @@ public enum Duration: Comparable {
       let amount = seconds
       guard let integer = Int(exactly: amount) else {
         guard let nanosecondsInteger = Int(exactly: amount * 1e9) else {
-          if !Thread.current.isRunningXCTest, assertIfNotExact {
-            ChouTi.assertFailure("inaccurate conversion", metadata: [
+          if assertIfNotExact {
+            ChouTi.assertFailure("inaccurate seconds conversion", metadata: [
               "amount": "\(amount)",
             ])
           }
@@ -179,31 +179,47 @@ public enum Duration: Comparable {
 
 public extension Date {
 
+  /// Add a duration to the date.
+  /// - Parameter duration: The duration to add.
+  /// - Returns: A new date with the duration added.
   @inlinable
   @inline(__always)
   func adding(_ duration: Duration) -> Date {
     addingTimeInterval(duration.seconds)
   }
 
+  /// Add a time interval to the date.
+  /// - Parameter timeInterval: The time interval to add.
+  /// - Returns: A new date with the time interval added.
   @inlinable
   @inline(__always)
   func adding(_ timeInterval: TimeInterval) -> Date {
     addingTimeInterval(timeInterval)
   }
 
+  /// Subtract a duration from the date.
+  /// - Parameter duration: The duration to subtract.
+  /// - Returns: A new date with the duration subtracted.
   @inlinable
   @inline(__always)
   func subtracting(_ duration: Duration) -> Date {
     addingTimeInterval(-duration.seconds)
   }
 
+  /// Subtract a time interval from the date.
+  /// - Parameter timeInterval: The time interval to subtract.
+  /// - Returns: A new date with the time interval subtracted.
   @inlinable
   @inline(__always)
   func subtracting(_ timeInterval: TimeInterval) -> Date {
     addingTimeInterval(-timeInterval)
   }
 
-  /// Return true if the time has been for example 60s, inclusive.
+  /// Check if the date has been passed a certain duration (inclusive) since a given date.
+  /// - Parameters:
+  ///   - duration: The duration to check.
+  ///   - since: The date to compare with.
+  /// - Returns: `true` if the date has been passed the duration since the given date.
   @inlinable
   @inline(__always)
   func hasBeen(_ duration: Duration, since: Date) -> Bool {

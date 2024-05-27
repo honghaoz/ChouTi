@@ -31,6 +31,13 @@ public enum Assert {
   /// Default handler will fail the test.
   /// You can call `setTestAssertionFailureHandler(_:)` to set your own handler to customize the behavior.
   /// Call `resetTestAssertionFailureHandler()` to reset the handler to the default handler.
+  ///
+  /// Example:
+  /// ```swift
+  /// Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
+  ///   expect(message) == "assertion failure message"
+  /// }
+  /// ```
   public static var testAssertionFailureHandler: TestAssertionFailureHandler? = __defaultTestAssertionFailureHandler
 
   /// Set the test assertion failure handler.

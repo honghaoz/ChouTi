@@ -170,6 +170,9 @@ class DurationTests: XCTestCase {
     var duration = Duration.nanoseconds(10)
     XCTAssertEqual(duration.dispatchTimeInterval(), DispatchTimeInterval.nanoseconds(10))
 
+    duration = .zero
+    XCTAssertEqual(duration.dispatchTimeInterval(), DispatchTimeInterval.nanoseconds(0))
+
     duration = Duration.nanoseconds(10.4)
     XCTAssertEqual(duration.dispatchTimeInterval(), DispatchTimeInterval.nanoseconds(10))
 
@@ -194,11 +197,69 @@ class DurationTests: XCTestCase {
     duration = Duration.minutes(10)
     XCTAssertEqual(duration.dispatchTimeInterval(), DispatchTimeInterval.seconds(600))
 
+    duration = Duration.minutes(0.12 * 1e-6)
+    XCTAssertEqual(duration.dispatchTimeInterval(), DispatchTimeInterval.nanoseconds(7200))
+
     duration = Duration.minutes(10.7)
     XCTAssertEqual(duration.dispatchTimeInterval(), DispatchTimeInterval.seconds(642))
 
     duration = Duration.forever
     XCTAssertEqual(duration.dispatchTimeInterval(), DispatchTimeInterval.never)
+
+    do {
+      // not exact, seconds
+      let duration = Duration.seconds(0.12 * 1e-9)
+      Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
+        expect(message) == "inaccurate seconds conversion"
+        expect(metadata) == ["amount": "1.2e-10"]
+      }
+      XCTAssertEqual(duration.dispatchTimeInterval(assertIfNotExact: true), DispatchTimeInterval.nanoseconds(0))
+      Assert.resetTestAssertionFailureHandler()
+    }
+
+    do {
+      // not exact, milliseconds
+      let duration = Duration.milliseconds(0.12 * 1e-6)
+      Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
+        expect(message) == "inaccurate milliseconds conversion"
+        expect(metadata) == ["amount": "1.2e-07"]
+      }
+      XCTAssertEqual(duration.dispatchTimeInterval(assertIfNotExact: true), DispatchTimeInterval.nanoseconds(0))
+      Assert.resetTestAssertionFailureHandler()
+    }
+
+    do {
+      // not exact, microseconds
+      let duration = Duration.microseconds(0.12 * 1e-3)
+      Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
+        expect(message) == "inaccurate microseconds conversion"
+        expect(metadata) == ["amount": "0.00012"]
+      }
+      XCTAssertEqual(duration.dispatchTimeInterval(assertIfNotExact: true), DispatchTimeInterval.nanoseconds(0))
+      Assert.resetTestAssertionFailureHandler()
+    }
+
+    do {
+      // not exact, nanoseconds
+      let duration = Duration.nanoseconds(0.12)
+      Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
+        expect(message) == "inaccurate nanoseconds conversion"
+        expect(metadata) == ["amount": "0.12"]
+      }
+      XCTAssertEqual(duration.dispatchTimeInterval(assertIfNotExact: true), DispatchTimeInterval.nanoseconds(0))
+      Assert.resetTestAssertionFailureHandler()
+    }
+
+    do {
+      // not exact, minutes
+      let duration = Duration.minutes(0.12 * 1e-9)
+      Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
+        expect(message) == "inaccurate seconds conversion"
+        expect(metadata) == ["amount": "7.2e-09"]
+      }
+      XCTAssertEqual(duration.dispatchTimeInterval(assertIfNotExact: true), DispatchTimeInterval.nanoseconds(7))
+      Assert.resetTestAssertionFailureHandler()
+    }
   }
 
   // MARK: - Comparable
@@ -219,35 +280,29 @@ class DurationTests: XCTestCase {
     XCTAssert(Duration.hours(1) > Duration.seconds(1))
   }
 
-  // TODO: to restore
+  func testAdding() {
+    let date = Date(timeIntervalSince1970: 1598249449) // Aug 23, 23:10 PM in Pacific Time.
 
-//  func testAdding() {
-//    let date = Date(timeIntervalSince1970: 1598249449) // Aug 23, 23:10 PM in Pacific Time.
-//
-//    let oneHourLater = date.adding(.hours(1))
-//    XCTAssertEqual(oneHourLater.day(in: .losAngeles), 24)
-//    XCTAssertEqual(oneHourLater.hour(in: .losAngeles), 0)
-//    XCTAssertEqual(oneHourLater.minute(in: .losAngeles), 10)
-//    XCTAssertEqual(oneHourLater.second(in: .losAngeles), 49)
-//  }
-//
-//  func testSubtracting() {
-//    let date = Date(timeIntervalSince1970: 1598249449) // Aug 23, 23:10 PM in Pacific Time.
-//
-//    let oneHourAgo = date.subtracting(.hours(2))
-//    XCTAssertEqual(oneHourAgo.day(in: .losAngeles), 23)
-//    XCTAssertEqual(oneHourAgo.hour(in: .losAngeles), 21)
-//    XCTAssertEqual(oneHourAgo.minute(in: .losAngeles), 10)
-//    XCTAssertEqual(oneHourAgo.second(in: .losAngeles), 49)
-//
-//    let twoSecondsAgo = date.subtracting(2)
-//    XCTAssertEqual(twoSecondsAgo.second(in: .losAngeles), 47)
-//  }
-//
-//  func testHasBeen() {
-//    let date1 = Date(timeIntervalSince1970: 1598249449) // Aug 23, 23:10:49 PM in Pacific Time.
-//    let date2 = Date(timeIntervalSince1970: 1598249439) // Aug 23, 23:10:39 PM in Pacific Time.
-//    XCTAssertTrue(date1.hasBeen(.seconds(10), since: date2))
-//    XCTAssertFalse(date1.hasBeen(.seconds(11), since: date2))
-//  }
+    let oneHourLater = date.adding(.hours(1))
+    expect(oneHourLater.timeIntervalSince1970) == 1598253049
+
+    expect(date.adding(60 * 60).timeIntervalSince1970) == 1598253049
+  }
+
+  func testSubtracting() {
+    let date = Date(timeIntervalSince1970: 1598249449) // Aug 23, 23:10 PM in Pacific Time.
+
+    let oneHourAgo = date.subtracting(.hours(2))
+    expect(oneHourAgo.timeIntervalSince1970) == 1598242249
+
+    let twoSecondsAgo = date.subtracting(2)
+    expect(twoSecondsAgo.timeIntervalSince1970) == 1598249447
+  }
+
+  func testHasBeen() {
+    let date1 = Date(timeIntervalSince1970: 1598249449) // Aug 23, 23:10:49 PM in Pacific Time.
+    let date2 = Date(timeIntervalSince1970: 1598249439) // Aug 23, 23:10:39 PM in Pacific Time.
+    XCTAssertTrue(date1.hasBeen(.seconds(10), since: date2))
+    XCTAssertFalse(date1.hasBeen(.seconds(11), since: date2))
+  }
 }

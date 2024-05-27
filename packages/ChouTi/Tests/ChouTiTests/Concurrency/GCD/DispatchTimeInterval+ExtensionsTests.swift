@@ -5,9 +5,9 @@
 //  Copyright © 2024 ChouTi. All rights reserved.
 //
 
-import Foundation
 import XCTest
-@testable import ChouTi
+
+import ChouTi
 
 class DispatchTimeInterval_ExtensionsTests: XCTestCase {
 

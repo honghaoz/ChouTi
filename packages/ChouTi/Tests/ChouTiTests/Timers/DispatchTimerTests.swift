@@ -5,8 +5,9 @@
 //  Copyright © 2024 ChouTi. All rights reserved.
 //
 
-import Foundation
 import XCTest
+import ChouTiTest
+
 import ChouTi
 
 class DispatchTimerTests: XCTestCase {
@@ -15,15 +16,14 @@ class DispatchTimerTests: XCTestCase {
     var fireCount = 0
     let queue = DispatchQueue.makeSerialQueue(label: "test", qos: .userInteractive)
     let timer = DispatchTimer(queue: queue) {
-      XCTAssertTrue(DispatchQueue.isOnQueue(queue))
+      expect(DispatchQueue.isOnQueue(queue)) == true
       fireCount += 1
     }
     timer.fire(every: .seconds(1), leeway: .zero, fireImmediately: true)
 
     wait(timeout: 0.1)
-    XCTAssertEqual(fireCount, 1)
+    expect(fireCount) == 1
 
-    // TODO: restore tests
-    // XCTAssertEqualEventually(fireCount, 2)
+    expect(fireCount).toEventually(beEqual(to: 2))
   }
 }

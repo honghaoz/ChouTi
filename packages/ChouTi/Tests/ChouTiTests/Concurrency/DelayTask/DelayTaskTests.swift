@@ -6,7 +6,9 @@
 //
 
 import XCTest
-@testable import ChouTi
+import ChouTiTest
+
+import ChouTi
 
 class DelayTaskTests: XCTestCase {
 
@@ -148,7 +150,6 @@ class DelayTaskTests: XCTestCase {
     }
   }
 
-  #if !CI
   func testChainedTaskCancelledInMiddle() {
     let expectation = XCTestExpectation(description: "")
 
@@ -164,43 +165,48 @@ class DelayTaskTests: XCTestCase {
       value = 4
     }
 
-    XCTAssertEqual(value, 1)
-    XCTAssertEqual(t1.isExecuted, false)
-    XCTAssertEqual(t1.isCanceled, false)
-    XCTAssertEqual(t2.isExecuted, false)
-    XCTAssertEqual(t2.isCanceled, false)
+    expect(value) == 1
+    expect(t1.isExecuted) == false
+    expect(t1.isCanceled) == false
+    expect(t2.isExecuted) == false
+    expect(t2.isCanceled) == false
+    expect(t3.isExecuted) == false
+    expect(t3.isCanceled) == false
 
     delay(0.1, leeway: .zero) {
-      XCTAssertEqual(t1.isExecuted, false)
-      XCTAssertEqual(t1.isCanceled, false)
-      XCTAssertEqual(t2.isExecuted, false)
-      XCTAssertEqual(t2.isCanceled, false)
+      expect(t1.isExecuted) == false
+      expect(t1.isCanceled) == false
+      expect(t2.isExecuted) == false
+      expect(t2.isCanceled) == false
+      expect(t3.isExecuted) == false
+      expect(t3.isCanceled) == false
     }
 
     delay(0.3, leeway: .zero) {
-      XCTAssertEqual(value, 2)
+      expect(value) == 2
 
-      XCTAssertEqual(t1.isExecuted, true)
-      XCTAssertEqual(t1.isCanceled, false)
-      XCTAssertEqual(t2.isExecuted, false)
-      XCTAssertEqual(t2.isCanceled, false)
+      expect(t1.isExecuted) == true // <--
+      expect(t1.isCanceled) == false
+      expect(t2.isExecuted) == false
+      expect(t2.isCanceled) == false
+      expect(t3.isExecuted) == false
+      expect(t3.isCanceled) == false
 
       // cancel t2 should also cancel t3
       t2.cancel()
 
-      XCTAssertEqual(t1.isExecuted, true)
-      XCTAssertEqual(t1.isCanceled, false)
-      XCTAssertEqual(t2.isExecuted, false)
-      XCTAssertEqual(t2.isCanceled, true)
-      XCTAssertEqual(t3.isExecuted, false)
-      XCTAssertEqual(t3.isCanceled, true)
+      expect(t1.isExecuted) == true
+      expect(t1.isCanceled) == false
+      expect(t2.isExecuted) == false
+      expect(t2.isCanceled) == true // <--
+      expect(t3.isExecuted) == false
+      expect(t3.isCanceled) == true // <--
 
       expectation.fulfill()
     }
 
     wait(for: [expectation], timeout: 5)
   }
-  #endif
 
   func testEarlyExecute() {
     let expectation = XCTestExpectation(description: "execute")

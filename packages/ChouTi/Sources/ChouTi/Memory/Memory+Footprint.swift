@@ -39,8 +39,11 @@ public extension Memory {
   /// Get formatted memory footprint in MB. Like "64.2509765625 MB"
   /// - Returns: Formatted memory footprint in MB.
   static func formattedMemoryFootprint() -> String {
-    let usedBytes: UInt64? = UInt64(memoryFootprint() ?? 0)
-    let usedMB = Double(usedBytes ?? 0) / 1024 / 1024
+    guard let memoryFootprint = memoryFootprint() else {
+      return "Unknown"
+    }
+    let usedBytes = UInt64(memoryFootprint)
+    let usedMB = Double(usedBytes) / 1024 / 1024
     return "\(usedMB) MB"
   }
 }

@@ -39,6 +39,8 @@ extension RuntimeError: Equatable {
       return true
     case (reason(let r1), reason(let r2)):
       return r1 == r2
+    case (error(let e1), error(let e2)):
+      return String(describing: e1) == String(describing: e2)
     default:
       return false
     }

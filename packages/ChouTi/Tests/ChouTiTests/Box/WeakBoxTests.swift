@@ -5,9 +5,9 @@
 //  Copyright © 2024 ChouTi. All rights reserved.
 //
 
-import Foundation
-
 import XCTest
+import ChouTiTest
+
 import ChouTi
 
 class WeakBoxTests: XCTestCase {
@@ -74,5 +74,63 @@ class WeakBoxTests: XCTestCase {
     let foo2 = ClassFoo()
     box.object = foo2
     XCTAssert(box.object === foo2)
+  }
+
+  func test_Equatable() {
+    do {
+      let box1 = WeakBox<NSObject>(nil)
+      let box2 = WeakBox<NSObject>(nil)
+      XCTAssertEqual(box1, box2)
+    }
+
+    do {
+      let object = NSObject()
+      let box1 = WeakBox<NSObject>(object)
+      let box2 = WeakBox<NSObject>(nil)
+      XCTAssertNotEqual(box1, box2)
+    }
+
+    do {
+      let object = NSObject()
+      let box1 = WeakBox<NSObject>(nil)
+      let box2 = WeakBox<NSObject>(object)
+      XCTAssertNotEqual(box1, box2)
+    }
+
+    do {
+      let object = NSObject()
+      let box1 = WeakBox<NSObject>(object)
+      let box2 = WeakBox<NSObject>(object)
+      XCTAssertEqual(box1, box2)
+    }
+  }
+
+  func test_Hashable() {
+    do {
+      let box1 = WeakBox<NSObject>(nil)
+      let box2 = WeakBox<NSObject>(nil)
+      XCTAssertEqual(box1.hashValue, box2.hashValue)
+    }
+
+    do {
+      let object = NSObject()
+      let box1 = WeakBox<NSObject>(object)
+      let box2 = WeakBox<NSObject>(nil)
+      XCTAssertNotEqual(box1.hashValue, box2.hashValue)
+    }
+
+    do {
+      let object = NSObject()
+      let box1 = WeakBox<NSObject>(nil)
+      let box2 = WeakBox<NSObject>(object)
+      XCTAssertNotEqual(box1.hashValue, box2.hashValue)
+    }
+
+    do {
+      let object = NSObject()
+      let box1 = WeakBox<NSObject>(object)
+      let box2 = WeakBox<NSObject>(object)
+      XCTAssertEqual(box1.hashValue, box2.hashValue)
+    }
   }
 }
