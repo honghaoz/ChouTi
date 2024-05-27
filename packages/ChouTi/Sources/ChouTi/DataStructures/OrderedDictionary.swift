@@ -8,7 +8,7 @@
 import Foundation
 
 /// An ordered dictionary.
-public struct OrderedDictionary<KeyType: Hashable, ValueType> {
+public struct OrderedDictionary<KeyType: Hashable, ValueType>: CustomStringConvertible {
 
   /// The number of key-value pairs in the dictionary.
   ///
@@ -192,6 +192,35 @@ public struct OrderedDictionary<KeyType: Hashable, ValueType> {
   public mutating func reserveCapacity(_ minimumCapacity: Int) {
     keys.reserveCapacity(minimumCapacity)
     dictionary.reserveCapacity(minimumCapacity)
+  }
+
+  // MARK: - CustomStringConvertible
+
+  /// A textual representation of the dictionary's key-value pairs.
+  ///
+  /// Example: `["a": 1, "b": 2, "c": 3]`
+  public var description: String {
+    let pairs = keys.map { key in
+      // swiftlint:disable:next force_unwrapping
+      let value = dictionary[key]!
+
+      let keyDescription: String
+      if let key = key as? (any ExpressibleByUnicodeScalarLiteral) {
+        keyDescription = "\"\(key)\""
+      } else {
+        keyDescription = "\(key)"
+      }
+
+      let valueDescription: String
+      if let value = value as? (any ExpressibleByUnicodeScalarLiteral) {
+        valueDescription = "\"\(value)\""
+      } else {
+        valueDescription = "\(value)"
+      }
+
+      return "\(keyDescription): \(valueDescription)"
+    }
+    return "[" + pairs.joined(separator: ", ") + "]"
   }
 }
 

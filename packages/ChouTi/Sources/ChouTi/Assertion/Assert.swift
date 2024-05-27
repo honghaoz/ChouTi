@@ -53,12 +53,13 @@ public enum Assert {
 
   static let __defaultTestAssertionFailureHandler: TestAssertionFailureHandler? = { message, metadata, file, line, column in
     let message = """
-    🛑 Assertion Failure 🛑 💾 Source: \(file):\(line):\(column), 🗯️ Message: "\(message)"\(makeMetadataDescription(metadata: metadata))
+    🛑 Assertion Failure 🛑 💾 Source: \(file):\(line):\(column), 🗯️ Message: "\(message)", 📝 metadata: \(metadata)
     """
     #if TEST
     XCTFail(message, file: file, line: line)
     #else
     print(message)
+    raise(SIGABRT)
     #endif
   }
 
@@ -147,7 +148,8 @@ func makeMetadataDescription(metadata: OrderedDictionary<String, String>) -> Str
 
   """
 
-  for (key, value) in metadata {
+  for key in metadata.keys.sorted() {
+    let value = metadata[key]! // swiftlint:disable:this force_unwrapping
     string += "- \(key): \(value)\n"
   }
   // remove last newline
