@@ -18,14 +18,14 @@ RESET=$(safe_tput sgr0)
 TAG="ChouTi"
 GIT_DIR=$(git rev-parse --git-dir)
 
+cd "$GIT_DIR" || exit 1
+
 if [[ ! -d "hooks" ]]; then
   mkdir hooks
 fi
 
 function write-hook-script-content() {
   HOOK_NAME="$1"
-
-  cd "$GIT_DIR" || return
   HOOK_SCRIPT="./hooks/$HOOK_NAME"
 
   # 1) prepare empty hook script file if needed
