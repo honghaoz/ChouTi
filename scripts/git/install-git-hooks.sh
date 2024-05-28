@@ -8,7 +8,7 @@ pushd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
 # ===------ BEGIN ------===
 
 # define colors
-safe_tput() { [[ -t 1 ]] && tput "$@" || echo ""; }
+safe_tput() { [ -n "$TERM" ] && [ "$TERM" != "dumb" ] && tput "$@" || echo ""; }
 CYAN=$(safe_tput setaf 6)
 RESET=$(safe_tput sgr0)
 

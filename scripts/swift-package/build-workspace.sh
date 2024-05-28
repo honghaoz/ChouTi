@@ -2,37 +2,25 @@
 
 set -e
 
-tput-safe() {
-  if [ -n "$TERM" ] && [ "$TERM" != "dumb" ]; then
-    tput "$@"
-  fi
-}
-
-tput-bold() {
-  tput-safe bold
-}
-
-tput-cyan() {
-  tput-safe setaf 6
-}
-
-tput-reset() {
-  tput-safe sgr0
-}
+# define colors
+safe_tput() { [ -n "$TERM" ] && [ "$TERM" != "dumb" ] && tput "$@" || echo ""; }
+BOLD=$(safe_tput bold)
+CYAN=$(safe_tput setaf 6)
+RESET=$(safe_tput sgr0)
 
 print_help() {
-  echo "$(tput-bold)OVERVIEW:$(tput-reset) Build Swift package via a workspace for all platforms."
+  echo "${BOLD}OVERVIEW:${RESET} Build Swift package via a workspace for all platforms."
   echo ""
-  echo "$(tput-bold)Usage:$(tput-reset) $0 --workspace-path <workspace_path> --scheme <scheme_name> --configuration <configuration> --os <iOS macOS visionOS>"
+  echo "${BOLD}Usage:${RESET} $0 --workspace-path <workspace_path> --scheme <scheme_name> --configuration <configuration> --os <iOS macOS visionOS>"
   echo ""
-  echo "$(tput-bold)OPTIONS:$(tput-reset)"
+  echo "${BOLD}OPTIONS:${RESET}"
   echo "  --workspace-path <workspace_path>  The path to the workspace. Required."
   echo "  --scheme <scheme_name>             The scheme to build. Required."
   echo "  --configuration <configuration>    The build configuration. Optional. Default is Debug."
   echo "  --os <iOS macOS visionOS>          The list of OS to build for. Optional. Default is 'iOS macOS visionOS'."
   echo "  --help, -h                         Show this help message."
   echo ""
-  echo "$(tput-bold)EXAMPLES:$(tput-reset)"
+  echo "${BOLD}EXAMPLES:${RESET}"
   echo "  $0 --workspace path/to/Project.xcworkspace --scheme ChouTi --configuration Debug|Release --os iOS macOS visionOS"
 }
 
@@ -152,11 +140,11 @@ WORKSPACE=$(basename "$WORKSPACE_PATH")
 
 cd "$WORKSPACE_DIR" || exit 1
 
-echo "🚀 Build workspace: $(tput-cyan)$WORKSPACE$(tput-reset), scheme: $(tput-cyan)$SCHEME$(tput-reset), configuration: $(tput-cyan)$CONFIGURATION$(tput-reset), os: $(tput-cyan)$OS$(tput-reset)"
+echo "🚀 Build workspace: ${CYAN}$WORKSPACE${RESET}, scheme: ${CYAN}$SCHEME${RESET}, configuration: ${CYAN}$CONFIGURATION${RESET}, os: ${CYAN}$OS${RESET}"
 
-echo "$(tput-bold)Swift Version:$(tput-reset) $(swift --version)"
-echo "$(tput-bold)Xcode Version:$(tput-reset) $(xcodebuild -version)"
-echo "$(tput-bold)Available Simulators:$(tput-reset)"
+echo "${BOLD}Swift Version:${RESET} $(swift --version)"
+echo "${BOLD}Xcode Version:${RESET} $(xcodebuild -version)"
+echo "${BOLD}Available Simulators:${RESET}"
 xcrun simctl list devices available
 
 echo "ℹ️  $WORKSPACE, Scheme: $SCHEME, available destinations:"

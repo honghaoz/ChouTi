@@ -8,7 +8,7 @@ pushd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
 # ===------ BEGIN ------===
 
 # define colors
-safe_tput() { [[ -t 1 ]] && tput "$@" || echo ""; }
+safe_tput() { [ -n "$TERM" ] && [ "$TERM" != "dumb" ] && tput "$@" || echo ""; }
 BOLD=$(safe_tput bold)
 GREEN=$(safe_tput setaf 2)
 RESET=$(safe_tput sgr0)
@@ -75,7 +75,7 @@ if [[ "$FORMAT_ALL" == "true" ]]; then
   end_time="$(perl -MTime::HiRes=time -e 'printf "%.9f\n", time')" # track end time
   time_diff=$(echo "$end_time - $start_time" | bc) # calculate time difference
   formatted_time_diff=$(printf "%.3f" "$time_diff") # format time difference to 3 decimal places
-  printf "⏱️  swiftformat took $GREEN%s$NORMAL seconds.\n" "$formatted_time_diff"
+  printf "⏱️  swiftformat took $GREEN%s$RESET seconds.\n" "$formatted_time_diff"
 
   # swiftlint
   echo ""
@@ -88,7 +88,7 @@ if [[ "$FORMAT_ALL" == "true" ]]; then
   end_time="$(perl -MTime::HiRes=time -e 'printf "%.9f\n", time')" # track end time
   time_diff=$(echo "$end_time - $start_time" | bc) # calculate time difference
   formatted_time_diff=$(printf "%.3f" "$time_diff") # format time difference to 3 decimal places
-  printf "⏱️  swiftlint took $GREEN%s$NORMAL seconds.\n" "$formatted_time_diff"
+  printf "⏱️  swiftlint took $GREEN%s$RESET seconds.\n" "$formatted_time_diff"
 else
   echo "TODO: Format staged files"
 fi

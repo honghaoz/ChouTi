@@ -3,7 +3,7 @@
 set -e
 
 # define colors
-safe_tput() { [[ -t 1 ]] && tput "$@" || echo ""; }
+safe_tput() { [ -n "$TERM" ] && [ "$TERM" != "dumb" ] && tput "$@" || echo ""; }
 BOLD=$(safe_tput bold)
 RED=$(safe_tput setaf 1)
 YELLOW=$(safe_tput setaf 3)

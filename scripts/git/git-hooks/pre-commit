@@ -3,7 +3,7 @@
 set -e
 
 # define colors
-safe_tput() { [[ -t 1 ]] && tput "$@" || echo ""; }
+safe_tput() { [ -n "$TERM" ] && [ "$TERM" != "dumb" ] && tput "$@" || echo ""; }
 CYAN=$(safe_tput setaf 6)
 GREEN=$(safe_tput setaf 2)
 RESET=$(safe_tput sgr0)

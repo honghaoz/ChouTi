@@ -9,11 +9,8 @@ pushd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
 
 # OVERVIEW: Download bins to /bin, based on .versions.
 
-safe_tput() {
-  if [ -n "$TERM" ] && [ "$TERM" != "dumb" ]; then
-    tput "$@"
-  fi
-}
+# define colors
+safe_tput() { [ -n "$TERM" ] && [ "$TERM" != "dumb" ] && tput "$@" || echo ""; }
 CYAN=$(safe_tput setaf 6)
 RESET=$(safe_tput sgr0)
 
