@@ -27,14 +27,21 @@ final class DispatchQueue_OnSpecificQueueTests: XCTestCase {
 
   func testRunOnBackground() {
     var hasRun = false
+    var logs: [String] = []
+    logs.append("DEBUG[\(#function)][\(Thread.current)][\(DispatchQueue.currentQueueLabel)] before async on shared queue")
     DispatchQueue.shared().async {
+      logs.append("DEBUG[\(#function)][\(Thread.current)][\(DispatchQueue.currentQueueLabel)] before async on self queue")
       DispatchQueue.onQueueAsync(queue: self.queue) {
+        logs.append("DEBUG[\(#function)][\(Thread.current)][\(DispatchQueue.currentQueueLabel)] on self queue")
         dispatchPrecondition(condition: .onQueue(self.queue))
         hasRun = true
+        logs.append("DEBUG[\(#function)][\(Thread.current)][\(DispatchQueue.currentQueueLabel)] on self queue executed")
       }
+      logs.append("DEBUG[\(#function)][\(Thread.current)][\(DispatchQueue.currentQueueLabel)] after async on self queue")
       expect(hasRun) == false
     }
-    expect(hasRun) == false
+    logs.append("DEBUG[\(#function)][\(Thread.current)][\(DispatchQueue.currentQueueLabel)] after async on shared queue")
+    expect(hasRun, "logs: \(logs)") == false
     expect(hasRun).toEventually(beTrue())
 
     // var hasRun = false
