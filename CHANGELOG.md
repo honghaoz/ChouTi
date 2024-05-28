@@ -1,4 +1,10 @@
 # Change Log
+
+## [0.0.4](https://github.com/honghaoz/ChouTi/releases/tag/0.0.4) (2024-00-00)
+
+- Framework `ChouTiTest`:
+  - Updated: `import ChouTiTest` now imports `XCTest` as well
+
 ## [0.0.3](https://github.com/honghaoz/ChouTi/releases/tag/0.0.3) (2024-05-26)
 
 - Framework `ChouTi`:
