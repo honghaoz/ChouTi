@@ -30,7 +30,7 @@ jobs:
       matrix:
         os: [macos-14]
         xcode: [Xcode_15.3]
-    timeout-minutes: 15
+    timeout-minutes: 20
     runs-on: ${{ matrix.os }}
     env:
       DEVELOPER_DIR: /Applications/${{ matrix.xcode }}.app/Contents/Developer
