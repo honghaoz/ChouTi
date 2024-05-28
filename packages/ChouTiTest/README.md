@@ -29,7 +29,6 @@ targets: [
 ## Usage
 
 ```swift
-import XCTest
 import ChouTiTest
 
 class SomeTests: XCTestCase {

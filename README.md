@@ -55,7 +55,6 @@ import ChouTi
 [**ChouTiTest**](packages/ChouTiTest/README.md) is a Swift testing framework for writing tests with simple, expressive syntax.
 
 ```swift
-import XCTest
 import ChouTiTest
 
 class SomeTests: XCTestCase {
