@@ -79,11 +79,13 @@ REPO_ROOT=$(git rev-parse --show-toplevel)
 cd "$REPO_ROOT" || exit 1
 
 SWIFTFORMAT_BIN="$REPO_ROOT/bin/swiftformat" && [[ ! -f "$SWIFTFORMAT_BIN" ]] && { echo "🛑 Error: swiftformat not found."; exit 1; }
+SWIFTFORMAT_VERSION=$("$SWIFTFORMAT_BIN" --version)
 SWIFTFORMAT_CONFIG="$REPO_ROOT/configs/.swiftformat" && [[ ! -f "$SWIFTFORMAT_CONFIG" ]] && { echo "🛑 Error: swiftformat config not found."; exit 1; }
 SWIFTFORMAT_CACHE="$REPO_ROOT/.temp/swiftformat-cache" && mkdir -p "$REPO_ROOT/.temp"
 SWIFTFORMAT_BEAUTIFY="$REPO_ROOT/scripts/swiftformat-beautify"
 
 SWIFTLINT_BIN="$REPO_ROOT/bin/swiftlint" && [[ ! -f "$SWIFTLINT_BIN" ]] && { echo "🛑 Error: swiftlint not found."; exit 1; }
+SWIFTLINT_VERSION=$("$SWIFTLINT_BIN" version)
 SWIFTLINT_CONFIG_NAME=".swiftlint.yml"
 SWIFTLINT_CONFIG="$REPO_ROOT/configs/$SWIFTLINT_CONFIG_NAME" && [[ ! -f "$SWIFTLINT_CONFIG" ]] && { echo "🛑 Error: swiftlint config not found."; exit 1; }
 SWIFTLINT_REPO_ROOT_CONFIG="$REPO_ROOT/$SWIFTLINT_CONFIG_NAME"
@@ -95,7 +97,7 @@ ERROR_CODE=0
 if [[ "$LINT_ALL" == "true" ]]; then
   # swiftformat
   echo ""
-  echo "➡️  Executing swiftformat..."
+  echo "➡️  Executing swiftformat ($SWIFTFORMAT_VERSION)..."
 
   measure_start
   set -o pipefail && "$SWIFTFORMAT_BIN" --lint --baseconfig "$SWIFTFORMAT_CONFIG" --cache "$SWIFTFORMAT_CACHE" "$REPO_ROOT" 2>&1 | "$SWIFTFORMAT_BEAUTIFY" || ERROR_CODE=$?
@@ -117,7 +119,7 @@ if [[ "$LINT_ALL" == "true" ]]; then
 
   # run swiftlint
   echo ""
-  echo "➡️  Executing swiftlint..."
+  echo "➡️  Executing swiftlint ($SWIFTLINT_VERSION)..."
 
   measure_start
   lint_output=$("$SWIFTLINT_BIN" lint --cache-path "$SWIFTLINT_CACHE_DIR" "$REPO_ROOT" 2>&1)
