@@ -7,8 +7,11 @@ pushd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
 
 # ===------ BEGIN ------===
 
-# shellcheck disable=SC1091
-source ./colors.sh
+# define colors
+safe_tput() { [[ -t 1 ]] && tput "$@" || echo ""; }
+BOLD=$(safe_tput bold)
+GREEN=$(safe_tput setaf 2)
+RESET=$(safe_tput sgr0)
 
 function print_help() {
   echo "${BOLD}OVERVIEW:${RESET} Format Swift source files."

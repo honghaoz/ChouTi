@@ -3,19 +3,12 @@
 set -e
 
 # define colors
-if [[ -t 1 ]]; then
-  RESET=$(tput sgr0)
-  BOLD=$(tput bold)
-  RED=$(tput setaf 1)
-  GREEN=$(tput setaf 2)
-  YELLOW=$(tput setaf 3)
-else
-  RESET=""
-  BOLD=""
-  RED=""
-  GREEN=""
-  YELLOW=""
-fi
+safe_tput() { [[ -t 1 ]] && tput "$@" || echo ""; }
+BOLD=$(safe_tput bold)
+RED=$(safe_tput setaf 1)
+YELLOW=$(safe_tput setaf 3)
+GREEN=$(safe_tput setaf 2)
+RESET=$(safe_tput sgr0)
 
 print_help() {
   echo "${BOLD}OVERVIEW:${RESET}" Beautify the output of SwiftLint.
