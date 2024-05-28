@@ -80,23 +80,49 @@ cd "$REPO_ROOT" || exit 1
 
 SWIFTFORMAT_BIN="$REPO_ROOT/bin/swiftformat" && [[ ! -f "$SWIFTFORMAT_BIN" ]] && { echo "🛑 Error: swiftformat not found."; exit 1; }
 SWIFTFORMAT_VERSION=$("$SWIFTFORMAT_BIN" --version)
-SWIFTFORMAT_CONFIG="$REPO_ROOT/configs/.swiftformat" && [[ ! -f "$SWIFTFORMAT_CONFIG" ]] && { echo "🛑 Error: swiftformat config not found."; exit 1; }
+SWIFTFORMAT_CONFIG_NAME=".swiftformat"
+SWIFTFORMAT_CONFIG="$REPO_ROOT/configs/$SWIFTFORMAT_CONFIG_NAME" && [[ ! -f "$SWIFTFORMAT_CONFIG" ]] && { echo "🛑 Error: swiftformat config not found."; exit 1; }
+SWIFTFORMAT_REPO_ROOT_CONFIG="$REPO_ROOT/$SWIFTFORMAT_CONFIG_NAME"
 SWIFTFORMAT_CACHE="$REPO_ROOT/.temp/swiftformat-cache" && mkdir -p "$REPO_ROOT/.temp"
 SWIFTFORMAT_BEAUTIFY="$REPO_ROOT/scripts/swiftformat-beautify"
 
 SWIFTLINT_BIN="$REPO_ROOT/bin/swiftlint" && [[ ! -f "$SWIFTLINT_BIN" ]] && { echo "🛑 Error: swiftlint not found."; exit 1; }
 SWIFTLINT_VERSION=$("$SWIFTLINT_BIN" version)
-SWIFTLINT_AUTOCORRECT_CONFIG="$REPO_ROOT/configs/.swiftlint.autocorrect.yml" && [[ ! -f "$SWIFTLINT_AUTOCORRECT_CONFIG" ]] && { echo "🛑 Error: swiftlint autocorrect config not found."; exit 1; }
+SWIFTLINT_CONFIG_NAME=".swiftlint.yml"
+SWIFTLINT_CONFIG="$REPO_ROOT/configs/$SWIFTLINT_CONFIG_NAME" && [[ ! -f "$SWIFTLINT_CONFIG" ]] && { echo "🛑 Error: swiftlint config not found."; exit 1; }
+SWIFTLINT_REPO_ROOT_CONFIG="$REPO_ROOT/$SWIFTLINT_CONFIG_NAME"
+SWIFTLINT_AUTOCORRECT_CONFIG_NAME=".swiftlint.autocorrect.yml"
+SWIFTLINT_AUTOCORRECT_CONFIG="$REPO_ROOT/configs/$SWIFTLINT_AUTOCORRECT_CONFIG_NAME" && [[ ! -f "$SWIFTLINT_AUTOCORRECT_CONFIG" ]] && { echo "🛑 Error: swiftlint autocorrect config not found."; exit 1; }
+SWIFTLINT_REPO_ROOT_AUTOCORRECT_CONFIG="$REPO_ROOT/$SWIFTLINT_AUTOCORRECT_CONFIG_NAME"
 SWIFTLINT_CACHE_DIR="$REPO_ROOT/.temp/swiftlint-cache" && mkdir -p "$SWIFTLINT_CACHE_DIR"
 SWIFTLINT_BEAUTIFY="$REPO_ROOT/scripts/swiftlint-beautify"
 
 if [[ "$FORMAT_ALL" == "true" ]]; then
+  # copy config files to the root directory
+  cp "$SWIFTFORMAT_CONFIG" "$SWIFTFORMAT_REPO_ROOT_CONFIG"
+  cp "$SWIFTLINT_CONFIG" "$SWIFTLINT_REPO_ROOT_CONFIG"
+  cp "$SWIFTLINT_AUTOCORRECT_CONFIG" "$SWIFTLINT_REPO_ROOT_AUTOCORRECT_CONFIG"
+
+  cleanup() {
+    # remove config files from the root directory
+    if [ -f "$SWIFTFORMAT_REPO_ROOT_CONFIG" ]; then
+      rm "$SWIFTFORMAT_REPO_ROOT_CONFIG"
+    fi
+    if [ -f "$SWIFTLINT_REPO_ROOT_CONFIG" ]; then
+      rm "$SWIFTLINT_REPO_ROOT_CONFIG"
+    fi
+    if [ -f "$SWIFTLINT_REPO_ROOT_AUTOCORRECT_CONFIG" ]; then
+      rm "$SWIFTLINT_REPO_ROOT_AUTOCORRECT_CONFIG"
+    fi
+  }
+  trap cleanup EXIT
+
   # swiftformat
   echo ""
   echo "➡️  Executing swiftformat ($SWIFTFORMAT_VERSION)..."
 
   measure_start
-  command "$SWIFTFORMAT_BIN" --baseconfig "$SWIFTFORMAT_CONFIG" --cache "$SWIFTFORMAT_CACHE" "$REPO_ROOT" 2>&1 | "$SWIFTFORMAT_BEAUTIFY"
+  command "$SWIFTFORMAT_BIN" --cache "$SWIFTFORMAT_CACHE" "$REPO_ROOT" 2>&1 | "$SWIFTFORMAT_BEAUTIFY"
   measure_end "swiftformat"
 
   # swiftlint
@@ -104,8 +130,10 @@ if [[ "$FORMAT_ALL" == "true" ]]; then
   echo "➡️  Executing swiftlint ($SWIFTLINT_VERSION)..."
 
   measure_start
-  command "$SWIFTLINT_BIN" --autocorrect --config "$SWIFTLINT_AUTOCORRECT_CONFIG" --cache-path "$SWIFTLINT_CACHE_DIR" "$REPO_ROOT" 2>&1 | "$SWIFTLINT_BEAUTIFY"
+  command "$SWIFTLINT_BIN" --autocorrect --config "$SWIFTLINT_REPO_ROOT_AUTOCORRECT_CONFIG" --cache-path "$SWIFTLINT_CACHE_DIR" "$REPO_ROOT" 2>&1 | "$SWIFTLINT_BEAUTIFY"
   measure_end "swiftlint"
+
+  cleanup
 else
   echo "TODO: Format staged files"
 fi

@@ -80,7 +80,9 @@ cd "$REPO_ROOT" || exit 1
 
 SWIFTFORMAT_BIN="$REPO_ROOT/bin/swiftformat" && [[ ! -f "$SWIFTFORMAT_BIN" ]] && { echo "🛑 Error: swiftformat not found."; exit 1; }
 SWIFTFORMAT_VERSION=$("$SWIFTFORMAT_BIN" --version)
-SWIFTFORMAT_CONFIG="$REPO_ROOT/configs/.swiftformat" && [[ ! -f "$SWIFTFORMAT_CONFIG" ]] && { echo "🛑 Error: swiftformat config not found."; exit 1; }
+SWIFTFORMAT_CONFIG_NAME=".swiftformat"
+SWIFTFORMAT_CONFIG="$REPO_ROOT/configs/$SWIFTFORMAT_CONFIG_NAME" && [[ ! -f "$SWIFTFORMAT_CONFIG" ]] && { echo "🛑 Error: swiftformat config not found."; exit 1; }
+SWIFTFORMAT_REPO_ROOT_CONFIG="$REPO_ROOT/$SWIFTFORMAT_CONFIG_NAME"
 SWIFTFORMAT_CACHE="$REPO_ROOT/.temp/swiftformat-cache" && mkdir -p "$REPO_ROOT/.temp"
 SWIFTFORMAT_BEAUTIFY="$REPO_ROOT/scripts/swiftformat-beautify"
 
@@ -95,21 +97,17 @@ SWIFTLINT_BEAUTIFY="$REPO_ROOT/scripts/swiftlint-beautify"
 ERROR_CODE=0
 
 if [[ "$LINT_ALL" == "true" ]]; then
-  # swiftformat
-  echo ""
-  echo "➡️  Executing swiftformat ($SWIFTFORMAT_VERSION)..."
-
-  measure_start
-  set -o pipefail && "$SWIFTFORMAT_BIN" --lint --baseconfig "$SWIFTFORMAT_CONFIG" --cache "$SWIFTFORMAT_CACHE" "$REPO_ROOT" 2>&1 | "$SWIFTFORMAT_BEAUTIFY" || ERROR_CODE=$?
-  measure_end "swiftformat"
-
-  # swiftlint
-
+  # copy config files to the root directory
+  cp "$SWIFTFORMAT_CONFIG" "$SWIFTFORMAT_REPO_ROOT_CONFIG"
   # copy $REPO_ROOT/configs/swiftlint.yml to $REPO_ROOT/.swiftlint.yml
   # so that .swiftlint.yml in child directories can be nested
   cp "$SWIFTLINT_CONFIG" "$SWIFTLINT_REPO_ROOT_CONFIG"
 
   cleanup() {
+    # remove config files from the root directory
+    if [ -f "$SWIFTFORMAT_REPO_ROOT_CONFIG" ]; then
+      rm "$SWIFTFORMAT_REPO_ROOT_CONFIG"
+    fi
     # remove $REPO_ROOT/.swiftlint.yml
     if [ -f "$SWIFTLINT_REPO_ROOT_CONFIG" ]; then
       rm "$SWIFTLINT_REPO_ROOT_CONFIG"
@@ -117,7 +115,15 @@ if [[ "$LINT_ALL" == "true" ]]; then
   }
   trap cleanup EXIT
 
-  # run swiftlint
+  # swiftformat
+  echo ""
+  echo "➡️  Executing swiftformat ($SWIFTFORMAT_VERSION)..."
+
+  measure_start
+  set -o pipefail && "$SWIFTFORMAT_BIN" --lint --cache "$SWIFTFORMAT_CACHE" "$REPO_ROOT" 2>&1 | "$SWIFTFORMAT_BEAUTIFY" || ERROR_CODE=$?
+  measure_end "swiftformat"
+
+  # swiftlint
   echo ""
   echo "➡️  Executing swiftlint ($SWIFTLINT_VERSION)..."
 
