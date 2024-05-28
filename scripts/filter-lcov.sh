@@ -1,41 +1,72 @@
 #!/bin/bash
 
+set -e
+
+# define colors
+safe_tput() { [ -n "$TERM" ] && [ "$TERM" != "dumb" ] && tput "$@" || echo ""; }
+BOLD=$(safe_tput bold)
+GREEN=$(safe_tput setaf 2)
+YELLOW=$(safe_tput setaf 3)
+RESET=$(safe_tput sgr0)
+
 print_help() {
-  echo "OVERVIEW: Filter LCOV file to keep only the specified source file."
+  echo "${BOLD}OVERVIEW:${RESET} Filter LCOV file to keep only the specified source file."
   echo ""
-  echo "WARNING: This script modifies the input LCOV file."
+  echo "${BOLD}Usage:${RESET} $0 input_lcov_file --keep-pattern 'regex_pattern'"
   echo ""
-  echo "Usage: $0 input_lcov_file --keep-pattern 'regex_pattern'"
+  echo "${YELLOW}WARNING:${RESET} This script modifies the passed in input LCOV file."
   echo ""
-  echo "EXAMPLES:"
-  echo "  $0 coverage.lcov --keep-pattern '.+packages/ChouTi/Sources/.+'"
-  exit 1
+  echo "${BOLD}EXAMPLES:${RESET}"
+  echo "  ${GREEN}$0 coverage.lcov --keep-pattern '.+packages/ChouTi/Sources/.+'${RESET}"
 }
 
-# Check if correct number of arguments are provided
-if [ "$#" -ne 3 ]; then
-  print_help
-fi
-
-# Input LCOV file
-input_file="$1"
-shift
-
+input_file=""
 keep_pattern=""
 
 # Argument parsing
 while [[ "$#" -gt 0 ]]; do
   case $1 in
+    --help | -h)
+      print_help
+      exit 0
+      ;;
     --keep-pattern)
+      if [ -z "$2" ]; then
+        echo "🛑 Error: --keep-pattern requires an argument"
+        echo ""
+        print_help
+        exit 1
+      fi
       keep_pattern="$2"
-      shift
+      shift # past option
+      shift # past value
       ;;
     *)
-      print_help
+      if [ -z "$input_file" ]; then
+        input_file="$1"
+        shift
+      elif [[ $1 == -* ]]; then # if prefixed "-"
+        echo "🛑 Error: Unrecognized option '$1'"
+        echo ""
+        print_help
+        exit 1
+      else
+        echo "🛑 Error: Unrecognized argument '$1'"
+        echo ""
+        print_help
+        exit 1
+      fi
       ;;
   esac
-  shift
 done
+
+# Check if input file exists
+if [ ! -f "$input_file" ]; then
+  echo "🛑 Error: Input file '$input_file' not found"
+  echo ""
+  print_help
+  exit 1
+fi
 
 # Check if keep pattern is provided
 if [ -z "$keep_pattern" ]; then
