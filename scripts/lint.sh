@@ -59,62 +59,81 @@ while [[ "$#" -gt 0 ]]; do
   esac
 done
 
-REPO_ROOT=$(git rev-parse --show-toplevel)
-
-# make .temp directory if it doesn't exist
-mkdir -p "$REPO_ROOT/.temp"
-
-if [[ "$LINT_ALL" == "true" ]]; then
-  ERROR_CODE=0
-
-  # swiftformat
-  echo ""
-  echo "➡️  Executing swiftformat..."
+# ===------ Measure time taken [START] ------===
+start_time=""
+end_time=""
+formatted_time_diff=""
+function measure_start() {
   start_time="$(perl -MTime::HiRes=time -e 'printf "%.9f\n", time')" # track start time
-
-  set -o pipefail && "$REPO_ROOT/bin/swiftformat" --lint --baseconfig "$REPO_ROOT/configs/.swiftformat" --cache "$REPO_ROOT/.temp/swiftformat-cache" "$REPO_ROOT" 2>&1 | "$REPO_ROOT/scripts/swiftformat-beautify" || ERROR_CODE=$?
-
+}
+function measure_end() {
+  tag="$1"
   end_time="$(perl -MTime::HiRes=time -e 'printf "%.9f\n", time')" # track end time
   time_diff=$(echo "$end_time - $start_time" | bc) # calculate time difference
   formatted_time_diff=$(printf "%.3f" "$time_diff") # format time difference to 3 decimal places
-  printf "⏱️  swiftformat took $GREEN%s$RESET seconds.\n" "$formatted_time_diff"
+  printf "⏱️  $tag took $GREEN%s$RESET seconds.\n" "$formatted_time_diff"
+}
+# ===------ Measure time taken [END] ------===
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+cd "$REPO_ROOT" || exit 1
+
+SWIFTFORMAT_BIN="$REPO_ROOT/bin/swiftformat" && [[ ! -f "$SWIFTFORMAT_BIN" ]] && { echo "🛑 Error: swiftformat not found."; exit 1; }
+SWIFTFORMAT_CONFIG="$REPO_ROOT/configs/.swiftformat" && [[ ! -f "$SWIFTFORMAT_CONFIG" ]] && { echo "🛑 Error: swiftformat config not found."; exit 1; }
+SWIFTFORMAT_CACHE="$REPO_ROOT/.temp/swiftformat-cache" && mkdir -p "$REPO_ROOT/.temp"
+SWIFTFORMAT_BEAUTIFY="$REPO_ROOT/scripts/swiftformat-beautify"
+
+SWIFTLINT_BIN="$REPO_ROOT/bin/swiftlint" && [[ ! -f "$SWIFTLINT_BIN" ]] && { echo "🛑 Error: swiftlint not found."; exit 1; }
+SWIFTLINT_CONFIG_NAME=".swiftlint.yml"
+SWIFTLINT_CONFIG="$REPO_ROOT/configs/$SWIFTLINT_CONFIG_NAME" && [[ ! -f "$SWIFTLINT_CONFIG" ]] && { echo "🛑 Error: swiftlint config not found."; exit 1; }
+SWIFTLINT_REPO_ROOT_CONFIG="$REPO_ROOT/$SWIFTLINT_CONFIG_NAME"
+SWIFTLINT_CACHE_DIR="$REPO_ROOT/.temp/swiftlint-cache" && mkdir -p "$SWIFTLINT_CACHE_DIR"
+SWIFTLINT_BEAUTIFY="$REPO_ROOT/scripts/swiftlint-beautify"
+
+ERROR_CODE=0
+
+if [[ "$LINT_ALL" == "true" ]]; then
+  # swiftformat
+  echo ""
+  echo "➡️  Executing swiftformat..."
+
+  measure_start
+  set -o pipefail && "$SWIFTFORMAT_BIN" --lint --baseconfig "$SWIFTFORMAT_CONFIG" --cache "$SWIFTFORMAT_CACHE" "$REPO_ROOT" 2>&1 | "$SWIFTFORMAT_BEAUTIFY" || ERROR_CODE=$?
+  measure_end "swiftformat"
 
   # swiftlint
 
   # copy $REPO_ROOT/configs/swiftlint.yml to $REPO_ROOT/.swiftlint.yml
   # so that .swiftlint.yml in child directories can be nested
-  cp "$REPO_ROOT/configs/.swiftlint.yml" "$REPO_ROOT/.swiftlint.yml"
+  cp "$SWIFTLINT_CONFIG" "$SWIFTLINT_REPO_ROOT_CONFIG"
 
   cleanup() {
     # remove $REPO_ROOT/.swiftlint.yml
-    if [ -f "$REPO_ROOT/.swiftlint.yml" ]; then
-      rm "$REPO_ROOT/.swiftlint.yml"
+    if [ -f "$SWIFTLINT_REPO_ROOT_CONFIG" ]; then
+      rm "$SWIFTLINT_REPO_ROOT_CONFIG"
     fi
   }
   trap cleanup EXIT
 
   # run swiftlint
-  cd "$REPO_ROOT" || exit 1
-
   echo ""
   echo "➡️  Executing swiftlint..."
-  start_time="$(perl -MTime::HiRes=time -e 'printf "%.9f\n", time')" # track start time
 
-  mkdir -p "$REPO_ROOT/.temp/swiftlint-cache"
-  lint_output=$("$REPO_ROOT/bin/swiftlint" lint --cache-path "$REPO_ROOT/.temp/swiftlint-cache" "$REPO_ROOT" 2>&1)
-  echo "$lint_output" | "$REPO_ROOT/scripts/swiftlint-beautify"
+  measure_start
+  lint_output=$("$SWIFTLINT_BIN" lint --cache-path "$SWIFTLINT_CACHE_DIR" "$REPO_ROOT" 2>&1)
+  echo "$lint_output" | "$SWIFTLINT_BEAUTIFY"
+  measure_end "swiftlint"
 
-  # if lint_output find non zero violations, set ERROR_CODE to 1
-  # Example of violation line: "Done linting! Found 8 violations, 0 serious in 120 files."
-  # Example of non violation line: "Done linting! Found 0 violations, 0 serious in 120 files."
-  if echo "$lint_output" | grep -q "Found [1-9][0-9]* violations"; then
+  # check last line of lint_output for violations info
+  #
+  # Examples of no violation line:
+  # - "Done linting! Found 0 violations, 0 serious in 120 files."
+  # Examples of violation line:
+  # - "Done linting! Found 1 violation, 0 serious in 120 files."
+  # - "Done linting! Found 8 violations, 0 serious in 120 files."
+  if echo "$lint_output" | tail -n 1 | grep -q -E "Found [1-9][0-9]* violation"; then
     ERROR_CODE=1
   fi
-
-  end_time="$(perl -MTime::HiRes=time -e 'printf "%.9f\n", time')" # track end time
-  time_diff=$(echo "$end_time - $start_time" | bc) # calculate time difference
-  formatted_time_diff=$(printf "%.3f" "$time_diff") # format time difference to 3 decimal places
-  printf "⏱️  swiftlint took $GREEN%s$RESET seconds.\n" "$formatted_time_diff"
 
   cleanup
 
