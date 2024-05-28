@@ -18,8 +18,6 @@ on:
 
 env:
   TERM: xterm-256color
-  MACOS: ${{ vars.MACOS }}
-  XCODE_VERSION: ${{ vars.XCODE_VERSION }}
   DEVELOPER_DIR: /Applications/Xcode_${{ vars.XCODE_VERSION }}.app/Contents/Developer
 
 jobs:
@@ -27,13 +25,8 @@ jobs:
     name: Build & Test
     strategy:
       fail-fast: false
-      matrix:
-        os: [macos-14]
-        xcode: [Xcode_15.3]
     timeout-minutes: 20
-    runs-on: ${{ matrix.os }}
-    env:
-      DEVELOPER_DIR: /Applications/${{ matrix.xcode }}.app/Contents/Developer
+    runs-on: ${{ vars.MACOS }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4

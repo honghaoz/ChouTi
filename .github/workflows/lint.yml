@@ -9,7 +9,6 @@ on:
 
 env:
   TERM: xterm-256color
-  XCODE_VERSION: ${{ vars.XCODE_VERSION }}
   DEVELOPER_DIR: /Applications/Xcode_${{ vars.XCODE_VERSION }}.app/Contents/Developer
 
 jobs:
