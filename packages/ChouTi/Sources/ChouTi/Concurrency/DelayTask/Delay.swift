@@ -25,15 +25,8 @@ public protocol DelayTaskType: AnyObject {
   /// The task will be executed on the specified queue synchronously if possible. That is if `execute()` is called on the same queue as the task's queue, the task will be executed synchronously. Otherwise, the task will be executed asynchronously.
   func execute()
 
-  /// Cancel task if task is not executed or cancelled.
-  ///
-  /// This method will assert if the task is executing, executed or cancelled.
+  /// Cancel the task.
   func cancel()
-
-  /// Cancel task if needed.
-  ///
-  /// If the task is executing, executed or cancelled, this method will do nothing.
-  func cancelIfNeeded()
 
   @discardableResult
   func then(delay delayedSeconds: TimeInterval, task: @escaping () -> Void) -> DelayTaskType
@@ -243,32 +236,7 @@ private final class PrivateDelayTask: DelayTaskType {
   }
 
   func cancel() {
-    cancel(assertIfExecuted: true)
-  }
-
-  func cancelIfNeeded() {
     if isCanceled || isExecuting || isExecuted {
-      return
-    }
-    cancel(assertIfExecuted: false)
-  }
-
-  private func cancel(assertIfExecuted: Bool) {
-    if isCanceled {
-      ChouTi.assertFailure("task is already cancelled")
-      return
-    }
-
-    if isExecuting {
-      ChouTi.assertFailure("cancel while executing")
-      return
-    }
-
-    if isExecuted {
-      // already executed
-      if assertIfExecuted {
-        ChouTi.assertFailure("task is already executed")
-      }
       return
     }
 
@@ -282,7 +250,7 @@ private final class PrivateDelayTask: DelayTaskType {
 
     // cancel next task if has one
     if let nextTask {
-      nextTask.cancel(assertIfExecuted: assertIfExecuted)
+      nextTask.cancel()
     }
 
     PrivateDelayTask.storeLock.withLock {
