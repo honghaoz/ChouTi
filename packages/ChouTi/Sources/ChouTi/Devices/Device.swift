@@ -120,17 +120,17 @@ public enum Device {
   /// Get the free disk space in bytes.
   public static var freeDiskSpaceInBytes: Int64 {
     do {
-      if #available(iOS 11.0, *) {
-        let freeSpace = try URL(fileURLWithPath: NSHomeDirectory() as String).resourceValues(forKeys: [URLResourceKey.volumeAvailableCapacityForImportantUsageKey]).volumeAvailableCapacityForImportantUsage
-        return freeSpace.assert() ?? 0
-      } else {
+      let freeSpace = try URL(fileURLWithPath: NSHomeDirectory() as String).resourceValues(forKeys: [URLResourceKey.volumeAvailableCapacityForImportantUsageKey]).volumeAvailableCapacityForImportantUsage
+      return freeSpace.assert() ?? 0
+    } catch {
+      do {
         let systemAttributes = try FileManager.default.attributesOfFileSystem(forPath: NSHomeDirectory() as String)
         let freeSpace = (systemAttributes[FileAttributeKey.systemFreeSize] as? NSNumber)?.int64Value
         return freeSpace.assert() ?? 0
+      } catch {
+        ChouTi.assertFailure("failed to get free disk space", metadata: ["error": "\(error)"])
+        return 0
       }
-    } catch {
-      ChouTi.assertFailure("failed to get free disk space", metadata: ["error": "\(error)"])
-      return 0
     }
   }
 }

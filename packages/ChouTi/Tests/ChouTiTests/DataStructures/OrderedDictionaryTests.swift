@@ -343,17 +343,28 @@ class OrderedDictionaryTests: XCTestCase {
   }
 
   func test_description() {
-    let dict: OrderedDictionary<String, Any> = [
-      "a": 1,
-      "b": Character("2"),
-      "c": StaticString("33"),
-      "d": "45678"[String.Index(utf16Offset: 0, in: "45678") ..< String.Index(utf16Offset: 3, in: "45678")],
-      "e": 5.0,
-      "f": true,
-      "g": "gg",
-    ]
+    do {
+      let dict: OrderedDictionary<String, Any> = [
+        "a": 1,
+        "b": Character("2"),
+        "c": StaticString("33"),
+        "d": "45678"[String.Index(utf16Offset: 0, in: "45678") ..< String.Index(utf16Offset: 3, in: "45678")],
+        "e": 5.0,
+        "f": true,
+        "g": "gg",
+      ]
 
-    expect("\(dict)") == #"["a": 1, "b": "2", "c": "33", "d": "456", "e": 5.0, "f": true, "g": "gg"]"#
+      expect("\(dict)") == #"["a": 1, "b": "2", "c": "33", "d": "456", "e": 5.0, "f": true, "g": "gg"]"#
+    }
+    do {
+      let dict: OrderedDictionary<Int, Any> = [
+        1: 1,
+        2: Character("2"),
+        3: StaticString("33"),
+      ]
+
+      expect("\(dict)") == #"[1: 1, 2: "2", 3: "33"]"#
+    }
   }
 
   func _testOrderedDictionaryPerformance() {
