@@ -14,70 +14,197 @@ class DelayTests: XCTestCase {
   func test_delay_noRetain() {
     let expectation = expectation(description: "delayed task executed")
 
-    var value = "start"
+    var executed = false
 
     // no retain
     delay(0.1) {
       expect(Thread.isMainThread) == true
-      value = "end"
+      executed = true
       expectation.fulfill()
     }
 
-    expect(value) == "start"
+    expect(executed) == false
     waitForExpectations(timeout: 0.2) { _ in
-      expect(value) == "end"
+      expect(executed) == true
     }
   }
 
   func test_delay_retain() {
     let expectation = expectation(description: "delayed task executed")
 
-    var value = "start"
+    var executed = false
 
     // retained task
     let task = delay(0.1) {
       expect(Thread.isMainThread) == true
-      value = "end"
+      executed = true
       expectation.fulfill()
     }
 
     expect(task.isCanceled) == false
     expect(task.isExecuted) == false
-    expect(value) == "start"
+    expect(executed) == false
 
     waitForExpectations(timeout: 0.2) { _ in
       expect(task.isCanceled) == false
       expect(task.isExecuted) == true
-      expect(value) == "end"
+      expect(executed) == true
     }
   }
 
   func test_cancel() {
     let expectation = expectation(description: "delayed task should be canceled")
+    expectation.assertForOverFulfill = true
     expectation.isInverted = true
 
-    var value = "start"
+    var executed = false
     let task = delay(0.1) {
-      value = "end"
+      executed = true
       expectation.fulfill()
     }
 
     expect(task.isCanceled) == false
     expect(task.isExecuted) == false
-    expect(value) == "start"
+    expect(executed) == false
 
     task.cancel()
 
     expect(task.isCanceled) == true
     expect(task.isExecuted) == false
-    expect(value) == "start"
+    expect(executed) == false
 
     waitForExpectations(timeout: 0.15)
 
     expect(task.isCanceled) == true
     expect(task.isExecuted) == false
-    expect(value) == "start"
+    expect(executed) == false
   }
+
+  // MARK: - Early Execute
+
+  func test_execute() {
+    let expectation = expectation(description: "delayed task should be executed")
+    expectation.assertForOverFulfill = true
+
+    var value = false
+    let task = delay(0.1) {
+      value = true
+      expectation.fulfill()
+    }
+
+    expect(task.isCanceled) == false
+    expect(task.isExecuted) == false
+    expect(value) == false
+
+    task.execute()
+
+    expect(task.isCanceled) == false
+    expect(task.isExecuted) == true
+    expect(value) == true
+
+    waitForExpectations(timeout: 0.15)
+  }
+
+  func test_execute_ifAlreadyCanceled() {
+    let expectation = expectation(description: "delayed task should be executed")
+    expectation.assertForOverFulfill = true
+    expectation.isInverted = true
+
+    var value = false
+    let task = delay(0.1) {
+      value = true
+      expectation.fulfill()
+    }
+
+    expect(task.isCanceled) == false
+    expect(task.isExecuted) == false
+    expect(value) == false
+
+    task.cancel()
+    task.execute()
+
+    expect(task.isCanceled) == true
+    expect(task.isExecuted) == false
+    expect(value) == false
+
+    waitForExpectations(timeout: 0.15)
+  }
+
+  func test_execute_ifAlreadyExecuted() {
+    let expectation = expectation(description: "delayed task should be executed")
+    expectation.assertForOverFulfill = true
+
+    var value = false
+    let task = delay(0.1) {
+      value = true
+      expectation.fulfill()
+    }
+
+    expect(task.isCanceled) == false
+    expect(task.isExecuted) == false
+    expect(value) == false
+
+    task.execute()
+    task.execute()
+
+    expect(task.isCanceled) == false
+    expect(task.isExecuted) == true
+    expect(value) == true
+
+    waitForExpectations(timeout: 0.15)
+  }
+
+  // MARK: - Edge Cases
+
+  func test_invalidDelay_negative() {
+    Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
+      expect(message) == "delay seconds must be non-negative"
+      expect(metadata) == ["delay": "-0.1"]
+    }
+
+    let expectation = expectation(description: "delayed task should be executed")
+
+    var value = false
+    let task = delay(-0.1) {
+      value = true
+      expectation.fulfill()
+    }
+
+    // invalid delay seconds leads to immediate execution
+    expect(task.isCanceled) == false
+    expect(task.isExecuted) == true
+    expect(value) == true
+
+    waitForExpectations(timeout: 0.15)
+
+    Assert.resetTestAssertionFailureHandler()
+  }
+
+  func test_invalidDelay_infinite() {
+    Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
+      expect(message) == "delay seconds must be finite"
+      expect(metadata) == ["delay": "inf"]
+    }
+
+    let expectation = expectation(description: "delayed task should be executed")
+
+    var value = false
+    let task = delay(.infinity) {
+      value = true
+      expectation.fulfill()
+    }
+
+    // invalid delay seconds leads to immediate execution
+    expect(task.isCanceled) == false
+    expect(task.isExecuted) == true
+    expect(value) == true
+
+    waitForExpectations(timeout: 0.15)
+
+    Assert.resetTestAssertionFailureHandler()
+  }
+
+  // MARK: - Chained Task
 
   func testChainedTask() {
     var value = 1
@@ -196,25 +323,6 @@ class DelayTests: XCTestCase {
 
     wait(for: [expectation], timeout: 5)
   }
-
-  func testEarlyExecute() {
-    let expectation = XCTestExpectation(description: "execute")
-    expectation.assertForOverFulfill = true
-
-    var executed: Bool = false
-    let task = delay(0.1) {
-      executed = true
-      expectation.fulfill()
-    }
-
-    XCTAssertFalse(executed)
-    XCTAssertFalse(task.isExecuted)
-
-    task.execute()
-    XCTAssertTrue(executed)
-    XCTAssertTrue(task.isExecuted)
-
-    wait(timeout: 0.2)
-    wait(for: [expectation], timeout: 1)
-  }
 }
+
+// execute middle chained tasks
