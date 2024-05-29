@@ -9,7 +9,7 @@ import Foundation
 
 // MARK: - DelayTaskType
 
-/// A delay task type that can be cancelled, chained with another task.
+/// A delay task type that can be canceled and chained.
 public protocol DelayTaskType: AnyObject {
 
   /// Indicates whether the task is canceled.
@@ -18,11 +18,9 @@ public protocol DelayTaskType: AnyObject {
   /// Indicates whether the task is executed.
   var isExecuted: Bool { get }
 
-  /// Executes the task immediately.
+  /// Executes the task immediately if the task is not executed or canceled.
   ///
-  /// The task will be executed immediately if the task is not executed or cancelled.
-  ///
-  /// The task will be executed on the specified queue synchronously if possible. That is if `execute()` is called on the same queue as the task's queue, the task will be executed synchronously. Otherwise, the task will be executed asynchronously.
+  /// If this method is called on the same queue as the task's queue, the task will be executed synchronously. Otherwise, the task will be executed asynchronously.
   func execute()
 
   /// Cancel the task.
@@ -147,7 +145,7 @@ private final class PrivateDelayTask: DelayTaskType {
 
   /// Start the task.
   fileprivate func start() {
-    if isCanceled {
+    if isCanceled || isExecuting || isExecuted {
       return
     }
 
@@ -163,7 +161,7 @@ private final class PrivateDelayTask: DelayTaskType {
       }
 
       guard self.isCanceled == false else {
-        ChouTi.assertFailure("workItem should not be cancelled when executing")
+        ChouTi.assertFailure("workItem shouldn't be canceled when executing")
         return
       }
       guard self.isExecuted == false else {
@@ -179,7 +177,6 @@ private final class PrivateDelayTask: DelayTaskType {
       PrivateDelayTask.storeLock.withLock {
         ChouTi.assert(PrivateDelayTask.store[self.id] != nil, "store should have the task reference when just executed")
         PrivateDelayTask.store[self.id] = nil
-        // NSLog("☄️: release: \(self.id), \(Self.store.count)")
       }
 
       // dispatch next task if has one
@@ -189,11 +186,10 @@ private final class PrivateDelayTask: DelayTaskType {
     })
     self.workItem = workItem
 
-    // store the task must happen before executing the task below, since tasks with 0 delay can execute asynchronously.
+    // store the task must happen before executing the task below, since tasks with 0 delay can execute synchronously.
     PrivateDelayTask.storeLock.withLock {
       ChouTi.assert(PrivateDelayTask.store[id] == nil, "store should not have the task reference when just started")
       PrivateDelayTask.store[id] = self
-      // NSLog("☄️: add: \(id), \(self), \(delayedSeconds), \(Self.store.count)")
     }
 
     // schedule the task
@@ -209,16 +205,7 @@ private final class PrivateDelayTask: DelayTaskType {
   }
 
   func execute() {
-    guard isCanceled == false else {
-      ChouTi.assertFailure("task is already cancelled")
-      return
-    }
-    guard isExecuting == false else {
-      ChouTi.assertFailure("task is already executing")
-      return
-    }
-    guard isExecuted == false else {
-      ChouTi.assertFailure("task is already executed")
+    if isCanceled || isExecuting || isExecuted {
       return
     }
 
@@ -255,7 +242,6 @@ private final class PrivateDelayTask: DelayTaskType {
 
     PrivateDelayTask.storeLock.withLock {
       PrivateDelayTask.store[id] = nil
-      // NSLog("☄️: release: \(id), \(Self.store.count)")
     }
   }
 }
