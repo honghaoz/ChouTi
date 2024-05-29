@@ -7,22 +7,32 @@
 
 import Foundation
 
+// MARK: - DelayTaskType
+
 /// A delay task type that can be cancelled, chained with another task.
 public protocol DelayTaskType: AnyObject {
 
+  /// Indicates whether the task is canceled.
   var isCanceled: Bool { get }
+
+  /// Indicates whether the task is executed.
   var isExecuted: Bool { get }
 
-  /// Executes the task.
+  /// Executes the task immediately.
   ///
-  /// - Executes synchronously if on the same work queue.
-  /// - Executes asynchronously if on different work queue.
+  /// The task will be executed immediately if the task is not executed or cancelled.
+  ///
+  /// The task will be executed on the specified queue synchronously if possible. That is if `execute()` is called on the same queue as the task's queue, the task will be executed synchronously. Otherwise, the task will be executed asynchronously.
   func execute()
 
-  /// Cancel task if not executed, assert if already executed or cancelled.
+  /// Cancel task if task is not executed or cancelled.
+  ///
+  /// This method will assert if the task is executing, executed or cancelled.
   func cancel()
 
-  /// Cancel if task, regardless if task is executed or cancelled.
+  /// Cancel task if needed.
+  ///
+  /// If the task is executing, executed or cancelled, this method will do nothing.
   func cancelIfNeeded()
 
   @discardableResult
@@ -44,26 +54,45 @@ public protocol DelayTaskType: AnyObject {
   func then(delay delayedSeconds: TimeInterval, leeway: TimerLeeway?, qos: DispatchQoS, flags: DispatchWorkItemFlags, queue: DispatchQueue, task: @escaping () -> Void) -> DelayTaskType
 }
 
-/// Cancelable delayed task.
+// MARK: - PrivateDelayTask
+
 private final class PrivateDelayTask: DelayTaskType {
 
-  /// The global store to keep `PrivateDelayTask` reference.
+  /// The global store to keep strong references to `PrivateDelayTask`. So that the task can be kept alive until it's executed.
   private static var store: [MachTimeId: PrivateDelayTask] = [:]
   private static let storeLock = UnfairLock()
 
-  /// Unique id used in store.
+  /// The unique id of the task.
   private let id = MachTimeId.id()
 
   /// Whether this task is canceled.
-  private(set) var isCanceled: Bool = false
+  private(set) var isCanceled: Bool {
+    get { isCanceledLock.withLock { _isCanceled } }
+    set { isCanceledLock.withLock { _isCanceled = newValue } }
+  }
+
+  private var _isCanceled: Bool = false
+  private let isCanceledLock = UnfairLock()
 
   /// Whether this task is executing.
-  private var isExecuting: Bool = false
+  private var isExecuting: Bool {
+    get { isExecutingLock.withLock { _isExecuting } }
+    set { isExecutingLock.withLock { _isExecuting = newValue } }
+  }
+
+  private var _isExecuting: Bool = false
+  private let isExecutingLock = UnfairLock()
 
   /// Whether this task has been executed.
-  private(set) var isExecuted: Bool = false
+  private(set) var isExecuted: Bool {
+    get { isExecutedLock.withLock { _isExecuted } }
+    set { isExecutedLock.withLock { _isExecuted = newValue } }
+  }
 
-  /// Closure to be executed.
+  private var _isExecuted: Bool = false
+  private let isExecutedLock = UnfairLock()
+
+  /// The task block.
   private let task: () -> Void
 
   /// Delay in seconds.
@@ -73,29 +102,21 @@ private final class PrivateDelayTask: DelayTaskType {
   private let leeway: TimerLeeway?
 
   private let qos: DispatchQoS
+
   private let flags: DispatchWorkItemFlags
 
   /// The queue to run.
   private weak var queue: DispatchQueue?
 
-  /// The underlying work item, must keep a strong reference to cancel it.
+  /// The underlying work item. Need to keep a strong reference to it to cancel it.
   private var workItem: DispatchWorkItem?
 
-  /// The delay timer if used.
+  /// The delay timer if has one.
   private var timer: DispatchTimer?
 
-  /// Next chained task.
+  /// The next chained delay task.
   private var nextTask: PrivateDelayTask?
 
-  /// Init a delay task.
-  ///
-  /// - Parameters:
-  ///   - delayedSeconds: The delayed seconds.
-  ///   - leeway: The leeway for timer. Specify a value to use `DispatchTimer`.
-  ///   - qos: The qos of the task.
-  ///   - flags: The flags for the underlying work item.
-  ///   - queue: The queue to execute the task.
-  ///   - task: The task block.
   fileprivate init(delayedSeconds: TimeInterval,
                    leeway: TimerLeeway?,
                    qos: DispatchQoS,
@@ -104,14 +125,21 @@ private final class PrivateDelayTask: DelayTaskType {
                    task: @escaping () -> Void)
   {
     let delayedSeconds: TimeInterval = {
-      if !delayedSeconds.isFinite {
+      guard delayedSeconds >= 0 else {
+        ChouTi.assertFailure("delay seconds must be non-negative", metadata: [
+          "delay": "\(delayedSeconds)",
+        ])
+        return 0
+      }
+
+      guard delayedSeconds.isFinite else {
         ChouTi.assertFailure("delay seconds must be finite", metadata: [
           "delay": "\(delayedSeconds)",
         ])
         return 0
-      } else {
-        return delayedSeconds
       }
+
+      return delayedSeconds
     }()
 
     self.delayedSeconds = delayedSeconds
@@ -138,12 +166,11 @@ private final class PrivateDelayTask: DelayTaskType {
     let workItem = DispatchWorkItem(qos: qos, flags: flags, block: { [weak self] in
       guard let self else {
         // can be nil if caller cancels task and set the task to nil
-        // ChouTi.assertFailure("nil self")
         return
       }
 
       guard self.isCanceled == false else {
-        ChouTi.assertFailure("workItem should already be cancelled.")
+        ChouTi.assertFailure("workItem should not be cancelled when executing")
         return
       }
       guard self.isExecuted == false else {
@@ -157,7 +184,7 @@ private final class PrivateDelayTask: DelayTaskType {
       self.isExecuted = true
 
       PrivateDelayTask.storeLock.withLock {
-        ChouTi.assert(PrivateDelayTask.store[self.id] != nil)
+        ChouTi.assert(PrivateDelayTask.store[self.id] != nil, "store should have the task reference when just executed")
         PrivateDelayTask.store[self.id] = nil
         // NSLog("☄️: release: \(self.id), \(Self.store.count)")
       }
@@ -171,42 +198,55 @@ private final class PrivateDelayTask: DelayTaskType {
 
     // store the task must happen before executing the task below, since tasks with 0 delay can execute asynchronously.
     PrivateDelayTask.storeLock.withLock {
+      ChouTi.assert(PrivateDelayTask.store[id] == nil, "store should not have the task reference when just started")
       PrivateDelayTask.store[id] = self
       // NSLog("☄️: add: \(id), \(self), \(delayedSeconds), \(Self.store.count)")
     }
 
-    if let leeway {
-      if delayedSeconds <= 0 {
-        onQueueAsync(queue: queue, execute: workItem)
-      } else {
-        timer = DispatchTimer.delayTimer(after: delayedSeconds, isStrict: leeway.isStrict, leeway: leeway, queue: queue, block: { [weak workItem] in workItem?.perform() })
-      }
+    // schedule the task
+    if delayedSeconds <= 0 {
+      onQueueAsync(queue: queue, execute: workItem)
     } else {
-      onQueueAsync(queue: queue, delay: delayedSeconds, execute: workItem)
+      if let leeway {
+        timer = DispatchTimer.delayTimer(after: delayedSeconds, isStrict: leeway.isStrict, leeway: leeway, queue: queue, block: { [weak workItem] in workItem.assert("workItem should not be nil when executing")?.perform() })
+      } else {
+        onQueueAsync(queue: queue, delay: delayedSeconds, execute: workItem)
+      }
     }
   }
 
-  public func execute() {
-    ChouTi.assert(isExecuted == false)
-    ChouTi.assert(isCanceled == false)
-
-    guard let queue = self.queue else {
-      ChouTi.assertFailure("queue is nil")
+  func execute() {
+    guard isCanceled == false else {
+      ChouTi.assertFailure("task is already cancelled")
+      return
+    }
+    guard isExecuting == false else {
+      ChouTi.assertFailure("task is already executing")
+      return
+    }
+    guard isExecuted == false else {
+      ChouTi.assertFailure("task is already executed")
       return
     }
 
-    if let workItem {
-      onQueueAsync(queue: queue, execute: workItem)
-    } else {
-      ChouTi.assertFailure("work item shouldn't be nil")
+    guard let queue = self.queue else {
+      ChouTi.assertFailure("queue shouldn't be nil")
+      return
     }
+
+    guard let workItem = self.workItem else {
+      ChouTi.assertFailure("work item shouldn't be nil")
+      return
+    }
+
+    onQueueAsync(queue: queue, execute: workItem)
   }
 
-  public func cancel() {
+  func cancel() {
     cancel(assertIfExecuted: true)
   }
 
-  public func cancelIfNeeded() {
+  func cancelIfNeeded() {
     if isCanceled || isExecuting || isExecuted {
       return
     }
@@ -232,9 +272,13 @@ private final class PrivateDelayTask: DelayTaskType {
       return
     }
 
+    isCanceled = true
+
+    timer?.invalidate()
+
     // workItem could be nil if not started yet
     workItem?.cancel()
-    isCanceled = true
+    workItem = nil
 
     // cancel next task if has one
     if let nextTask {
@@ -246,6 +290,11 @@ private final class PrivateDelayTask: DelayTaskType {
       // NSLog("☄️: release: \(id), \(Self.store.count)")
     }
   }
+}
+
+// MARK: - Then
+
+extension PrivateDelayTask {
 
   /// Chaining a new task on main queue.
   /// - Parameters:
@@ -255,28 +304,28 @@ private final class PrivateDelayTask: DelayTaskType {
   @inlinable
   @inline(__always)
   @discardableResult
-  public func then(delay delayedSeconds: TimeInterval, task: @escaping () -> Void) -> DelayTaskType {
+  func then(delay delayedSeconds: TimeInterval, task: @escaping () -> Void) -> DelayTaskType {
     then(delay: delayedSeconds, leeway: nil, queue: .main, task: task)
   }
 
   @inlinable
   @inline(__always)
   @discardableResult
-  public func then(delay delayedSeconds: TimeInterval, leeway: TimerLeeway?, task: @escaping () -> Void) -> DelayTaskType {
+  func then(delay delayedSeconds: TimeInterval, leeway: TimerLeeway?, task: @escaping () -> Void) -> DelayTaskType {
     then(delay: delayedSeconds, leeway: leeway, queue: .main, task: task)
   }
 
   @inlinable
   @inline(__always)
   @discardableResult
-  public func then(delay delayedSeconds: TimeInterval, queue: DispatchQueue, task: @escaping () -> Void) -> DelayTaskType {
+  func then(delay delayedSeconds: TimeInterval, queue: DispatchQueue, task: @escaping () -> Void) -> DelayTaskType {
     then(delay: delayedSeconds, leeway: nil, qos: .unspecified, flags: [], queue: queue, task: task)
   }
 
   @inlinable
   @inline(__always)
   @discardableResult
-  public func then(delay delayedSeconds: TimeInterval, qos: DispatchQoS, flags: DispatchWorkItemFlags, queue: DispatchQueue, task: @escaping () -> Void) -> DelayTaskType {
+  func then(delay delayedSeconds: TimeInterval, qos: DispatchQoS, flags: DispatchWorkItemFlags, queue: DispatchQueue, task: @escaping () -> Void) -> DelayTaskType {
     then(delay: delayedSeconds, leeway: nil, qos: qos, flags: flags, queue: queue, task: task)
   }
 
@@ -294,12 +343,12 @@ private final class PrivateDelayTask: DelayTaskType {
   ///   - task: The closure to run.
   /// - Returns: A delay task.
   @discardableResult
-  public func then(delay delayedSeconds: TimeInterval,
-                   leeway: TimerLeeway? = nil,
-                   qos: DispatchQoS = .unspecified,
-                   flags: DispatchWorkItemFlags = [],
-                   queue: DispatchQueue,
-                   task: @escaping () -> Void) -> DelayTaskType
+  func then(delay delayedSeconds: TimeInterval,
+            leeway: TimerLeeway? = nil,
+            qos: DispatchQoS = .unspecified,
+            flags: DispatchWorkItemFlags = [],
+            queue: DispatchQueue,
+            task: @escaping () -> Void) -> DelayTaskType
   {
     let task = PrivateDelayTask(
       delayedSeconds: delayedSeconds,

@@ -1,5 +1,5 @@
 //
-//  DelayTaskTests.swift
+//  DelayTests.swift
 //
 //  Created by Honghao Zhang on 10/18/20.
 //  Copyright © 2024 ChouTi. All rights reserved.
@@ -10,7 +10,7 @@ import ChouTiTest
 
 import ChouTi
 
-class DelayTaskTests: XCTestCase {
+class DelayTests: XCTestCase {
 
   func testDelay() {
     let expectation = expectation(description: "delayed task executed")
