@@ -214,7 +214,7 @@ private final class PrivateDelayTask: DelayTaskType {
     taskLock.unlock()
 
     guard let queue = self.queue else {
-      ChouTi.assertFailure("queue shouldn't be nil")
+      ChouTi.assertFailure("execution queue is deallocated")
       return
     }
 
