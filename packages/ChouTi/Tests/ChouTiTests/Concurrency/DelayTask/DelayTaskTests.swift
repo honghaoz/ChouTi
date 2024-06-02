@@ -52,6 +52,24 @@ class DelayTaskTests: XCTestCase {
     }
   }
 
+  func test_delay_noRetain_duration() {
+    let expectation = expectation(description: "delayed task executed")
+
+    var executed = false
+
+    // no retain
+    delay(.seconds(0.1)) {
+      expect(Thread.isMainThread) == true
+      executed = true
+      expectation.fulfill()
+    }
+
+    expect(executed) == false
+    waitForExpectations(timeout: 0.2) { _ in
+      expect(executed) == true
+    }
+  }
+
   // MARK: - Cancel
 
   func test_cancel() {
@@ -300,28 +318,65 @@ class DelayTaskTests: XCTestCase {
 
   // MARK: - Chained Task
 
-  func testChainedTask() {
-    var value = 1
+  func test_chainedTask() {
+    let task1Expectation = XCTestExpectation(description: "task1 should be executed")
+    task1Expectation.assertForOverFulfill = true
+    let task2Expectation = XCTestExpectation(description: "task2 should be executed")
+    task2Expectation.assertForOverFulfill = true
 
-    delay(0.1, leeway: .zero, queue: .shared(qos: .userInteractive)) {
+    var value = 0
+    let task = delay(0.1) {
+      value = 1
+      task1Expectation.fulfill()
+    }
+
+    let chainedTask = task.then(delay: 0.1) {
       value = 2
-    }
-    .then(delay: 0.1, leeway: .zero, queue: .shared(qos: .userInteractive)) {
-      value = 3
+      task2Expectation.fulfill()
     }
 
-    XCTAssertEqual(value, 1)
+    expect(value) == 0
+    expect(task.isCanceled) == false
+    expect(task.isExecuted) == false
+    expect(chainedTask.isCanceled) == false
+    expect(chainedTask.isExecuted) == false
 
-    delay(0.15, leeway: .zero) {
-      XCTAssertEqual(value, 2)
-    }
+    wait(for: [task1Expectation], timeout: 0.15)
 
-    delay(0.25, leeway: .zero) {
-      XCTAssertEqual(value, 3)
-    }
+    expect(value) == 1
+    expect(task.isCanceled) == false
+    expect(task.isExecuted) == true
+    expect(chainedTask.isCanceled) == false
+    expect(chainedTask.isExecuted) == false
+
+    wait(for: [task2Expectation], timeout: 0.15)
+
+    expect(value) == 2
+    expect(task.isCanceled) == false
+    expect(task.isExecuted) == true
+    expect(chainedTask.isCanceled) == false
+    expect(chainedTask.isExecuted) == true
   }
 
-  func testChainedTaskCancelled() {
+  func test_chainedTask2() {
+    var value = 0
+    delay(0.1, leeway: .zero, queue: .shared(qos: .userInteractive)) {
+      value = 1
+    }
+    .then(delay: 0.1, leeway: .zero, queue: .shared(qos: .userInteractive)) {
+      value = 2
+    }
+
+    expect(value) == 0
+
+    wait(timeout: 0.15)
+    expect(value) == 1
+
+    wait(timeout: 0.15)
+    expect(value) == 2
+  }
+
+  func test_chainedTask_cancelBeforeExecuting() {
     var value = 1
 
     let t1 = delay(0.2, leeway: .zero, queue: .shared(qos: .userInteractive)) {
@@ -331,36 +386,36 @@ class DelayTaskTests: XCTestCase {
       value = 3
     }
 
-    XCTAssertEqual(value, 1)
-    XCTAssertEqual(t1.isExecuted, false)
-    XCTAssertEqual(t1.isCanceled, false)
-    XCTAssertEqual(t2.isExecuted, false)
-    XCTAssertEqual(t2.isCanceled, false)
+    expect(value) == 1
+    expect(t1.isExecuted) == false
+    expect(t1.isCanceled) == false
+    expect(t2.isExecuted) == false
+    expect(t2.isCanceled) == false
 
     delay(0.1, leeway: .zero) {
       // cancel before t1 executes
       // this should cancel all dependent tasks
       t1.cancel()
 
-      XCTAssertEqual(value, 1)
+      expect(value) == 1
 
-      XCTAssertEqual(t1.isExecuted, false)
-      XCTAssertEqual(t1.isCanceled, true)
-      XCTAssertEqual(t2.isExecuted, false)
-      XCTAssertEqual(t2.isCanceled, true)
+      expect(t1.isExecuted) == false
+      expect(t1.isCanceled) == true
+      expect(t2.isExecuted) == false
+      expect(t2.isCanceled) == true
     }
 
     delay(0.3, leeway: .zero) {
-      XCTAssertEqual(value, 1)
+      expect(value) == 1
 
-      XCTAssertEqual(t1.isExecuted, false)
-      XCTAssertEqual(t1.isCanceled, true)
-      XCTAssertEqual(t2.isExecuted, false)
-      XCTAssertEqual(t2.isCanceled, true)
+      expect(t1.isExecuted) == false
+      expect(t1.isCanceled) == true
+      expect(t2.isExecuted) == false
+      expect(t2.isCanceled) == true
     }
   }
 
-  func testChainedTaskCancelledInMiddle() {
+  func test_chainedTask_cancel_task2() {
     let expectation = XCTestExpectation(description: "")
 
     var value = 1
@@ -417,6 +472,87 @@ class DelayTaskTests: XCTestCase {
 
     wait(for: [expectation], timeout: 5)
   }
-}
 
-// execute middle chained tasks
+  func test_chainedTask_earlyExecute() {
+    let task2Expectation = XCTestExpectation(description: "task should be executed")
+    task2Expectation.assertForOverFulfill = true
+
+    let t1 = delay(0.1, leeway: .zero, queue: .shared(qos: .userInteractive)) {}
+
+    let t2 = t1.then(delay: 0.1, leeway: .zero, queue: .shared(qos: .userInteractive)) {
+      task2Expectation.fulfill()
+    }
+
+    t1.execute()
+
+    wait(for: [task2Expectation], timeout: 0.15) // task 2 schedules earlier
+  }
+
+  func test_chainedTask_with_leeway() {
+    let expectation = XCTestExpectation(description: "task should be executed")
+    expectation.assertForOverFulfill = true
+
+    delay(0.1, leeway: .zero) {}
+      .then(delay: 0.1, leeway: .zero) {
+        expectation.fulfill()
+      }
+
+    wait(for: [expectation], timeout: 0.25)
+  }
+
+  func test_chainedTask_with_queue() {
+    let expectation = XCTestExpectation(description: "task should be executed")
+    expectation.assertForOverFulfill = true
+
+    delay(0.1) {}
+      .then(delay: 0.1, queue: .shared(qos: .userInteractive)) {
+        expectation.fulfill()
+      }
+
+    wait(for: [expectation], timeout: 0.25)
+  }
+
+  func test_chainedTask_with_qos() {
+    let expectation = XCTestExpectation(description: "task should be executed")
+    expectation.assertForOverFulfill = true
+
+    delay(0.1) {}
+      .then(delay: 0.1, qos: .userInteractive, flags: [], queue: .shared(qos: .userInteractive)) {
+        expectation.fulfill()
+      }
+
+    wait(for: [expectation], timeout: 0.25)
+  }
+
+  // MARK: - Async Task
+
+  func test_delay_async() async throws {
+    let delayedSeconds: TimeInterval = 0.5
+
+    let start = mach_absolute_time()
+    await delay(delayedSeconds)
+    let endTime = mach_absolute_time()
+
+    let elapsedTime = endTime.interval(since: start)
+
+    expect(elapsedTime).to(beGreaterThan(delayedSeconds))
+
+    let tolerance: TimeInterval = delayedSeconds / 10
+    expect(elapsedTime).to(beLessThanOrEqual(to: delayedSeconds + tolerance))
+  }
+
+  func test_delay_async_duration() async throws {
+    let delayedSeconds: TimeInterval = 0.5
+
+    let start = mach_absolute_time()
+    await delay(.milliseconds(delayedSeconds * 1000))
+    let endTime = mach_absolute_time()
+
+    let elapsedTime = endTime.interval(since: start)
+
+    expect(elapsedTime).to(beGreaterThan(delayedSeconds))
+
+    let tolerance: TimeInterval = delayedSeconds / 10
+    expect(elapsedTime).to(beLessThanOrEqual(to: delayedSeconds + tolerance))
+  }
+}

@@ -26,21 +26,62 @@ public protocol DelayTaskType: AnyObject {
   /// Cancel the task.
   func cancel()
 
+  /// Chain a new delay task.
+  /// - Parameters:
+  ///   - delayedSeconds: The delayed seconds.
+  ///   - task: The closure to run on the main queue.
+  /// - Returns: The chained delay task.
   @discardableResult
   func then(delay delayedSeconds: TimeInterval, task: @escaping () -> Void) -> DelayTaskType
 
+  /// Chain a new delay task.
+  /// - Parameters:
+  ///   - delayedSeconds: The delayed seconds.
+  ///   - leeway: The leeway for for the delay.
+  ///   - task: The closure to run on the main queue.
+  /// - Returns: The chained delay task.
   @discardableResult
   func then(delay delayedSeconds: TimeInterval, leeway: TimerLeeway?, task: @escaping () -> Void) -> DelayTaskType
 
+  /// Chain a new delay task.
+  /// - Parameters:
+  ///   - delayedSeconds: The delayed seconds.
+  ///   - queue: The dispatch queue to run on.
+  ///   - task: The closure to run.
+  /// - Returns: The chained delay task.
   @discardableResult
   func then(delay delayedSeconds: TimeInterval, queue: DispatchQueue, task: @escaping () -> Void) -> DelayTaskType
 
+  /// Chain a new delay task.
+  /// - Parameters:
+  ///   - delayedSeconds: The delayed seconds.
+  ///   - qos: The quality of service of the task.
+  ///   - flags: The flags of the underlying work item.
+  ///   - queue: The dispatch queue to run on.
+  ///   - task: The closure to run.
+  /// - Returns: The chained delay task.
   @discardableResult
   func then(delay delayedSeconds: TimeInterval, qos: DispatchQoS, flags: DispatchWorkItemFlags, queue: DispatchQueue, task: @escaping () -> Void) -> DelayTaskType
 
+  /// Chain a new delay task.
+  /// - Parameters:
+  ///   - delayedSeconds: The delayed seconds.
+  ///   - leeway: The leeway for the delay.
+  ///   - queue: The dispatch queue to run on.
+  ///   - task: The closure to run.
+  /// - Returns: The chained delay task.
   @discardableResult
   func then(delay delayedSeconds: TimeInterval, leeway: TimerLeeway?, queue: DispatchQueue, task: @escaping () -> Void) -> DelayTaskType
 
+  /// Chain a new delay task.
+  /// - Parameters:
+  ///   - delayedSeconds: The delayed seconds.
+  ///   - leeway: The leeway for the delay
+  ///   - qos: The quality of service of the task.
+  ///   - flags: The flags of the underlying work item.
+  ///   - queue: The dispatch queue to run on.
+  ///   - task: The closure to run.
+  /// - Returns: The chained delay task.
   @discardableResult
   func then(delay delayedSeconds: TimeInterval, leeway: TimerLeeway?, qos: DispatchQoS, flags: DispatchWorkItemFlags, queue: DispatchQueue, task: @escaping () -> Void) -> DelayTaskType
 }
@@ -78,8 +119,10 @@ private final class PrivateDelayTask: DelayTaskType {
   /// The leeway for the underlying timer.
   private let leeway: TimerLeeway?
 
+  /// The quality of service of the task.
   private let qos: DispatchQoS
 
+  /// The flags of the underlying work item.
   private let flags: DispatchWorkItemFlags
 
   /// The queue to run.
@@ -253,11 +296,6 @@ private final class PrivateDelayTask: DelayTaskType {
 
 extension PrivateDelayTask {
 
-  /// Chaining a new task on main queue.
-  /// - Parameters:
-  ///   - delayedSeconds: The delayed seconds.
-  ///   - task: The closure to run.
-  /// - Returns: A delay task.
   @inlinable
   @inline(__always)
   @discardableResult
@@ -293,12 +331,6 @@ extension PrivateDelayTask {
     then(delay: delayedSeconds, leeway: leeway, qos: .unspecified, flags: [], queue: queue, task: task)
   }
 
-  /// Chaining a new task.
-  /// - Parameters:
-  ///   - delayedSeconds: The delayed seconds.
-  ///   - queue: The dispatch queue to run on.
-  ///   - task: The closure to run.
-  /// - Returns: A delay task.
   @discardableResult
   func then(delay delayedSeconds: TimeInterval,
             leeway: TimerLeeway? = nil,
@@ -324,24 +356,15 @@ extension PrivateDelayTask {
 
 // MARK: - Public Methods
 
-/// Execute the task closure on specified queue after delayed seconds.
-///
-/// Example:
-/// ```
-/// // exact 1 second delayed task.
-/// delay(1, leeway: .zero) {
-///   // ...
-/// }
-/// ```
-///
+/// Execute a task after a delay.
 /// - Parameters:
-///   - delayedSeconds: Delay in seconds.
-///   - leeway: Specify a value to use `DispatchTimer` to drive the delay.
-///   - qos: DispatchQoS.
-///   - flags: DispatchWorkItemFlags.
-///   - queue: The queue to run the task. By default, the main queue is used.
-///   - task: The task closure.
-/// - Returns: A delay task token that you can cancel.
+///   - delayedSeconds: The delayed seconds.
+///   - leeway: The leeway for the delay.
+///   - qos: The quality of service of the task.
+///   - flags: The flags of the underlying work item.
+///   - queue: The dispatch queue to run on.
+///   - task: The closure to run.
+/// - Returns: The delay task.
 @discardableResult
 public func delay(_ delayedSeconds: TimeInterval,
                   leeway: TimerLeeway? = nil,
@@ -362,15 +385,15 @@ public func delay(_ delayedSeconds: TimeInterval,
   return task
 }
 
-/// Execute the task on the specified queue after delay.
+/// Execute a task after a delay.
 /// - Parameters:
-///   - duration: Delay duration.
-///   - leeway: Specify a value to use `DispatchTimer` to drive the delay.
-///   - qos: DispatchQoS.
-///   - flags: DispatchWorkItemFlags.
-///   - queue: The queue to run the task. By default, the main queue is used.
-///   - task: The task closure.
-/// - Returns: A delay task token that you can cancel.
+///   - duration: The delayed duration.
+///   - leeway: The leeway for the delay.
+///   - qos: The quality of service of the task.
+///   - flags: The flags of the underlying work item.
+///   - queue: The dispatch queue to run on.
+///   - task: The closure to run.
+/// - Returns: The delay task.
 @discardableResult
 public func delay(_ duration: Duration,
                   leeway: TimerLeeway? = nil,
@@ -382,7 +405,13 @@ public func delay(_ duration: Duration,
   delay(duration.seconds, leeway: leeway, qos: qos, flags: flags, queue: queue, task: task)
 }
 
-/// Async version of delay.
+/// Execute a task after a delay.
+/// - Parameters:
+///   - delayedSeconds: The delayed seconds.
+///   - leeway: The leeway for the delay.
+///   - qos: The quality of service of the task.
+///   - flags: The flags of the underlying work item.
+///   - queue: The dispatch queue to run on.
 public func delay(_ delayedSeconds: TimeInterval,
                   leeway: TimerLeeway? = nil,
                   qos: DispatchQoS = .unspecified,
@@ -396,7 +425,13 @@ public func delay(_ delayedSeconds: TimeInterval,
   }
 }
 
-/// Async version of delay.
+/// Execute a task after a delay.
+/// - Parameters:
+///   - duration: The delayed duration.
+///   - leeway: The leeway for the delay.
+///   - qos: The quality of service of the task.
+///   - flags: The flags of the underlying work item.
+///   - queue: The dispatch queue to run on.
 public func delay(_ duration: Duration,
                   leeway: TimerLeeway? = nil,
                   qos: DispatchQoS = .unspecified,
