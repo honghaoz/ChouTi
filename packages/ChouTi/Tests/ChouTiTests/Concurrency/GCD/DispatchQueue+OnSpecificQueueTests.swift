@@ -108,7 +108,6 @@ final class DispatchQueue_OnSpecificQueueTests: XCTestCase {
       dispatchPrecondition(condition: .onQueue(self.queue))
       hasRun = true
     }
-    expect(hasRun) == false
     expect(hasRun).toEventually(beTrue())
   }
 

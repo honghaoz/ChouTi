@@ -34,7 +34,6 @@ class DispatchGroup_ExtensionsTests: XCTestCase {
   }
 
   func testAsyncWithTimeout() {
-    let expectation = self.expectation(description: "Async task with timeout should timeout")
     let group = DispatchGroup()
 
     group.enter()
@@ -48,22 +47,29 @@ class DispatchGroup_ExtensionsTests: XCTestCase {
       group.leave()
     }
 
+    let timeoutExpectation = self.expectation(description: "task should timeout")
+    timeoutExpectation.assertForOverFulfill = true
+
+    let executeExpectation = self.expectation(description: "timed out task should not execute")
+    executeExpectation.isInverted = true
+
     group.async(
       queue: .main,
       timeoutInterval: 0.1,
       timeout: {
-        expectation.fulfill()
+        expect(Thread.isMainThread) == true
+        timeoutExpectation.fulfill()
       },
       execute: {
-        XCTFail("This block should not be called")
+        expect(Thread.isMainThread) == true
+        executeExpectation.fulfill()
       }
     )
 
-    waitForExpectations(timeout: 1, handler: nil)
+    waitForExpectations(timeout: 0.3, handler: nil)
   }
 
   func testAsyncWithTimeout_nonPositiveTimeout() {
-    let expectation = self.expectation(description: "Async task with non-positive timeout should complete")
     let group = DispatchGroup()
 
     group.enter()
@@ -81,12 +87,20 @@ class DispatchGroup_ExtensionsTests: XCTestCase {
       expect(message) == "Timeout interval should be greater than 0"
     }
 
+    let timeoutExpectation = self.expectation(description: "task should timeout")
+    timeoutExpectation.isInverted = true
+
+    let executeExpectation = self.expectation(description: "timed out task should not execute")
+    executeExpectation.assertForOverFulfill = true
+
     group.async(
       queue: .main,
       timeoutInterval: -1,
-      timeout: {},
+      timeout: {
+        timeoutExpectation.fulfill()
+      },
       execute: {
-        expectation.fulfill()
+        executeExpectation.fulfill()
       }
     )
     Assert.resetTestAssertionFailureHandler()

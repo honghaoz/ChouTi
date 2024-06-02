@@ -293,7 +293,7 @@ class DelayTaskTests: XCTestCase {
 
     var value = false
     var queue: DispatchQueue? = DispatchQueue(label: "test_queue_is_deallocated")
-    let task = delay(0.1, queue: queue!) {
+    let task = delay(0.1, queue: queue!) { // swiftlint:disable:this force_unwrapping
       value = true
       expectation.fulfill()
     }
@@ -479,7 +479,7 @@ class DelayTaskTests: XCTestCase {
 
     let t1 = delay(0.1, leeway: .zero, queue: .shared(qos: .userInteractive)) {}
 
-    let t2 = t1.then(delay: 0.1, leeway: .zero, queue: .shared(qos: .userInteractive)) {
+    t1.then(delay: 0.1, leeway: .zero, queue: .shared(qos: .userInteractive)) {
       task2Expectation.fulfill()
     }
 

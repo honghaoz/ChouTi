@@ -47,12 +47,17 @@ public extension DispatchGroup {
       async(qos: qos, flags: flags, queue: queue, execute: work)
       return
     }
+
+    var isTimedOut: Bool = false
     let delayToken = delay(timeoutInterval, queue: queue) {
+      isTimedOut = true
       timeoutBlock()
     }
     notify(qos: qos, flags: flags, queue: queue, execute: { [weak delayToken] in
       delayToken?.cancel()
-      work()
+      if !isTimedOut {
+        work()
+      }
     })
   }
 
