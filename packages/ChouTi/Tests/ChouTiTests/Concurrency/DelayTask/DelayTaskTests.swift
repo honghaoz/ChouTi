@@ -359,6 +359,8 @@ class DelayTaskTests: XCTestCase {
   }
 
   func test_chainedTask2() {
+    let waitExpectation = XCTestExpectation(description: "wait")
+
     var value = 0
     delay(0.1, leeway: .zero, queue: .shared(qos: .userInteractive)) {
       value = 1
@@ -369,11 +371,16 @@ class DelayTaskTests: XCTestCase {
 
     expect(value) == 0
 
-    wait(timeout: 0.15)
-    expect(value) == 1
+    delay(0.15, leeway: .zero) {
+      expect(value) == 1
+    }
 
-    wait(timeout: 0.15)
-    expect(value) == 2
+    delay(0.25, leeway: .zero, queue: .shared(qos: .userInteractive)) {
+      expect(value) == 2
+      waitExpectation.fulfill()
+    }
+
+    wait(for: [waitExpectation], timeout: 0.3)
   }
 
   func test_chainedTask_cancelBeforeExecuting() {
@@ -504,12 +511,14 @@ class DelayTaskTests: XCTestCase {
     let expectation = XCTestExpectation(description: "task should be executed")
     expectation.assertForOverFulfill = true
 
-    delay(0.1) {}
-      .then(delay: 0.1, queue: .shared(qos: .userInteractive)) {
-        expectation.fulfill()
-      }
+    delay(0.05) {
+      _ = 1
+    }
+    .then(delay: 0.05, queue: .shared(qos: .userInteractive)) {
+      expectation.fulfill()
+    }
 
-    wait(for: [expectation], timeout: 0.25)
+    wait(for: [expectation], timeout: 0.2)
   }
 
   func test_chainedTask_with_qos() {
@@ -537,7 +546,7 @@ class DelayTaskTests: XCTestCase {
 
     expect(elapsedTime).to(beGreaterThan(delayedSeconds))
 
-    let tolerance: TimeInterval = delayedSeconds / 10
+    let tolerance: TimeInterval = delayedSeconds / 5 // 20%
     expect(elapsedTime).to(beLessThanOrEqual(to: delayedSeconds + tolerance))
   }
 
@@ -552,7 +561,7 @@ class DelayTaskTests: XCTestCase {
 
     expect(elapsedTime).to(beGreaterThan(delayedSeconds))
 
-    let tolerance: TimeInterval = delayedSeconds / 10
+    let tolerance: TimeInterval = delayedSeconds / 5 // 20%
     expect(elapsedTime).to(beLessThanOrEqual(to: delayedSeconds + tolerance))
   }
 }

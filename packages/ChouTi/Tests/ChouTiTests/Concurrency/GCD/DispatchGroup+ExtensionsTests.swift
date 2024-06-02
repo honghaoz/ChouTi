@@ -138,8 +138,8 @@ class DispatchGroup_ExtensionsTests: XCTestCase {
       var isWorkExecuted = false
 
       group.enter()
-      DispatchQueue.global().async {
-        usleep(100000) // 0.1 second
+      DispatchQueue.global(qos: .userInteractive).async {
+        usleep(50000) // 0.05 second
         group.leave()
       }
 
@@ -185,7 +185,7 @@ class DispatchGroup_ExtensionsTests: XCTestCase {
 
       group.enter()
       DispatchQueue.global().async {
-        usleep(100000) // 0.1 second
+        usleep(50000) // 0.05 second
         group.leave()
       }
 

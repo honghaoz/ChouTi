@@ -62,9 +62,9 @@ class DispatchWorkItem_ExtensionsTests: XCTestCase {
       expect(DispatchQueue.isOnQueue(self.backgroundQueue)) == true
       expectation.fulfill()
     }
-    .asyncDispatch(to: backgroundQueue, delay: 0.2)
+    .asyncDispatch(to: backgroundQueue, delay: 0.1)
 
-    wait(timeout: 0.02)
+    wait(timeout: 0.01)
     expect(isCalled) == false
 
     wait(for: [expectation], timeout: 1)
