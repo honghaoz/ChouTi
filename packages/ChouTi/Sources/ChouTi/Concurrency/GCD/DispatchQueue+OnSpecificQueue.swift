@@ -133,7 +133,7 @@ public extension DispatchQueue {
         // ignore common known queues
         return false
       } else {
-        ChouTi.assertFailure("Expect a queue label for queue: \(DispatchQueue.currentQueueLabel), use static make(...) method to create a queue.", file: file, line: line, column: column)
+        ChouTi.assertFailure("Expect a queue label for queue: \"\(DispatchQueue.currentQueueLabel)\", use static make(...) method to create a queue.", file: file, line: line, column: column)
       }
       #endif
     }

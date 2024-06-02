@@ -30,6 +30,7 @@ extension DispatchTimeInterval: Comparable {
     case .never:
       return TimeInterval.greatestFiniteMagnitude
     @unknown default:
+      ChouTi.assertFailure("unknown DispatchTimeInterval: \(self)")
       return TimeInterval.greatestFiniteMagnitude
     }
   }

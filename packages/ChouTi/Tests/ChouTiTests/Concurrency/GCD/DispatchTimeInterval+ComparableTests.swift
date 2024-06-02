@@ -5,33 +5,27 @@
 //  Copyright © 2024 ChouTi. All rights reserved.
 //
 
-import Foundation
-import XCTest
+import ChouTiTest
+
 import ChouTi
 
 class DispatchTimeInterval_ComparableTests: XCTestCase {
 
-  func testEqual() {
-    let intervalSeconds1 = DispatchTimeInterval.seconds(10)
-    let intervalSeconds2 = DispatchTimeInterval.seconds(10)
-    XCTAssertTrue(intervalSeconds1 == intervalSeconds2)
-
-    let intervalMilliseconds1 = DispatchTimeInterval.milliseconds(10)
-    let intervalMilliseconds2 = DispatchTimeInterval.milliseconds(10)
-    XCTAssertTrue(intervalMilliseconds1 == intervalMilliseconds2)
+  func test_lessThan() {
+    expect(DispatchTimeInterval.seconds(1)) < DispatchTimeInterval.seconds(2)
+    expect(DispatchTimeInterval.seconds(1)) < DispatchTimeInterval.milliseconds(1001)
+    expect(DispatchTimeInterval.seconds(1)) < DispatchTimeInterval.microseconds(1000001)
+    expect(DispatchTimeInterval.seconds(Int(1e9))) < DispatchTimeInterval.never
   }
 
-  func testGreaterThan() {
-    let intervalSeconds1 = DispatchTimeInterval.seconds(11)
-    let intervalSeconds2 = DispatchTimeInterval.seconds(10)
-    XCTAssertTrue(intervalSeconds1 > intervalSeconds2)
-
-    let intervalMilliseconds1 = DispatchTimeInterval.milliseconds(11)
-    let intervalMilliseconds2 = DispatchTimeInterval.milliseconds(10)
-    XCTAssertTrue(intervalMilliseconds1 > intervalMilliseconds2)
-
-    let intervalMilliseconds11 = DispatchTimeInterval.milliseconds(1001)
-    let intervalMilliseconds22 = DispatchTimeInterval.seconds(1)
-    XCTAssertTrue(intervalMilliseconds11 > intervalMilliseconds22)
+  func test_greaterThan() {
+    expect(DispatchTimeInterval.seconds(2)) > DispatchTimeInterval.seconds(1)
+    expect(DispatchTimeInterval.seconds(1)) >= DispatchTimeInterval.seconds(1)
+    expect(DispatchTimeInterval.seconds(1)) >= DispatchTimeInterval.milliseconds(1000)
+    expect(DispatchTimeInterval.seconds(1)) > DispatchTimeInterval.milliseconds(999)
+    expect(DispatchTimeInterval.seconds(1)) >= DispatchTimeInterval.microseconds(1000000)
+    expect(DispatchTimeInterval.seconds(1)) > DispatchTimeInterval.microseconds(999999)
+    expect(DispatchTimeInterval.seconds(1)) >= DispatchTimeInterval.nanoseconds(1000000000)
+    expect(DispatchTimeInterval.seconds(1)) > DispatchTimeInterval.nanoseconds(999999999)
   }
 }

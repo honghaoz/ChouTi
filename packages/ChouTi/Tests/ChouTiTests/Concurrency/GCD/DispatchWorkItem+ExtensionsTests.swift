@@ -5,19 +5,19 @@
 //  Copyright © 2024 ChouTi. All rights reserved.
 //
 
-import Foundation
-import XCTest
+import ChouTiTest
+
 import ChouTi
 
 class DispatchWorkItem_ExtensionsTests: XCTestCase {
 
-  var backgroundQueue: DispatchQueue!
+  private var backgroundQueue: DispatchQueue!
 
   override func setUp() {
     backgroundQueue = .shared(qos: .userInteractive)
   }
 
-  func testZeroDelay() {
+  func test_zeroDelay() {
     let expectation = XCTestExpectation(description: "should run")
 
     DispatchWorkItem { [weak self] in
@@ -25,15 +25,15 @@ class DispatchWorkItem_ExtensionsTests: XCTestCase {
         XCTFail("no self")
         return
       }
-      XCTAssert(DispatchQueue.isOnQueue(self.backgroundQueue))
+      expect(DispatchQueue.isOnQueue(self.backgroundQueue)) == true
       expectation.fulfill()
     }
     .asyncDispatch(to: backgroundQueue, delay: 0)
 
-    wait(for: [expectation], timeout: 0.2)
+    wait(for: [expectation], timeout: 0.001)
   }
 
-  func testNegativeDelay() {
+  func test_negativeDelay() {
     let expectation = XCTestExpectation(description: "should run")
 
     DispatchWorkItem { [weak self] in
@@ -41,7 +41,7 @@ class DispatchWorkItem_ExtensionsTests: XCTestCase {
         XCTFail("no self")
         return
       }
-      XCTAssert(DispatchQueue.isOnQueue(self.backgroundQueue))
+      expect(DispatchQueue.isOnQueue(self.backgroundQueue)) == true
       expectation.fulfill()
     }
     .asyncDispatch(to: backgroundQueue, delay: -5)
@@ -49,7 +49,7 @@ class DispatchWorkItem_ExtensionsTests: XCTestCase {
     wait(for: [expectation], timeout: 0.001)
   }
 
-  func testPositiveDelay() {
+  func test_positiveDelay() {
     let expectation = XCTestExpectation(description: "should run")
 
     var isCalled = false
@@ -59,13 +59,14 @@ class DispatchWorkItem_ExtensionsTests: XCTestCase {
         XCTFail("no self")
         return
       }
-      XCTAssert(DispatchQueue.isOnQueue(self.backgroundQueue))
+      expect(DispatchQueue.isOnQueue(self.backgroundQueue)) == true
       expectation.fulfill()
     }
     .asyncDispatch(to: backgroundQueue, delay: 0.2)
 
     wait(timeout: 0.02)
-    XCTAssertFalse(isCalled)
+    expect(isCalled) == false
+
     wait(for: [expectation], timeout: 1)
   }
 
@@ -80,13 +81,14 @@ class DispatchWorkItem_ExtensionsTests: XCTestCase {
         XCTFail("no self")
         return
       }
-      XCTAssert(DispatchQueue.isOnQueue(self.backgroundQueue))
+      expect(DispatchQueue.isOnQueue(self.backgroundQueue)) == true
       expectation.fulfill()
     }
     .asyncDispatch(to: backgroundQueue, delay: 0.2)
 
     wait(timeout: 0.02)
-    XCTAssertFalse(isCalled)
+    expect(isCalled) == false
+
     task.cancel()
 
     wait(for: [expectation], timeout: 1)

@@ -6,13 +6,30 @@
 //
 
 import ChouTiTest
-import XCTest
 
 import ChouTi
 
 final class DispatchQueue_OnSpecificQueueTests: XCTestCase {
 
   private let queue = DispatchQueue.make(label: "test-queue", autoreleaseFrequency: .workItem, target: .shared())
+
+  func test_isOnQueue_nonMakeQueue() {
+    let queue = DispatchQueue(label: "test-queue-non-make-queue")
+    Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
+      expect(message) == "Expect a queue label for queue: \"test-queue-non-make-queue\", use static make(...) method to create a queue."
+    }
+    queue.sync {
+      expect(DispatchQueue.isOnQueue(queue)) == false
+    }
+    Assert.resetTestAssertionFailureHandler()
+  }
+
+  func test_isOnQueue_nonMakeQueue_commonQueue() {
+    let queue = DispatchQueue.global()
+    queue.sync {
+      expect(DispatchQueue.isOnQueue(queue)) == true
+    }
+  }
 
   func testRunOnQueue() {
     queue.sync {
@@ -95,11 +112,190 @@ final class DispatchQueue_OnSpecificQueueTests: XCTestCase {
     expect(hasRun).toEventually(beTrue())
   }
 
+  func test_makeQueue() {
+    let queue = DispatchQueue.make(label: "test-queue")
+    expect(queue.label) == "test-queue"
+    expect(queue.qos) == .unspecified
+  }
+
+  func test_makeMainQueue() {
+    let queue = DispatchQueue.makeMain()
+    expect(queue) === .main
+  }
+
+  func test_isOnCooperativeQueue() {
+    let expectation = XCTestExpectation(description: "isOnCooperativeQueue")
+
+    @Sendable func someAsyncFunction() async {
+      expect(DispatchQueue.isOnCooperativeQueue()) == true
+      expectation.fulfill()
+    }
+
+    Task {
+      await someAsyncFunction()
+    }
+    expect(DispatchQueue.isOnCooperativeQueue()) == false
+
+    wait(for: [expectation], timeout: 1)
+  }
+
+  func test_onQueueAsync_block() {
+    // positive delay
+    do {
+      let expectation = XCTestExpectation(description: "onQueueAsync block")
+      DispatchQueue.onQueueAsync(queue: queue, delay: 0.1) {
+        dispatchPrecondition(condition: .onQueue(self.queue))
+        expectation.fulfill()
+      }
+      wait(for: [expectation], timeout: 1)
+    }
+
+    // non negative delay
+    do {
+      let expectation = XCTestExpectation(description: "onQueueAsync block")
+      DispatchQueue.onQueueAsync(queue: queue, delay: 0) {
+        dispatchPrecondition(condition: .onQueue(self.queue))
+        expectation.fulfill()
+      }
+      wait(for: [expectation], timeout: 1)
+    }
+
+    // no delay
+    do {
+      let expectation = XCTestExpectation(description: "onQueueAsync block")
+      DispatchQueue.onQueueAsync(queue: queue) {
+        dispatchPrecondition(condition: .onQueue(self.queue))
+        expectation.fulfill()
+      }
+      wait(for: [expectation], timeout: 1)
+    }
+
+    // positive delay
+    do {
+      let expectation = XCTestExpectation(description: "onQueueAsync block")
+      onQueueAsync(queue: queue, delay: 0.1) {
+        dispatchPrecondition(condition: .onQueue(self.queue))
+        expectation.fulfill()
+      }
+      wait(for: [expectation], timeout: 1)
+    }
+  }
+
+  func test_onQueueSync_block() {
+    var value = 0
+    DispatchQueue.onQueueSync(queue: queue) {
+      dispatchPrecondition(condition: .onQueue(self.queue))
+      value = 1
+    }
+    expect(value) == 1
+  }
+
+  func test_onQueueAsync_workItem() {
+    // positive delay
+    do {
+      let expectation = XCTestExpectation(description: "onQueueAsync workItem")
+      let workItem = DispatchWorkItem {
+        dispatchPrecondition(condition: .onQueue(self.queue))
+        expectation.fulfill()
+      }
+      DispatchQueue.onQueueAsync(queue: queue, delay: 0.1, execute: workItem)
+      wait(for: [expectation], timeout: 1)
+    }
+
+    // non negative delay
+    do {
+      let expectation = XCTestExpectation(description: "onQueueAsync workItem")
+      let workItem = DispatchWorkItem {
+        dispatchPrecondition(condition: .onQueue(self.queue))
+        expectation.fulfill()
+      }
+      DispatchQueue.onQueueAsync(queue: queue, delay: 0, execute: workItem)
+      wait(for: [expectation], timeout: 1)
+    }
+
+    // no delay
+    do {
+      let expectation = XCTestExpectation(description: "onQueueAsync workItem")
+      let workItem = DispatchWorkItem {
+        dispatchPrecondition(condition: .onQueue(.main))
+        expectation.fulfill()
+      }
+      DispatchQueue.onQueueAsync(queue: .main, execute: workItem)
+      wait(for: [expectation], timeout: 1)
+    }
+
+    // positive delay
+    do {
+      let expectation = XCTestExpectation(description: "onQueueAsync workItem")
+      let workItem = DispatchWorkItem {
+        dispatchPrecondition(condition: .onQueue(self.queue))
+        expectation.fulfill()
+      }
+      onQueueAsync(queue: queue, delay: 0.1, execute: workItem)
+      wait(for: [expectation], timeout: 1)
+    }
+  }
+
+  func test_asyncIfNeeded() {
+    // main
+    do {
+      var value = 0
+      DispatchQueue.main.asyncIfNeeded {
+        expect(DispatchQueue.isOnQueue(.main)) == true
+        value = 1
+      }
+      expect(value) == 1
+    }
+
+    // background
+    do {
+      let expectation = XCTestExpectation(description: "asyncIfNeeded")
+      var value = 0
+      queue.asyncIfNeeded {
+        expect(DispatchQueue.isOnQueue(self.queue)) == true
+        value = 1
+        expectation.fulfill()
+      }
+      expect(value) == 0
+      wait(for: [expectation], timeout: 1)
+    }
+  }
+
+  func test_syncIfNeeded() {
+    // main
+    do {
+      var value = 0
+      DispatchQueue.main.syncIfNeeded {
+        expect(DispatchQueue.isOnQueue(.main)) == true
+        value = 1
+      }
+      expect(value) == 1
+    }
+
+    // background
+    do {
+      var value = 0
+      queue.syncIfNeeded {
+        expect(DispatchQueue.isOnQueue(queue)) == true
+        value = 1
+      }
+      expect(value) == 1
+    }
+  }
+
   func testRunOnQueueSync() {
-    queue.sync {
+    do {
       var hasRun = false
       DispatchQueue.onQueueSync(queue: queue) {
-        dispatchPrecondition(condition: .onQueue(self.queue))
+        dispatchPrecondition(condition: .onQueue(queue))
+        hasRun = true
+      }
+      expect(hasRun) == true
+    }
+    do {
+      var hasRun = false
+      onQueueSync(queue: queue) {
+        dispatchPrecondition(condition: .onQueue(queue))
         hasRun = true
       }
       expect(hasRun) == true

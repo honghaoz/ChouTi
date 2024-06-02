@@ -97,7 +97,7 @@ final class MachTimeIdTests: XCTestCase {
     let count = 10000
     var ids = [String](repeating: "", count: count)
     DispatchQueue.concurrentPerform(iterations: count) { i in
-      ids[i] = MachTimeId.idString()
+      ids[i] = String.machTimeId()
     }
 
     // check conflict

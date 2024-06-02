@@ -12,7 +12,7 @@ public extension DispatchWorkItem {
   /// Dispatch `self` to a dispatch queue for asynchronous execution.
   ///
   /// Example:
-  /// ```
+  /// ```swift
   /// let task = DispatchWorkItem {
   ///   ...
   /// }

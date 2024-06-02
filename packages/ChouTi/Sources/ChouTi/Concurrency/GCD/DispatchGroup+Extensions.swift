@@ -43,7 +43,7 @@ public extension DispatchGroup {
              execute work: @escaping () -> Void)
   {
     guard timeoutInterval > 0 else {
-      ChouTi.assertFailure("invalid timeout interval: \(timeoutInterval)")
+      ChouTi.assertFailure("Timeout interval should be greater than 0", metadata: ["timeoutInterval": "\(timeoutInterval)"])
       async(qos: qos, flags: flags, queue: queue, execute: work)
       return
     }

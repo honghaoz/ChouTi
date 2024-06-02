@@ -47,7 +47,7 @@ public extension DispatchQueue {
     case .utility:
       return .utilityQueue
     case .background:
-      ChouTi.assertFailure("If you’re using qos .background you probably mean .utility ")
+      ChouTi.assertFailure("qos .background is not recommended, use .utility instead.")
 
       // Finally, be wary of the `.background` QoS.
       // There are situations where `.background` QoS work stops completely. Last time a checked, this included low power mode on iOS.
