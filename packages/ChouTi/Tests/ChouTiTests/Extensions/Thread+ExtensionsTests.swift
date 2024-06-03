@@ -13,7 +13,7 @@ import ChouTi
 class Thread_ExtensionsTests: XCTestCase {
 
   func test_isRunningXCTest() {
-    expect(Thread.current.isRunningXCTest) == true
+    expect(Thread.isRunningXCTest) == true
   }
 
   func test_callStackSymbolsString() {

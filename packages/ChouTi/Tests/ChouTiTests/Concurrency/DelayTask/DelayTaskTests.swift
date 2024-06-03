@@ -422,6 +422,75 @@ class DelayTaskTests: XCTestCase {
     }
   }
 
+  func test_chainedTask_t2_canceled() {
+    let t2Expectation = XCTestExpectation(description: "t2 should not execute")
+    t2Expectation.isInverted = true
+
+    let t1 = delay(0.05, leeway: .zero, queue: .shared(qos: .userInteractive)) {
+      _ = 2
+    }
+    let t2 = t1.then(delay: 0.1, leeway: .zero, queue: .shared(qos: .userInteractive)) {
+      t2Expectation.fulfill()
+    }
+
+    t2.cancel()
+
+    wait(for: [t2Expectation], timeout: 0.25)
+  }
+
+  func test_chainedTask_t2_queue_deallocated() {
+    let t2Expectation = XCTestExpectation(description: "t2 should not execute")
+    t2Expectation.isInverted = true
+
+    let t1 = delay(0.05, leeway: .zero, queue: .shared(qos: .userInteractive)) {
+      _ = 2
+    }
+
+    Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
+      expect(message) == "queue is unavailable when scheduling"
+    }
+
+    var queue2: DispatchQueue? = DispatchQueue.makeSerialQueue(label: "queue2")
+    t1.then(delay: 0.1, leeway: .zero, queue: queue2!) { // swiftlint:disable:this force_unwrapping
+      t2Expectation.fulfill()
+    }
+
+    queue2 = nil
+
+    wait(for: [t2Expectation], timeout: 0.25)
+
+    Assert.resetTestAssertionFailureHandler()
+  }
+
+//  func test_queue_is_deallocated() {
+//    let expectation = expectation(description: "delayed task should be executed")
+//    expectation.assertForOverFulfill = true
+//
+//    var value = false
+//    var queue: DispatchQueue? = DispatchQueue(label: "test_queue_is_deallocated")
+//    let task = delay(0.1, queue: queue!) { // swiftlint:disable:this force_unwrapping
+//      value = true
+//      expectation.fulfill()
+//    }
+//
+//    expect(task.isCanceled) == false
+//    expect(task.isExecuted) == false
+//    expect(value) == false
+//
+//    Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
+//      expect(message) == "execution queue is deallocated"
+//    }
+//    queue = nil
+//    task.execute()
+//    Assert.resetTestAssertionFailureHandler()
+//
+//    expect(task.isCanceled) == false
+//    expect(task.isExecuted) == false
+//    expect(value) == false
+//
+//    waitForExpectations(timeout: 0.15)
+//  }
+
   func test_chainedTask_cancel_task2() {
     let expectation = XCTestExpectation(description: "")
 

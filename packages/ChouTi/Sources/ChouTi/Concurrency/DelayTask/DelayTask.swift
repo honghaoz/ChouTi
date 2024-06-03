@@ -177,7 +177,7 @@ private final class PrivateDelayTask: DelayTaskType {
     taskLock.unlock()
 
     guard let queue = self.queue else {
-      ChouTi.assertFailure("queue is nil")
+      ChouTi.assertFailure("queue is unavailable when scheduling")
       return
     }
 

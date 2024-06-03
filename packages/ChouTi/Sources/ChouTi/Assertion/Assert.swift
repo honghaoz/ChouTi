@@ -113,7 +113,7 @@ public func assertFailure(_ message: @autoclosure () -> String = String(),
                           function: StaticString = #function)
 {
   #if DEBUG
-  if Thread.current.isRunningXCTest {
+  if Thread.isRunningXCTest {
     Assert.testAssertionFailureHandler?(message(), metadata(), file, line, column)
   } else {
 

@@ -9,10 +9,11 @@ import Foundation
 
 public extension Thread {
 
-  /// Check if the current thread is running XCTest.
-  var isRunningXCTest: Bool {
+  /// Check if current process is running XCTest.
+  static var isRunningXCTest: Bool {
     /// https://stackoverflow.com/a/59732115/3164091
 
+    // ⚠️ Only works with main thread.
     /*
      Xcode 14:
       threadDictionary content:
@@ -59,7 +60,7 @@ public extension Thread {
            - 4 : <XCTContext: 0x6000021324e0>
            - 5 : <XCTContext: 0x600002142ee0>
       */
-    threadDictionary.allKeys.contains { key in
+    Thread.main.threadDictionary.allKeys.contains { key in
       guard let key = key as? String else {
         return false
       }

@@ -33,7 +33,43 @@ class DispatchGroup_ExtensionsTests: XCTestCase {
     waitForExpectations(timeout: 1, handler: nil)
   }
 
-  func testAsyncWithTimeout() {
+  func testAsyncWithTimeout_executed() {
+    let group = DispatchGroup()
+
+    group.enter()
+    DispatchQueue.global().async {
+      usleep(100000) // 0.1 second
+      group.leave()
+    }
+
+    group.enter()
+    DispatchQueue.global().async {
+      group.leave()
+    }
+
+    let timeoutExpectation = self.expectation(description: "task should timeout")
+    timeoutExpectation.isInverted = true
+
+    let executeExpectation = self.expectation(description: "timed out task should not execute")
+    executeExpectation.assertForOverFulfill = true
+
+    group.async(
+      queue: .main,
+      timeoutInterval: 0.2,
+      timeout: {
+        expect(Thread.isMainThread) == true
+        timeoutExpectation.fulfill()
+      },
+      execute: {
+        expect(Thread.isMainThread) == true
+        executeExpectation.fulfill()
+      }
+    )
+
+    waitForExpectations(timeout: 0.3, handler: nil)
+  }
+
+  func testAsyncWithTimeout_timedOut() {
     let group = DispatchGroup()
 
     group.enter()
