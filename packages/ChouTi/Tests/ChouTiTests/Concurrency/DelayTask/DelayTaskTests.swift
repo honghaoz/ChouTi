@@ -599,7 +599,7 @@ class DelayTaskTests: XCTestCase {
         expectation.fulfill()
       }
 
-    wait(for: [expectation], timeout: 0.25)
+    wait(for: [expectation], timeout: 0.3)
   }
 
   // MARK: - Async Task

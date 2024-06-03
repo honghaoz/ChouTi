@@ -91,6 +91,6 @@ class DispatchWorkItem_ExtensionsTests: XCTestCase {
 
     task.cancel()
 
-    wait(for: [expectation], timeout: 1)
+    wait(for: [expectation], timeout: 0.3)
   }
 }

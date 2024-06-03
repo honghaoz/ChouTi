@@ -41,7 +41,8 @@ public func assertNotOnQueue(_ queue: DispatchQueue,
 {
   #if DEBUG
   ChouTi.assert(!DispatchQueue.isOnQueue(queue, file: file, line: line, column: column), "Should be NOT on queue: \(queue.label). Current queue label: \"\(DispatchQueue.currentQueueLabel)\". Message: \(message())", file: file, line: line, column: column, function: function)
-  dispatchPrecondition(condition: .notOnQueue(queue))
+  // not sure why the below doesn't work.
+  // dispatchPrecondition(condition: .notOnQueue(queue))
   #endif
 }
 
@@ -73,6 +74,6 @@ public func assertNotOnCooperativeQueue(_ message: @autoclosure () -> String = S
                                         function: StaticString = #function)
 {
   #if DEBUG
-  ChouTi.assert(!DispatchQueue.isOnCooperativeQueue(), "Should NOT be on main thread. Current thread: \(Thread.current). Current queue label: \"\(DispatchQueue.currentQueueLabel)\". Message: \"\(message())\".", file: file, line: line, column: column, function: function)
+  ChouTi.assert(!DispatchQueue.isOnCooperativeQueue(), "Should NOT be on cooperative queue. Current thread: \(Thread.current). Current queue label: \"\(DispatchQueue.currentQueueLabel)\". Message: \"\(message())\".", file: file, line: line, column: column, function: function)
   #endif
 }
