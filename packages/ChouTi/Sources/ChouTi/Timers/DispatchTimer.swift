@@ -170,7 +170,7 @@ public final class DispatchTimer {
   }
 
   deinit {
-    invalidate()
+    cancel()
   }
 
   private func callCallbackBlocks() {
@@ -221,7 +221,7 @@ public final class DispatchTimer {
 
     let interval = interval.timeInterval
     guard interval > 0 else {
-      ChouTi.assertFailure("repeating duration should be greater than zero.")
+      ChouTi.assertFailure("repeating duration should be greater than zero.", metadata: ["interval": "\(interval)"])
       return
     }
 
@@ -278,7 +278,7 @@ public final class DispatchTimer {
 
     let interval = interval.timeInterval
     guard interval > 0 else {
-      ChouTi.assertFailure("delay duration should be greater than zero.")
+      ChouTi.assertFailure("delay duration should be greater than zero.", metadata: ["interval": "\(interval)"])
       return
     }
 
@@ -295,7 +295,7 @@ public final class DispatchTimer {
   ///   - block: The block to add.
   public func addBlock(key: String, assertIfExists: Bool = true, _ block: @escaping BlockVoid) {
     if assertIfExists {
-      ChouTi.assert(!extraBlocks.hasKey(key), "duplicated block key: \(key)")
+      ChouTi.assert(!extraBlocks.hasKey(key), "duplicated block key", metadata: ["key": "\(key)"])
     }
     extraBlocks[key] = block
   }
@@ -306,13 +306,15 @@ public final class DispatchTimer {
   ///   - assertIfNotExists: If assert if the key does not exist. Default to `true`.
   public func removeBlock(key: String, assertIfNotExists: Bool = true) {
     if assertIfNotExists {
-      ChouTi.assert(extraBlocks.hasKey(key), "missing block key: \(key)")
+      ChouTi.assert(extraBlocks.hasKey(key), "missing block key", metadata: ["key": "\(key)"])
     }
     extraBlocks.removeValue(forKey: key)
   }
 
-  /// Invalidates the timer. A timer cannot be reused after it is invalidated.
-  public func invalidate() {
+  /// Cancel the timer.
+  ///
+  /// The timer cannot be reused anymore after this call.
+  public func cancel() {
     timer.cancel()
   }
 
@@ -329,6 +331,26 @@ public final class DispatchTimer {
 
     return true
   }
+
+  // MARK: - Testing
+
+  #if DEBUG
+
+  var test: Test { Test(host: self) }
+
+  struct Test {
+
+    private let host: DispatchTimer
+
+    fileprivate init(host: DispatchTimer) {
+      ChouTi.assert(Thread.isRunningXCTest, "test namespace should only be used in test target.")
+      self.host = host
+    }
+
+    var extraBlocks: OrderedDictionary<String, BlockVoid> { host.extraBlocks }
+  }
+
+  #endif
 }
 
 // Notes:

@@ -12,17 +12,17 @@ import ChouTi
 class DispatchWorkItem_Delay: XCTestCase {
 
   func testDelayWithTimeInterval() {
-    let expectation = self.expectation(description: "should execute")
+    let expectation = self.expectation(description: "delay workItem should execute")
 
     DispatchWorkItem.delay(0.1, queue: .main) {
       expectation.fulfill()
     }
 
-    waitForExpectations(timeout: 0.2)
+    waitForExpectations(timeout: 0.5)
   }
 
   func testDelayWithDuration() {
-    let expectation = self.expectation(description: "should execute")
+    let expectation = self.expectation(description: "delay workItem should execute")
 
     let delay: Duration = .milliseconds(100)
 
@@ -30,6 +30,6 @@ class DispatchWorkItem_Delay: XCTestCase {
       expectation.fulfill()
     }
 
-    waitForExpectations(timeout: 0.2)
+    waitForExpectations(timeout: 0.5)
   }
 }

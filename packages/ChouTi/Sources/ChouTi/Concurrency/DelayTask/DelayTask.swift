@@ -273,7 +273,7 @@ private final class PrivateDelayTask: DelayTaskType {
 
     _isCanceled = true
 
-    timer?.invalidate()
+    timer?.cancel()
 
     // workItem could be nil if not started yet
     workItem?.cancel()

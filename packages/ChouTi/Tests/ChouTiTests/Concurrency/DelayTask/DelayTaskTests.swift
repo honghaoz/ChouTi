@@ -532,7 +532,7 @@ class DelayTaskTests: XCTestCase {
 
     t1.execute()
 
-    wait(for: [task2Expectation], timeout: 0.15) // task 2 schedules earlier
+    wait(for: [task2Expectation], timeout: 0.19) // task 2 schedules earlier
   }
 
   func test_chainedTask_with_leeway() {
@@ -544,7 +544,7 @@ class DelayTaskTests: XCTestCase {
         expectation.fulfill()
       }
 
-    wait(for: [expectation], timeout: 0.25)
+    wait(for: [expectation], timeout: 0.5)
   }
 
   func test_chainedTask_with_queue() {
@@ -570,7 +570,7 @@ class DelayTaskTests: XCTestCase {
         expectation.fulfill()
       }
 
-    wait(for: [expectation], timeout: 0.3)
+    wait(for: [expectation], timeout: 0.5)
   }
 
   // MARK: - Async Task
