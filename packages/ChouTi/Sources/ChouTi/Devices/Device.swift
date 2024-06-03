@@ -93,6 +93,7 @@ public enum Device {
     }
 
     let notchModels = Set([
+      // MacBook Pro
       // https://support.apple.com/en-us/108052
       "MacBookPro18,1", "MacBookPro18,2", // MacBook Pro (16-inch, 2021), M1
       "MacBookPro18,3", "MacBookPro18,4", // MacBook Pro (14-inch, 2021), M1
@@ -100,6 +101,7 @@ public enum Device {
       "Mac14,5", "Mac14,9", // MacBook Pro (14-inch, 2023), M2
       "Mac15,7", "Mac15,9", "Mac15,11", // MacBook Pro (16-inch, Nov 2023), M3
       "Mac15,6", "Mac15,8", "Mac15,10", "Mac15,3", // MacBook Pro (14-inch, Nov 2023), M3
+      // MacBook Air
       // https://support.apple.com/en-us/102869
       "Mac14,2", // MacBook Air (M2, 2022)
       "Mac14,15", // MacBook Air (15-inch, M2, 2023)

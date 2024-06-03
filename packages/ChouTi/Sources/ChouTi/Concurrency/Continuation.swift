@@ -30,20 +30,8 @@ public struct Continuation<T, E>: Sendable where E: Error {
 
   @inlinable
   @inline(__always)
-  public func resume(returning value: T) where E == Never {
-    continuation.resume(returning: value)
-  }
-
-  @inlinable
-  @inline(__always)
   public func resume(throwing error: E) {
     continuation.resume(throwing: error)
-  }
-
-  @inlinable
-  @inline(__always)
-  public func resume(with result: Result<T, some Error>) where E == Error {
-    continuation.resume(with: result)
   }
 
   @inlinable
