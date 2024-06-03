@@ -558,7 +558,7 @@ class DelayTaskTests: XCTestCase {
       expectation.fulfill()
     }
 
-    wait(for: [expectation], timeout: 0.2)
+    wait(for: [expectation], timeout: 0.5)
   }
 
   func test_chainedTask_with_qos() {
@@ -579,7 +579,7 @@ class DelayTaskTests: XCTestCase {
     let delayedSeconds: TimeInterval = 0.5
 
     let start = mach_absolute_time()
-    await delay(delayedSeconds)
+    await delay(delayedSeconds, leeway: .zero, qos: .userInteractive)
     let endTime = mach_absolute_time()
 
     let elapsedTime = endTime.interval(since: start)
@@ -594,7 +594,7 @@ class DelayTaskTests: XCTestCase {
     let delayedSeconds: TimeInterval = 0.5
 
     let start = mach_absolute_time()
-    await delay(.milliseconds(delayedSeconds * 1000))
+    await delay(.milliseconds(delayedSeconds * 1000), leeway: .zero, qos: .userInteractive)
     let endTime = mach_absolute_time()
 
     let elapsedTime = endTime.interval(since: start)

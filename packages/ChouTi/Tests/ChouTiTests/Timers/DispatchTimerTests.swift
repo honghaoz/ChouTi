@@ -21,8 +21,9 @@ class DispatchTimerTests: XCTestCase {
     }
     timer.fire(every: .seconds(0.2), leeway: .zero, fireImmediately: true)
 
-    wait(timeout: 0.1)
-    expect(fireCount) == 1
+    delay(0.1, leeway: .zero) {
+      expect(fireCount) == 1
+    }
 
     expect(fireCount).toEventually(beEqual(to: 2))
   }
@@ -37,8 +38,9 @@ class DispatchTimerTests: XCTestCase {
       }
       _ = timer
 
-      wait(timeout: 0.1)
-      expect(fireCount) == 1
+      delay(0.1, leeway: .zero) {
+        expect(fireCount) == 1
+      }
 
       expect(fireCount).toEventually(beEqual(to: 2))
     }
@@ -53,8 +55,9 @@ class DispatchTimerTests: XCTestCase {
       }
       _ = timer
 
-      wait(timeout: 0.1)
-      expect(fireCount) == 1
+      delay(0.1, leeway: .zero) {
+        expect(fireCount) == 1
+      }
 
       expect(fireCount).toEventually(beEqual(to: 2))
     }

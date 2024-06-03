@@ -24,7 +24,7 @@ class AssertOnMainThreadTests: XCTestCase {
 
     let expectation = expectation(description: "on background thread")
 
-    DispatchQueue.shared(qos: .utility).async {
+    DispatchQueue.shared(qos: .userInteractive).async {
       Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
         expect(message.contains("Should be on main thread. Current thread: <NSThread:")) == true
       }
@@ -46,7 +46,7 @@ class AssertOnMainThreadTests: XCTestCase {
 
     let expectation = expectation(description: "on background thread")
 
-    DispatchQueue.shared(qos: .utility).async {
+    DispatchQueue.shared(qos: .userInteractive).async {
       assertNotOnMainThread()
 
       expectation.fulfill()

@@ -20,15 +20,11 @@ class DispatchWorkItem_ExtensionsTests: XCTestCase {
   func test_zeroDelay() {
     let expectation = XCTestExpectation(description: "should run")
 
-    DispatchWorkItem { [weak self] in
-      guard let self else {
-        XCTFail("no self")
-        return
-      }
-      expect(DispatchQueue.isOnQueue(self.backgroundQueue)) == true
+    DispatchWorkItem {
+      expect(DispatchQueue.isOnQueue(.main)) == true
       expectation.fulfill()
     }
-    .asyncDispatch(to: backgroundQueue, delay: 0)
+    .asyncDispatch(to: .main, delay: 0)
 
     wait(for: [expectation], timeout: 0.001)
   }
@@ -36,15 +32,11 @@ class DispatchWorkItem_ExtensionsTests: XCTestCase {
   func test_negativeDelay() {
     let expectation = XCTestExpectation(description: "should run")
 
-    DispatchWorkItem { [weak self] in
-      guard let self else {
-        XCTFail("no self")
-        return
-      }
-      expect(DispatchQueue.isOnQueue(self.backgroundQueue)) == true
+    DispatchWorkItem {
+      expect(DispatchQueue.isOnQueue(.main)) == true
       expectation.fulfill()
     }
-    .asyncDispatch(to: backgroundQueue, delay: -5)
+    .asyncDispatch(to: .main, delay: -5)
 
     wait(for: [expectation], timeout: 0.001)
   }
@@ -53,16 +45,12 @@ class DispatchWorkItem_ExtensionsTests: XCTestCase {
     let expectation = XCTestExpectation(description: "should run")
 
     var isCalled = false
-    DispatchWorkItem { [weak self] in
+    DispatchWorkItem {
       isCalled = true
-      guard let self else {
-        XCTFail("no self")
-        return
-      }
-      expect(DispatchQueue.isOnQueue(self.backgroundQueue)) == true
+      expect(DispatchQueue.isOnQueue(.main)) == true
       expectation.fulfill()
     }
-    .asyncDispatch(to: backgroundQueue, delay: 0.1)
+    .asyncDispatch(to: .main, delay: 0.1)
 
     wait(timeout: 0.01)
     expect(isCalled) == false

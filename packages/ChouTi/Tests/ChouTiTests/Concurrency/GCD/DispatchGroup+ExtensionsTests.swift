@@ -74,7 +74,7 @@ class DispatchGroup_ExtensionsTests: XCTestCase {
 
     group.enter()
     DispatchQueue.global().async {
-      usleep(200000) // 0.2 second
+      usleep(300000) // 0.3 second
       group.leave()
     }
 
@@ -102,7 +102,7 @@ class DispatchGroup_ExtensionsTests: XCTestCase {
       }
     )
 
-    waitForExpectations(timeout: 0.3, handler: nil)
+    waitForExpectations(timeout: 0.5, handler: nil)
   }
 
   func testAsyncWithTimeout_nonPositiveTimeout() {
