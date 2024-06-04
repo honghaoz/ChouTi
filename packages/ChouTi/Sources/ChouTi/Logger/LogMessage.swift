@@ -187,6 +187,7 @@ public struct LogMessageInterpolation: StringInterpolationProtocol {
   }
 
   /// Provides `Optional` string interpolation without forcing the use of `String(describing:)`.
+  ///
   /// Example:
   /// ```swift
   /// let valueOrNil: String? = nil

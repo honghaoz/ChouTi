@@ -20,7 +20,7 @@ public extension LogDestination {
   /// - Parameters:
   ///   - folder: The folder to store log files, default is "~/Documents/logs".
   ///   - fileName: The log file name.
-  ///   - maxSizeInBytes: The max log file size in bytes, default is 5 MB.
+  ///   - maxSizeInBytes: The max log file size in bytes, default is 50 MB.
   /// - Returns: A file log destination.
   static func file(folder: URL? = nil, fileName: String, maxSizeInBytes: UInt64? = nil) -> LogDestination {
     Logger.FileLogDestination(folder: folder, fileName: fileName, maxSizeInBytes: maxSizeInBytes).asLogDestination()
@@ -70,7 +70,7 @@ public extension Logger {
     private var logFileSize: UInt64 = 0
 
     /// The file size to trim.
-    private let trimSize: UInt64 = 102400 // 100 * 1024 (100 KB)
+    private let trimSize: UInt64
 
     /// The minimum required disk space to write logs.
     private let minimumRequiredDiskSpace: UInt64 = 524288000 // 500 * 1024 * 1024 (500 MB)
@@ -88,7 +88,14 @@ public extension Logger {
         self.logFolder = URL(fileURLWithPath: NSTemporaryDirectory())
       }
       self.logFile = self.logFolder.appendingPathComponent(fileName)
-      self.maxSizeInBytes = maxSizeInBytes ?? 5242880 // 5 * 1024 * 1024 (5 MB0
+      self.maxSizeInBytes = maxSizeInBytes ?? 52428800 // 50 * 1024 * 1024 (50 MB)
+
+      let minTrimSize: UInt64 = 102400 // 100 * 1024 (100 KB)
+      if self.maxSizeInBytes < minTrimSize {
+        self.trimSize = self.maxSizeInBytes / 100
+      } else {
+        self.trimSize = minTrimSize
+      }
 
       do {
         try prepareFile()
@@ -141,7 +148,7 @@ public extension Logger {
       }
 
       #if DEBUG
-      print("📃 [Logger][\(typeName(self))] current log file size: \(logFileSize), trimming log file by: \(position)")
+      print("📃 [Logger][\(typeName(self))] current log file size: \(logFileSize) bytes, trimming log file by: \(position)")
       #endif
 
       logFileSize -= UInt64(position)

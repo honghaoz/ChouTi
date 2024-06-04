@@ -23,38 +23,35 @@ public let logger = Logger(tag: "chouti")
  ```
 
  Example 2:
-
  ```swift
  import ChouTi
 
  let logger = Logger.shared
 
- class Logger {
+ final class Logger {
 
    static let shared = Logger()
 
    let `default` = ChouTi.Logger(tag: "default")
    let userSession = ChouTi.Logger(tag: "user-session")
    let api = ChouTi.Logger(tag: "api")
-   let menu = ChouTi.Logger(tag: "menu")
 
    func disable() {
-     api.isEnabled = false
      `default`.isEnabled = false
-     menu.isEnabled = false
      userSession.isEnabled = false
+     api.isEnabled = false
    }
  }
  ```
  */
-public final class Logger: Hashable, CustomDebugStringConvertible {
+public final class Logger: Hashable, CustomStringConvertible {
 
   /// The log tag.
   ///
-  /// A tag is for "[UserSession] XXX".
+  /// A tag is for "[Tag] XXX".
   public var tag: String?
 
-  /// The log level..
+  /// The log level.
   ///
   /// `.debug` -> all messages
   /// `.waning` -> waning and error
@@ -70,7 +67,7 @@ public final class Logger: Hashable, CustomDebugStringConvertible {
   // private lazy var metricsMonitor: MetricsMonitor = MetricsMonitor()
 
   /// If logger is enabled.
-  public var isEnabled: Bool
+  public private(set) var isEnabled: Bool
 
   @usableFromInline
   let queue: DispatchQueue?
@@ -279,14 +276,14 @@ public final class Logger: Hashable, CustomDebugStringConvertible {
     lhs === rhs
   }
 
-  // MARK: - CustomDebugStringConvertible
+  // MARK: - CustomStringConvertible
 
-  public var debugDescription: String {
-    #if DEBUG
-    return "Logger(\(tag ??? "N/A"))<\(rawPointer(self))>"
-    #else
-    return "Logger(\(tag ??? "N/A"))"
-    #endif
+  public var description: String {
+    if let tag {
+      return "Logger<\(rawPointer(self))>(\(tag))"
+    } else {
+      return "Logger<\(rawPointer(self))>"
+    }
   }
 }
 
