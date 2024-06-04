@@ -5,7 +5,7 @@
 //  Copyright © 2024 ChouTi. All rights reserved.
 //
 
-import XCTest
+import ChouTiTest
 
 import ChouTi
 
@@ -13,37 +13,37 @@ final class ConstantsTests: XCTestCase {
 
   func testIsDebug() {
     #if DEBUG
-    XCTAssertTrue(isDebug, "isDebug should be true in DEBUG mode")
+    expect(isDebug, "isDebug should be true in DEBUG mode") == true
     #else
-    XCTAssertFalse(isDebug, "isDebug should be false in non-DEBUG mode")
+    expect(isDebug, "isDebug should be false in non-DEBUG mode") == false
     #endif
   }
 
   func testIsMac() {
     #if os(macOS)
-    XCTAssertTrue(isMac, "isMac should be true on macOS")
+    expect(isMac, "isMac should be true on macOS") == true
     #else
-    XCTAssertFalse(isMac, "isMac should be false on non-macOS")
+    expect(isMac, "isMac should be false on non-macOS") == false
     #endif
   }
 
   func testIsIOS() {
     #if os(iOS)
-    XCTAssertTrue(isIOS, "isIOS should be true on iOS")
+    expect(isIOS, "isIOS should be true on iOS") == true
     #else
-    XCTAssertFalse(isIOS, "isIOS should be false on non-iOS")
+    expect(isIOS, "isIOS should be false on non-iOS") == false
     #endif
   }
 
   func testIsDebuggingUsingXcode() {
     #if DEBUG
     let expectedValue = isatty(STDERR_FILENO) == 1
-    XCTAssertEqual(isDebuggingUsingXcode, expectedValue, "isDebuggingUsingXcode should match the isatty(STDERR_FILENO) value")
+    expect(isDebuggingUsingXcode) == expectedValue
     #endif
   }
 
   func testIsRunningAsRoot() {
     let expectedValue = getuid() == 0
-    XCTAssertEqual(isRunningAsRoot, expectedValue, "isRunningAsRoot should match the getuid() == 0 value")
+    expect(isRunningAsRoot) == expectedValue
   }
 }

@@ -7,7 +7,6 @@
 
 #if os(macOS)
 
-import XCTest
 import ChouTiTest
 
 import Combine

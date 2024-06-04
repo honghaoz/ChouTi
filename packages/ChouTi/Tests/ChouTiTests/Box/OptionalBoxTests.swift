@@ -1,16 +1,10 @@
 //
 //  OptionalBoxTests.swift
 //
-//  Copyright © 2024 ChouTi. All rights reserved.
-//
-
-//
-//  OptionalBoxTests.swift
-//
 //  Created by Honghao Zhang on 2/27/23.
 //  Copyright © 2024 ChouTi. All rights reserved.
 //
-import XCTest
+
 import ChouTiTest
 
 import ChouTi
@@ -20,22 +14,22 @@ class OptionalBoxTests: XCTestCase {
   func test_whenNotSet() {
     let box: OptionalBox<Int> = .notSet
 
-    XCTAssertNil(box.value)
-    XCTAssertTrue(box.isNotSet)
-    XCTAssertFalse(box.hasValue)
+    expect(box.value) == nil
+    expect(box.isNotSet) == true
+    expect(box.hasValue) == false
 
-    XCTAssertTrue(box.asAny().isNotSet)
+    expect(box.asAny().isNotSet) == true
 
     expect(box.description) == "notSet"
 
     var box2: OptionalBox<Int> = .notSet
-    XCTAssertEqual(box, box2)
+    expect(box) == box2
 
     box2 = .none
-    XCTAssertNotEqual(box, box2)
+    expect(box) != box2
 
     box2 = .some(200)
-    XCTAssertNotEqual(box, box2)
+    expect(box) != box2
 
     expect(box2.description) == "some(200)"
   }
@@ -43,23 +37,23 @@ class OptionalBoxTests: XCTestCase {
   func test_whenNone() {
     let box: OptionalBox<Int> = .none
 
-    XCTAssertNil(box.value)
-    XCTAssertFalse(box.isNotSet)
-    XCTAssertTrue(box.hasValue)
+    expect(box.value) == nil
+    expect(box.isNotSet) == false
+    expect(box.hasValue) == true
 
-    XCTAssertFalse(box.asAny().isNotSet)
-    XCTAssertTrue(box.asAny().hasValue)
+    expect(box.asAny().isNotSet) == false
+    expect(box.asAny().hasValue) == true
 
     expect(box.description) == "none"
 
     var box2: OptionalBox<Int> = .notSet
-    XCTAssertNotEqual(box, box2)
+    expect(box) != box2
 
     box2 = .none
-    XCTAssertEqual(box, box2)
+    expect(box) == box2
 
     box2 = .some(200)
-    XCTAssertNotEqual(box, box2)
+    expect(box) != box2
 
     expect(box2.description) == "some(200)"
   }
@@ -67,45 +61,45 @@ class OptionalBoxTests: XCTestCase {
   func test_whenSome() {
     var box: OptionalBox<Int> = .some(101)
 
-    XCTAssertEqual(box.value, 101)
-    XCTAssertFalse(box.isNotSet)
-    XCTAssertTrue(box.hasValue)
+    expect(box.value) == 101
+    expect(box.isNotSet) == false
+    expect(box.hasValue) == true
 
-    XCTAssertFalse(box.asAny().isNotSet)
-    XCTAssertTrue(box.asAny().hasValue)
+    expect(box.asAny().isNotSet) == false
+    expect(box.asAny().hasValue) == true
 
     box = (101 as Int?).wrapIntoOptionalBox()
-    XCTAssertEqual(box.value, 101)
+    expect(box.value) == 101
 
     expect(box.description) == "some(101)"
 
     var box2: OptionalBox<Int> = .notSet
-    XCTAssertNotEqual(box, box2)
+    expect(box) != box2
 
     box2 = .none
-    XCTAssertNotEqual(box, box2)
+    expect(box) != box2
 
     box2 = .some(101)
-    XCTAssertEqual(box, box2)
+    expect(box) == box2
 
     box2 = .some(102)
-    XCTAssertNotEqual(box, box2)
+    expect(box) != box2
 
     expect(box2.description) == "some(102)"
   }
 
   func test_wrap() {
     let box: OptionalBox<Int> = .wrap(101)
-    XCTAssertEqual(box.value, 101)
-    XCTAssertFalse(box.isNotSet)
-    XCTAssertTrue(box.hasValue)
+    expect(box.value) == 101
+    expect(box.isNotSet) == false
+    expect(box.hasValue) == true
 
     expect(box.description) == "some(101)"
 
     let box2: OptionalBox<Int> = .wrap(nil)
-    XCTAssertNil(box2.value)
-    XCTAssertFalse(box2.isNotSet)
-    XCTAssertTrue(box2.hasValue)
+    expect(box2.value) == nil
+    expect(box2.isNotSet) == false
+    expect(box2.hasValue) == true
 
     expect(box2.description) == "none"
   }

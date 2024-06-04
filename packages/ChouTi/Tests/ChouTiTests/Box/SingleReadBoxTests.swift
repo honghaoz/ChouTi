@@ -5,7 +5,7 @@
 //  Copyright © 2024 ChouTi. All rights reserved.
 //
 
-import XCTest
+import ChouTiTest
 
 import ChouTi
 
@@ -14,35 +14,35 @@ class SingleReadBoxTests: XCTestCase {
   func testBoolBoxDefaultValueFalse() {
     let box = SingleReadBox<Bool>(defaultValue: false)
 
-    XCTAssertEqual(box.defaultValue, false)
+    expect(box.defaultValue) == false
 
     // read when no value is set
-    XCTAssertEqual(box.read(), false)
-    XCTAssertEqual(box.read(), false)
-    XCTAssertEqual(box.read(), false)
+    expect(box.read()) == false
+    expect(box.read()) == false
+    expect(box.read()) == false
 
     // set value to true and read
     box.set(true)
-    XCTAssertEqual(box.read(), true)
-    XCTAssertEqual(box.read(), false)
-    XCTAssertEqual(box.read(), false)
+    expect(box.read()) == true
+    expect(box.read()) == false
+    expect(box.read()) == false
   }
 
   func testIntBoxDefaultValueZero() {
     let box = SingleReadBox<Int>(defaultValue: 0)
 
-    XCTAssertEqual(box.defaultValue, 0)
+    expect(box.defaultValue) == 0
 
     // read when no value is set
-    XCTAssertEqual(box.read(), 0)
-    XCTAssertEqual(box.read(), 0)
-    XCTAssertEqual(box.read(), 0)
+    expect(box.read()) == 0
+    expect(box.read()) == 0
+    expect(box.read()) == 0
 
     // set value to 99 and read
     box.set(99)
-    XCTAssertEqual(box.read(), 99)
-    XCTAssertEqual(box.read(), 0)
-    XCTAssertEqual(box.read(), 0)
+    expect(box.read()) == 99
+    expect(box.read()) == 0
+    expect(box.read()) == 0
   }
 }
 

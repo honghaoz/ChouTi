@@ -5,7 +5,6 @@
 //  Copyright © 2024 ChouTi. All rights reserved.
 //
 
-import XCTest
 import ChouTiTest
 
 #if canImport(AppKit)
@@ -74,6 +73,6 @@ final class DeviceTests: XCTestCase {
   // Test free disk space
   func testFreeDiskSpaceInBytes() {
     let freeDiskSpace = Device.freeDiskSpaceInBytes
-    XCTAssertGreaterThan(freeDiskSpace, 0)
+    expect(freeDiskSpace).to(beGreaterThan(0))
   }
 }

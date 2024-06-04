@@ -5,8 +5,6 @@
 //  Copyright © 2024 ChouTi. All rights reserved.
 //
 
-import Foundation
-import XCTest
 import ChouTiTest
 
 import ChouTi

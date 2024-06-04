@@ -66,7 +66,7 @@ class DispatchWorkItem_ExtensionsTests: XCTestCase {
     let task = DispatchWorkItem { [weak self] in
       isCalled = true
       guard let self else {
-        XCTFail("no self")
+        fail("no self")
         return
       }
       expect(DispatchQueue.isOnQueue(self.backgroundQueue)) == true

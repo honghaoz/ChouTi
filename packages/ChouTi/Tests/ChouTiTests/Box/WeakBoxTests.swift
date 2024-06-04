@@ -5,7 +5,6 @@
 //  Copyright © 2024 ChouTi. All rights reserved.
 //
 
-import XCTest
 import ChouTiTest
 
 import ChouTi
@@ -23,40 +22,40 @@ class WeakBoxTests: XCTestCase {
 
   func testWeakReference() {
     let box = WeakBox(NSObject())
-    XCTAssertNil(box.object)
+    expect(box.object) == nil
   }
 
   func testCanGetBackObject() {
     let object = NSObject()
     let box = WeakBox(object)
-    XCTAssertTrue(box.object === object)
+    expect(box.object) === object
   }
 
   func testWithStruct() {
     let someStruct = StructFoo()
     let box = WeakBox(someStruct)
-    XCTAssertNil(box.object)
+    expect(box.object) == nil
   }
 
   func testWithNSObjectNil() {
     let box = WeakBox<NSObject>(nil)
-    XCTAssertNil(box.object)
+    expect(box.object) == nil
   }
 
   func testWithAnyObjectWeakValue() {
     let box = WeakBox<AnyObject>(ClassFoo())
-    XCTAssertNil(box.object)
+    expect(box.object) == nil
   }
 
   func testWithAnyObjectStrongValue() {
     let foo = ClassFoo()
     let box = WeakBox<AnyObject>(foo)
-    XCTAssert(box.object === foo)
+    expect(box.object) === foo
   }
 
   func testWithAnyObjectNil() {
     let box = WeakBox<AnyObject>(nil)
-    XCTAssertNil(box.object)
+    expect(box.object) == nil
   }
 
   func testStructSetObject() {
@@ -64,44 +63,44 @@ class WeakBoxTests: XCTestCase {
     let box = WeakBox(someStruct)
     let someStruct2 = StructFoo()
     box.object = someStruct2
-    XCTAssertNil(box.object)
+    expect(box.object) == nil
   }
 
   func testAnyObjectSetObject() {
     let foo = ClassFoo()
     let box = WeakBox<AnyObject>(foo)
-    XCTAssert(box.object === foo)
+    expect(box.object) === foo
     let foo2 = ClassFoo()
     box.object = foo2
-    XCTAssert(box.object === foo2)
+    expect(box.object) === foo2
   }
 
   func test_Equatable() {
     do {
       let box1 = WeakBox<NSObject>(nil)
       let box2 = WeakBox<NSObject>(nil)
-      XCTAssertEqual(box1, box2)
+      expect(box1) == box2
     }
 
     do {
       let object = NSObject()
       let box1 = WeakBox<NSObject>(object)
       let box2 = WeakBox<NSObject>(nil)
-      XCTAssertNotEqual(box1, box2)
+      expect(box1) != box2
     }
 
     do {
       let object = NSObject()
       let box1 = WeakBox<NSObject>(nil)
       let box2 = WeakBox<NSObject>(object)
-      XCTAssertNotEqual(box1, box2)
+      expect(box1) != box2
     }
 
     do {
       let object = NSObject()
       let box1 = WeakBox<NSObject>(object)
       let box2 = WeakBox<NSObject>(object)
-      XCTAssertEqual(box1, box2)
+      expect(box1) == box2
     }
   }
 
@@ -109,28 +108,28 @@ class WeakBoxTests: XCTestCase {
     do {
       let box1 = WeakBox<NSObject>(nil)
       let box2 = WeakBox<NSObject>(nil)
-      XCTAssertEqual(box1.hashValue, box2.hashValue)
+      expect(box1.hashValue) == box2.hashValue
     }
 
     do {
       let object = NSObject()
       let box1 = WeakBox<NSObject>(object)
       let box2 = WeakBox<NSObject>(nil)
-      XCTAssertNotEqual(box1.hashValue, box2.hashValue)
+      expect(box1.hashValue) != box2.hashValue
     }
 
     do {
       let object = NSObject()
       let box1 = WeakBox<NSObject>(nil)
       let box2 = WeakBox<NSObject>(object)
-      XCTAssertNotEqual(box1.hashValue, box2.hashValue)
+      expect(box1.hashValue) != box2.hashValue
     }
 
     do {
       let object = NSObject()
       let box1 = WeakBox<NSObject>(object)
       let box2 = WeakBox<NSObject>(object)
-      XCTAssertEqual(box1.hashValue, box2.hashValue)
+      expect(box1.hashValue) == box2.hashValue
     }
   }
 }

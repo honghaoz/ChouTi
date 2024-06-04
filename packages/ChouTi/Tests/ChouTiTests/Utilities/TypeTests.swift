@@ -5,9 +5,6 @@
 //  Copyright © 2024 ChouTi. All rights reserved.
 //
 
-import Foundation
-
-import XCTest
 import ChouTiTest
 
 import ChouTi
@@ -18,63 +15,63 @@ class TypeNameTests: XCTestCase {
 
   func testTypeName() {
     expect(typeName(Foo.self)) == "Foo"
-    XCTAssertEqual(typeName(Foo()), "Foo")
+    expect(typeName(Foo())) == "Foo"
 
-    XCTAssertEqual(typeName([Foo].self), "Array<Foo>")
-    XCTAssertEqual(typeName([Foo]()), "Array<Foo>")
-    XCTAssertEqual(typeName([Foo.self]), "Array<Foo.Type>")
+    expect(typeName([Foo].self)) == "Array<Foo>"
+    expect(typeName([Foo]())) == "Array<Foo>"
+    expect(typeName([Foo.self])) == "Array<Foo.Type>"
 
-    XCTAssertEqual(typeName(Set<Foo>.self), "Set<Foo>")
-    XCTAssertEqual(typeName(Set<Foo>()), "Set<Foo>")
-    XCTAssertEqual(typeName(Set<[Foo]>.self), "Set<Array<Foo>>")
+    expect(typeName(Set<Foo>.self)) == "Set<Foo>"
+    expect(typeName(Set<Foo>())) == "Set<Foo>"
+    expect(typeName(Set<[Foo]>.self)) == "Set<Array<Foo>>"
 
-    XCTAssertEqual(typeName([Foo: Int].self), "Dictionary<Foo, Int>")
-    XCTAssertEqual(typeName([Foo: Int].self), "Dictionary<Foo, Int>")
-    XCTAssertEqual(typeName([Foo: Int]()), "Dictionary<Foo, Int>")
+    expect(typeName([Foo: Int].self)) == "Dictionary<Foo, Int>"
+    expect(typeName([Foo: Int].self)) == "Dictionary<Foo, Int>"
+    expect(typeName([Foo: Int]())) == "Dictionary<Foo, Int>"
   }
 
   func testIsNotArray() {
 
     func foo<M: FooType>() -> M {
-      XCTAssertFalse(isArrayType(M.self))
+      expect(isArrayType(M.self)) == false
       return 2 as! M // swiftlint:disable:this force_cast
     }
 
     let dummy: Int = foo()
-    XCTAssertEqual(dummy, 2)
+    expect(dummy) == 2
   }
 
   func testIsArray() {
 
     func foo<M: FooType>() -> M {
-      XCTAssertTrue(isArrayType(M.self))
+      expect(isArrayType(M.self)) == true
       return [2] as! M // swiftlint:disable:this force_cast
     }
 
     let dummy: [Int] = foo()
-    XCTAssertEqual(dummy, [2])
+    expect(dummy) == [2]
   }
 
   func testIsSet() {
 
     func foo<M: FooType>() -> M {
-      XCTAssertTrue(isSetType(M.self))
+      expect(isSetType(M.self)) == true
       return Set([2]) as! M // swiftlint:disable:this force_cast
     }
 
     let dummy: Set<Int> = foo()
-    XCTAssertEqual(dummy, [2])
+    expect(dummy) == [2]
   }
 
   func testIsDictionary() {
 
     func foo<M: FooType>() -> M {
-      XCTAssertTrue(isDictionaryType(M.self))
+      expect(isDictionaryType(M.self)) == true
       return [2: "a"] as! M // swiftlint:disable:this force_cast
     }
 
     let dummy: [Int: String] = foo()
-    XCTAssertEqual(dummy, [2: "a"])
+    expect(dummy) == [2: "a"]
   }
 
   func test_isOptionalType() {
@@ -86,34 +83,34 @@ class TypeNameTests: XCTestCase {
 
     class MyClass {}
     let object = MyClass()
-    XCTAssertTrue(isReferenceType(object))
+    expect(isReferenceType(object)) == true
 
     struct MyStruct {}
     let structure = MyStruct()
-    XCTAssertFalse(isReferenceType(structure))
+    expect(isReferenceType(structure)) == false
 
     enum MyEnum { case caseOne
       case caseTwo
     }
     let enumeration = MyEnum.caseOne
-    XCTAssertFalse(isReferenceType(enumeration))
+    expect(isReferenceType(enumeration)) == false
 
     let number: Int = 123
-    XCTAssertFalse(isReferenceType(number))
+    expect(isReferenceType(number)) == false
 
     let string = "string"
-    XCTAssertFalse(isReferenceType(string))
+    expect(isReferenceType(string)) == false
 
     let nsstring: NSString = "string"
-    XCTAssertTrue(isReferenceType(nsstring))
+    expect(isReferenceType(nsstring)) == true
   }
 
   func testClassName() {
-    XCTAssertEqual(getClassName(Foo()), "__SwiftValue")
-    XCTAssertEqual(getClassName(NSObject()), "NSObject")
+    expect(getClassName(Foo())) == "__SwiftValue"
+    expect(getClassName(NSObject())) == "NSObject"
 
     let error = NSError(domain: "", code: 1, userInfo: nil)
-    XCTAssertEqual(getClassName(error), "NSError")
+    expect(getClassName(error)) == "NSError"
 
     // MARK: - Error Mock
 
@@ -121,7 +118,7 @@ class TypeNameTests: XCTestCase {
       case badURLString
     }
 
-    XCTAssertEqual(getClassName(Error.badURLString), "__SwiftNativeNSError")
+    expect(getClassName(Error.badURLString)) == "__SwiftNativeNSError"
 
     #if os(macOS)
     let window = NSWindow(
@@ -131,7 +128,7 @@ class TypeNameTests: XCTestCase {
       defer: true
     )
     let closeButton = window.standardWindowButton(.closeButton)
-    XCTAssertEqual(getClassName(closeButton), "_NSThemeCloseWidget")
+    expect(getClassName(closeButton)) == "_NSThemeCloseWidget"
     #endif
   }
 }

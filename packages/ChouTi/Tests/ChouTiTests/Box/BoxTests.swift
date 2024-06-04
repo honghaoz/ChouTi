@@ -5,7 +5,6 @@
 //  Copyright © 2024 ChouTi. All rights reserved.
 //
 
-import XCTest
 import ChouTiTest
 
 import ChouTi
@@ -14,7 +13,7 @@ class BoxTests: XCTestCase {
 
   func testBoxContainsArrayOfStrings() {
     let box = ["1", "2"].wrapInBox()
-    XCTAssertEqual(box.value, ["1", "2"])
+    expect(box.value) == ["1", "2"]
   }
 
   // Test when box is a constant in a struct
@@ -25,9 +24,9 @@ class BoxTests: XCTestCase {
   func testBoxInStruct() {
     let value = TestStruct(aBox: Box<Int>(1))
 
-    XCTAssertEqual(value.aBox.value, 1, "initial value of the box should be 1")
+    expect(value.aBox.value, "initial value of the box") == 1
 
     value.aBox.value = 2
-    XCTAssertEqual(value.aBox.value, 2, "updated value of the box should be 2")
+    expect(value.aBox.value, "updated value of the box") == 2
   }
 }

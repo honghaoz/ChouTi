@@ -5,7 +5,6 @@
 //  Copyright © 2024 ChouTi. All rights reserved.
 //
 
-import XCTest
 import ChouTiTest
 
 import ChouTi
@@ -28,9 +27,9 @@ class OrderedDictionaryTests: XCTestCase {
 
   func testInit() {
     dict = OrderedDictionary<String, Int>(keys: ["a", "b", "c"], values: [1, 2, 3])
-    XCTAssertEqual(dict.count, 3)
-    XCTAssertEqual(dict.keys, ["a", "b", "c"])
-    XCTAssertEqual(dict.values, [1, 2, 3])
+    expect(dict.count) == 3
+    expect(dict.keys) == ["a", "b", "c"]
+    expect(dict.values) == [1, 2, 3]
 
     dict = OrderedDictionary<String, Int>()
     expect(dict.isEmpty) == true
@@ -61,45 +60,45 @@ class OrderedDictionaryTests: XCTestCase {
       "b": 2,
       "c": 3,
     ]
-    XCTAssertEqual(dict.count, 3)
-    XCTAssertEqual(dict.keys, ["a", "b", "c"])
-    XCTAssertEqual(dict.values, [1, 2, 3])
+    expect(dict.count) == 3
+    expect(dict.keys) == ["a", "b", "c"]
+    expect(dict.values) == [1, 2, 3]
   }
 
   func testSubscript() {
     dict = OrderedDictionary<String, Int>(keys: ["a", "b", "c"], values: [1, 2, 3])
     // test get
-    XCTAssertEqual(dict["a"], 1)
+    expect(dict["a"]) == 1
 
     // test insert new key
     dict["e"] = 5
-    XCTAssertEqual(dict["e"], 5)
-    XCTAssertEqual(dict.keys, ["a", "b", "c", "e"])
+    expect(dict["e"]) == 5
+    expect(dict.keys) == ["a", "b", "c", "e"]
 
     // test insert existing key
     dict["b"] = 12
-    XCTAssertEqual(dict["b"], 12)
-    XCTAssertEqual(dict.keys, ["a", "b", "c", "e"])
+    expect(dict["b"]) == 12
+    expect(dict.keys) == ["a", "b", "c", "e"]
   }
 
   func testAppend() {
     dict.append(value: 1, forKey: "a")
-    XCTAssertEqual(dict["a"], 1)
-    XCTAssertEqual(dict.count, 1)
-    XCTAssertEqual(dict.keys, ["a"])
-    XCTAssertEqual(dict.values, [1])
+    expect(dict["a"]) == 1
+    expect(dict.count) == 1
+    expect(dict.keys) == ["a"]
+    expect(dict.values) == [1]
 
     dict.append(value: 2, forKey: "b")
-    XCTAssertEqual(dict["b"], 2)
-    XCTAssertEqual(dict.count, 2)
-    XCTAssertEqual(dict.keys, ["a", "b"])
-    XCTAssertEqual(dict.values, [1, 2])
+    expect(dict["b"]) == 2
+    expect(dict.count) == 2
+    expect(dict.keys) == ["a", "b"]
+    expect(dict.values) == [1, 2]
 
     dict.append(value: 3, forKey: "c")
-    XCTAssertEqual(dict["c"], 3)
-    XCTAssertEqual(dict.count, 3)
-    XCTAssertEqual(dict.keys, ["a", "b", "c"])
-    XCTAssertEqual(dict.values, [1, 2, 3])
+    expect(dict["c"]) == 3
+    expect(dict.count) == 3
+    expect(dict.keys) == ["a", "b", "c"]
+    expect(dict.values) == [1, 2, 3]
   }
 
   func testPopLast() {
@@ -108,170 +107,170 @@ class OrderedDictionaryTests: XCTestCase {
     dict.append(value: 3, forKey: "c")
 
     let removed = dict.popLast()
-    XCTAssertEqual(removed?.0, "c")
-    XCTAssertEqual(removed?.1, 3)
-    XCTAssertEqual(dict.count, 2)
-    XCTAssertEqual(dict.keys, ["a", "b"])
-    XCTAssertEqual(dict.values, [1, 2])
+    expect(removed?.0) == "c"
+    expect(removed?.1) == 3
+    expect(dict.count) == 2
+    expect(dict.keys) == ["a", "b"]
+    expect(dict.values) == [1, 2]
 
     let removed2 = dict.popLast()
-    XCTAssertEqual(removed2?.0, "b")
-    XCTAssertEqual(removed2?.1, 2)
-    XCTAssertEqual(dict.count, 1)
-    XCTAssertEqual(dict.keys, ["a"])
-    XCTAssertEqual(dict.values, [1])
+    expect(removed2?.0) == "b"
+    expect(removed2?.1) == 2
+    expect(dict.count) == 1
+    expect(dict.keys) == ["a"]
+    expect(dict.values) == [1]
 
     let removed3 = dict.popLast()
-    XCTAssertEqual(removed3?.0, "a")
-    XCTAssertEqual(removed3?.1, 1)
-    XCTAssertEqual(dict.count, 0)
-    XCTAssertEqual(dict.keys, [])
-    XCTAssertEqual(dict.values, [])
+    expect(removed3?.0) == "a"
+    expect(removed3?.1) == 1
+    expect(dict.count) == 0
+    expect(dict.keys) == []
+    expect(dict.values) == []
 
     let removed4 = dict.popLast()
-    XCTAssertNil(removed4)
+    expect(removed4) == nil
   }
 
   func testHasKey() {
     dict["a"] = 1
-    XCTAssertTrue(dict.hasKey("a"))
-    XCTAssertFalse(dict.hasKey("b"))
+    expect(dict.hasKey("a")) == true
+    expect(dict.hasKey("b")) == false
   }
 
   func testHasNoKey() {
     dict.append(value: 1, forKey: "a")
-    XCTAssertFalse(dict.hasNoKey("a"))
-    XCTAssertTrue(dict.hasNoKey("b"))
+    expect(dict.hasNoKey("a")) == false
+    expect(dict.hasNoKey("b")) == true
   }
 
   func testReserveCapacity() {
     dict.removeAll(keepingCapacity: false)
     dict.reserveCapacity(10)
-    XCTAssertGreaterThanOrEqual(dict.capacity, 10, "dictionary should have at least capacity of 10")
+    expect(dict.capacity).to(beGreaterThanOrEqual(to: 10))
   }
 
   func testBasicOperations() {
-    XCTAssertNil(dict["none"])
-    XCTAssertNil(dict.firstValue)
-    XCTAssertNil(dict.lastValue)
+    expect(dict["none"]) == nil
+    expect(dict.firstValue) == nil
+    expect(dict.lastValue) == nil
 
     dict["apple"] = 1
-    XCTAssertEqual(dict["apple"], 1)
-    XCTAssertEqual(dict[0].0, "apple")
-    XCTAssertEqual(dict[0].1, 1)
-    XCTAssertEqual(dict.count, 1)
-    XCTAssertEqual(dict.firstValue, 1)
-    XCTAssertEqual(dict.lastValue, 1)
+    expect(dict["apple"]) == 1
+    expect(dict[0].0) == "apple"
+    expect(dict[0].1) == 1
+    expect(dict.count) == 1
+    expect(dict.firstValue) == 1
+    expect(dict.lastValue) == 1
 
     dict["apple"] = 11
-    XCTAssertEqual(dict["apple"], 11)
-    XCTAssertEqual(dict[0].0, "apple")
-    XCTAssertEqual(dict[0].1, 11)
-    XCTAssertEqual(dict.count, 1)
-    XCTAssertEqual(dict.firstValue, 11)
-    XCTAssertEqual(dict.lastValue, 11)
+    expect(dict["apple"]) == 11
+    expect(dict[0].0) == "apple"
+    expect(dict[0].1) == 11
+    expect(dict.count) == 1
+    expect(dict.firstValue) == 11
+    expect(dict.lastValue) == 11
 
     dict["banana"] = 2
-    XCTAssertEqual(dict["banana"], 2)
-    XCTAssertEqual(dict[1].0, "banana")
-    XCTAssertEqual(dict[1].1, 2)
-    XCTAssertEqual(dict.count, 2)
-    XCTAssertEqual(dict.firstValue, 11)
-    XCTAssertEqual(dict.lastValue, 2)
+    expect(dict["banana"]) == 2
+    expect(dict[1].0) == "banana"
+    expect(dict[1].1) == 2
+    expect(dict.count) == 2
+    expect(dict.firstValue) == 11
+    expect(dict.lastValue) == 2
 
-    XCTAssertEqual(dict.keys, ["apple", "banana"])
-    XCTAssertEqual(dict.values, [11, 2])
+    expect(dict.keys) == ["apple", "banana"]
+    expect(dict.values) == [11, 2]
 
     dict.removeValue(forKey: "apple")
-    XCTAssertNil(dict["apple"])
-    XCTAssertEqual(dict.count, 1)
-    XCTAssertEqual(dict.firstValue, 2)
-    XCTAssertEqual(dict.lastValue, 2)
+    expect(dict["apple"]) == nil
+    expect(dict.count) == 1
+    expect(dict.firstValue) == 2
+    expect(dict.lastValue) == 2
 
     dict["orange"] = 123
-    XCTAssertEqual(dict["orange"], 123)
-    XCTAssertEqual(dict.count, 2)
-    XCTAssertEqual(dict.firstValue, 2)
-    XCTAssertEqual(dict.lastValue, 123)
+    expect(dict["orange"]) == 123
+    expect(dict.count) == 2
+    expect(dict.firstValue) == 2
+    expect(dict.lastValue) == 123
 
     dict["orange"] = nil
-    XCTAssertNil(dict["orange"])
-    XCTAssertEqual(dict.count, 1)
-    XCTAssertEqual(dict.firstValue, 2)
-    XCTAssertEqual(dict.lastValue, 2)
+    expect(dict["orange"]) == nil
+    expect(dict.count) == 1
+    expect(dict.firstValue) == 2
+    expect(dict.lastValue) == 2
 
     dict.removeAll()
-    XCTAssertEqual(dict.count, 0)
-    XCTAssertNil(dict.firstValue)
-    XCTAssertNil(dict.lastValue)
+    expect(dict.count) == 0
+    expect(dict.firstValue) == nil
+    expect(dict.lastValue) == nil
   }
 
   func testInsertionAtIndex() {
     dict["apple"] = 1
-    XCTAssertEqual(dict["apple"], 1)
-    XCTAssertEqual(dict[0].0, "apple")
-    XCTAssertEqual(dict[0].1, 1)
-    XCTAssertEqual(dict.count, 1)
+    expect(dict["apple"]) == 1
+    expect(dict[0].0) == "apple"
+    expect(dict[0].1) == 1
+    expect(dict.count) == 1
 
     dict.insert(value: 2, forKey: "banana", atIndex: 1)
-    XCTAssertEqual(dict["banana"], 2)
-    XCTAssertEqual(dict[0].0, "apple")
-    XCTAssertEqual(dict[0].1, 1)
-    XCTAssertEqual(dict[1].0, "banana")
-    XCTAssertEqual(dict[1].1, 2)
-    XCTAssertEqual(dict.count, 2)
+    expect(dict["banana"]) == 2
+    expect(dict[0].0) == "apple"
+    expect(dict[0].1) == 1
+    expect(dict[1].0) == "banana"
+    expect(dict[1].1) == 2
+    expect(dict.count) == 2
 
     dict.insert(value: 3, forKey: "orange", atIndex: 1)
-    XCTAssertEqual(dict["orange"], 3)
-    XCTAssertEqual(dict[0].0, "apple")
-    XCTAssertEqual(dict[0].1, 1)
-    XCTAssertEqual(dict[1].0, "orange")
-    XCTAssertEqual(dict[1].1, 3)
-    XCTAssertEqual(dict[2].0, "banana")
-    XCTAssertEqual(dict[2].1, 2)
-    XCTAssertEqual(dict.count, 3)
+    expect(dict["orange"]) == 3
+    expect(dict[0].0) == "apple"
+    expect(dict[0].1) == 1
+    expect(dict[1].0) == "orange"
+    expect(dict[1].1) == 3
+    expect(dict[2].0) == "banana"
+    expect(dict[2].1) == 2
+    expect(dict.count) == 3
 
     var newDict = dict! // swiftlint:disable:this force_unwrapping
     newDict.insert(value: 4, forKey: "apple", atIndex: 2)
-    XCTAssertEqual(newDict["apple"], 4)
-    XCTAssertEqual(newDict[0].0, "orange")
-    XCTAssertEqual(newDict[0].1, 3)
-    XCTAssertEqual(newDict[1].0, "banana")
-    XCTAssertEqual(newDict[1].1, 2)
-    XCTAssertEqual(newDict[2].0, "apple")
-    XCTAssertEqual(newDict[2].1, 4)
-    XCTAssertEqual(newDict.count, 3)
+    expect(newDict["apple"]) == 4
+    expect(newDict[0].0) == "orange"
+    expect(newDict[0].1) == 3
+    expect(newDict[1].0) == "banana"
+    expect(newDict[1].1) == 2
+    expect(newDict[2].0) == "apple"
+    expect(newDict[2].1) == 4
+    expect(newDict.count) == 3
 
     newDict = dict! // swiftlint:disable:this force_unwrapping
     newDict.insert(value: 4, forKey: "apple", atIndex: 3)
-    XCTAssertEqual(newDict["apple"], 4)
-    XCTAssertEqual(newDict[0].0, "orange")
-    XCTAssertEqual(newDict[0].1, 3)
-    XCTAssertEqual(newDict[1].0, "banana")
-    XCTAssertEqual(newDict[1].1, 2)
-    XCTAssertEqual(newDict[2].0, "apple")
-    XCTAssertEqual(newDict[2].1, 4)
-    XCTAssertEqual(newDict.count, 3)
+    expect(newDict["apple"]) == 4
+    expect(newDict[0].0) == "orange"
+    expect(newDict[0].1) == 3
+    expect(newDict[1].0) == "banana"
+    expect(newDict[1].1) == 2
+    expect(newDict[2].0) == "apple"
+    expect(newDict[2].1) == 4
+    expect(newDict.count) == 3
 
     newDict = dict! // swiftlint:disable:this force_unwrapping
     newDict.insert(value: 4, forKey: "apple", atIndex: 1)
-    XCTAssertEqual(newDict["apple"], 4)
-    XCTAssertEqual(newDict[0].0, "orange")
-    XCTAssertEqual(newDict[0].1, 3)
-    XCTAssertEqual(newDict[1].0, "apple")
-    XCTAssertEqual(newDict[1].1, 4)
-    XCTAssertEqual(newDict[2].0, "banana")
-    XCTAssertEqual(newDict[2].1, 2)
-    XCTAssertEqual(newDict.count, 3)
+    expect(newDict["apple"]) == 4
+    expect(newDict[0].0) == "orange"
+    expect(newDict[0].1) == 3
+    expect(newDict[1].0) == "apple"
+    expect(newDict[1].1) == 4
+    expect(newDict[2].0) == "banana"
+    expect(newDict[2].1) == 2
+    expect(newDict.count) == 3
 
     let removed = dict.remove(at: 1)
-    XCTAssertEqual(removed.0, "orange")
-    XCTAssertEqual(removed.1, 3)
-    XCTAssertEqual(dict[0].0, "apple")
-    XCTAssertEqual(dict[0].1, 1)
-    XCTAssertEqual(dict[1].0, "banana")
-    XCTAssertEqual(dict[1].1, 2)
-    XCTAssertEqual(dict.count, 2)
+    expect(removed.0) == "orange"
+    expect(removed.1) == 3
+    expect(dict[0].0) == "apple"
+    expect(dict[0].1) == 1
+    expect(dict[1].0) == "banana"
+    expect(dict[1].1) == 2
+    expect(dict.count) == 2
   }
 
   func testCollection() {
@@ -281,18 +280,18 @@ class OrderedDictionaryTests: XCTestCase {
       "c": 3,
     ]
 
-    XCTAssertEqual(dict.count, 3)
-    XCTAssertEqual(dict.startIndex, 0)
-    XCTAssertEqual(dict.endIndex, 3)
-    XCTAssertEqual(dict.index(before: 2), 1)
-    XCTAssertEqual(dict.index(after: 0), 1)
-    XCTAssertEqual(dict.index(dict.startIndex, offsetBy: 2), 2)
-    XCTAssertEqual(dict[0].0, "a")
-    XCTAssertEqual(dict[0].1, 1)
-    XCTAssertEqual(dict[1].0, "b")
-    XCTAssertEqual(dict[1].1, 2)
-    XCTAssertEqual(dict[2].0, "c")
-    XCTAssertEqual(dict[2].1, 3)
+    expect(dict.count) == 3
+    expect(dict.startIndex) == 0
+    expect(dict.endIndex) == 3
+    expect(dict.index(before: 2)) == 1
+    expect(dict.index(after: 0)) == 1
+    expect(dict.index(dict.startIndex, offsetBy: 2)) == 2
+    expect(dict[0].0) == "a"
+    expect(dict[0].1) == 1
+    expect(dict[1].0) == "b"
+    expect(dict[1].1) == 2
+    expect(dict[2].0) == "c"
+    expect(dict[2].1) == 3
   }
 
   func testSequence() {
@@ -305,16 +304,16 @@ class OrderedDictionaryTests: XCTestCase {
     for (index, (key, value)) in dict.enumerated() {
       switch index {
       case 0:
-        XCTAssertEqual(key, "a")
-        XCTAssertEqual(value, 1)
+        expect(key) == "a"
+        expect(value) == 1
       case 1:
-        XCTAssertEqual(key, "b")
-        XCTAssertEqual(value, 2)
+        expect(key) == "b"
+        expect(value) == 2
       case 2:
-        XCTAssertEqual(key, "c")
-        XCTAssertEqual(value, 3)
+        expect(key) == "c"
+        expect(value) == 3
       default:
-        XCTFail("unexpected index")
+        fail("unexpected index")
       }
     }
   }
@@ -653,13 +652,13 @@ extension OrderedDictionaryTests {
 
   func testFirstKeyForValue() {
     dict = OrderedDictionary<String, Int>(keys: ["a", "b", "c"], values: [1, 2, 3])
-    XCTAssertEqual(dict[firstKeyFor: 2], "b")
-    XCTAssertEqual(dict[firstKeyWhere: { $0 == 3 }], "c")
+    expect(dict[firstKeyFor: 2]) == "b"
+    expect(dict[firstKeyWhere: { $0 == 3 }]) == "c"
   }
 
   func testAllKeysForValue() {
     dict = OrderedDictionary<String, Int>(keys: ["a", "b", "c"], values: [1, 2, 2])
-    XCTAssertEqual(dict.allKeys(for: 2).sorted(), ["b", "c"].sorted())
-    XCTAssertEqual(dict.allKeys(where: { $0 == 2 }).sorted(), ["b", "c"].sorted())
+    expect(dict.allKeys(for: 2).sorted()) == ["b", "c"].sorted()
+    expect(dict.allKeys(where: { $0 == 2 }).sorted()) == ["b", "c"].sorted()
   }
 }

@@ -5,7 +5,6 @@
 //  Copyright © 2024 ChouTi. All rights reserved.
 //
 
-import XCTest
 import ChouTiTest
 
 import ChouTi
@@ -14,42 +13,42 @@ class Array_ExtensionsTests: XCTestCase {
 
   func test_removingDuplicates() {
     var integers = [1, 2, 2, 1, 3, 4, 5, 3, 4, 5]
-    XCTAssertEqual(integers.removingDuplicates(), [1, 2, 3, 4, 5])
+    expect(integers.removingDuplicates()) == [1, 2, 3, 4, 5]
 
-    XCTAssertEqual(integers, [1, 2, 2, 1, 3, 4, 5, 3, 4, 5])
+    expect(integers) == [1, 2, 2, 1, 3, 4, 5, 3, 4, 5]
     integers.removeDuplicates()
-    XCTAssertEqual(integers, [1, 2, 3, 4, 5])
+    expect(integers) == [1, 2, 3, 4, 5]
   }
 
   func test_unique() {
     let integers = [1, 2, 2, 1, 3, 4, 5, 3, 4, 5]
-    XCTAssertEqual(integers.removingDuplicates(), [1, 2, 3, 4, 5])
+    expect(integers.removingDuplicates()) == [1, 2, 3, 4, 5]
   }
 
   func test_allUnique() {
     let nonUniqueIntegers = [1, 2, 2, 1, 3, 4, 5, 3, 4, 5]
-    XCTAssertFalse(nonUniqueIntegers.allUnique())
+    expect(nonUniqueIntegers.allUnique()) == false
 
     let uniqueIntegers = [1, 2, 3, 4, 5]
-    XCTAssertTrue(uniqueIntegers.allUnique())
+    expect(uniqueIntegers.allUnique()) == true
 
     let empty: [Int] = []
-    XCTAssertTrue(empty.allUnique())
+    expect(empty.allUnique()) == true
   }
 
   func test_asSet() {
-    XCTAssertEqual(["a", "b", "c", "c"].asSet(), Set(["a", "b", "c"]))
+    expect(["a", "b", "c", "c"].asSet()) == Set(["a", "b", "c"])
   }
 
   func test_allEqual() {
     let nonEqualIntegers = [1, 2, 2, 1, 3, 4, 5, 3, 4, 5]
-    XCTAssertFalse(nonEqualIntegers.allEqual())
+    expect(nonEqualIntegers.allEqual()) == false
 
     let equalIntegers = [1, 1, 1, 1, 1]
-    XCTAssertTrue(equalIntegers.allEqual())
+    expect(equalIntegers.allEqual()) == true
 
     let empty: [Int] = []
-    XCTAssertTrue(empty.allEqual())
+    expect(empty.allEqual()) == true
   }
 
   func test_removingFirstElement() {
@@ -100,23 +99,23 @@ class Array_ExtensionsTests: XCTestCase {
 
   func test_firstOfType() {
     let array: [Any] = ["a", 1, true, 2]
-    XCTAssertEqual(array.first(type: Int.self), 1)
-    XCTAssertNotNil(array.first(type: NSObject.self)) // got "a"
-    XCTAssertNil(array.first(type: [Int].self))
+    expect(array.first(type: Int.self)) == 1
+    expect(array.first(type: NSObject.self)) != nil // got "a"
+    expect(array.first(type: [Int].self)) == nil
   }
 
   func test_lastOfType() {
     let array: [Any] = ["a", 1, true, 2]
-    XCTAssertEqual(array.last(type: Int.self), 2)
-    XCTAssertNotNil(array.last(type: NSObject.self)) // got "a"
-    XCTAssertNil(array.last(type: [Int].self))
+    expect(array.last(type: Int.self)) == 2
+    expect(array.last(type: NSObject.self)) != nil // got "a"
+    expect(array.last(type: [Int].self)) == nil
   }
 
   func test_popFirst() {
     var array: [Any] = ["a", 1]
-    XCTAssertEqual(array.popFirst() as? String, "a")
-    XCTAssertEqual(array.popFirst() as? Int, 1)
-    XCTAssertNil(array.popFirst())
+    expect(array.popFirst() as? String) == "a"
+    expect(array.popFirst() as? Int) == 1
+    expect(array.popFirst()) == nil
   }
 
   func test_compacted() {
@@ -143,54 +142,54 @@ class Array_ExtensionsTests: XCTestCase {
 
   func test_chunked() {
     let emptyArray: [Int] = []
-    XCTAssertEqual(emptyArray.chunked(0), [])
-    XCTAssertEqual(emptyArray.chunked(1), [])
+    expect(emptyArray.chunked(0)) == []
+    expect(emptyArray.chunked(1)) == []
 
     let array = [1, 2, 3, 4, 5, 6, 7, 8, 9]
     let result0 = array.chunked(0)
-    XCTAssertEqual(result0.count, 0)
+    expect(result0.count) == 0
 
     let result1 = array.chunked(1)
-    XCTAssertEqual(result1.count, array.count)
-    XCTAssertEqual(result1[0], [array[0]])
-    XCTAssertEqual(result1[1], [array[1]])
-    XCTAssertEqual(result1[2], [array[2]])
-    XCTAssertEqual(result1[3], [array[3]])
-    XCTAssertEqual(result1[4], [array[4]])
-    XCTAssertEqual(result1[5], [array[5]])
-    XCTAssertEqual(result1[6], [array[6]])
-    XCTAssertEqual(result1[7], [array[7]])
-    XCTAssertEqual(result1[8], [array[8]])
+    expect(result1.count) == array.count
+    expect(result1[0]) == [array[0]]
+    expect(result1[1]) == [array[1]]
+    expect(result1[2]) == [array[2]]
+    expect(result1[3]) == [array[3]]
+    expect(result1[4]) == [array[4]]
+    expect(result1[5]) == [array[5]]
+    expect(result1[6]) == [array[6]]
+    expect(result1[7]) == [array[7]]
+    expect(result1[8]) == [array[8]]
 
     let result2NoPartial = array.chunked(2)
-    XCTAssertEqual(result2NoPartial.count, 4)
-    XCTAssertEqual(result2NoPartial[0], [array[0], array[1]])
-    XCTAssertEqual(result2NoPartial[1], [array[2], array[3]])
-    XCTAssertEqual(result2NoPartial[2], [array[4], array[5]])
-    XCTAssertEqual(result2NoPartial[3], [array[6], array[7]])
+    expect(result2NoPartial.count) == 4
+    expect(result2NoPartial[0]) == [array[0], array[1]]
+    expect(result2NoPartial[1]) == [array[2], array[3]]
+    expect(result2NoPartial[2]) == [array[4], array[5]]
+    expect(result2NoPartial[3]) == [array[6], array[7]]
 
     let result2WithPartial = array.chunked(2, acceptPartialResult: true)
-    XCTAssertEqual(result2WithPartial.count, 5)
-    XCTAssertEqual(result2WithPartial[0], [array[0], array[1]])
-    XCTAssertEqual(result2WithPartial[1], [array[2], array[3]])
-    XCTAssertEqual(result2WithPartial[2], [array[4], array[5]])
-    XCTAssertEqual(result2WithPartial[3], [array[6], array[7]])
-    XCTAssertEqual(result2WithPartial[4], [array[8]])
+    expect(result2WithPartial.count) == 5
+    expect(result2WithPartial[0]) == [array[0], array[1]]
+    expect(result2WithPartial[1]) == [array[2], array[3]]
+    expect(result2WithPartial[2]) == [array[4], array[5]]
+    expect(result2WithPartial[3]) == [array[6], array[7]]
+    expect(result2WithPartial[4]) == [array[8]]
   }
 
   func test_asPairs() {
     let array = [1, 2, 3, 4, 5, 6, 7, 8, 9]
     let pairs = array.asPairs()
 
-    XCTAssertEqual(pairs.count, 4)
-    XCTAssertEqual(pairs[0].0, 1)
-    XCTAssertEqual(pairs[0].1, 2)
-    XCTAssertEqual(pairs[1].0, 3)
-    XCTAssertEqual(pairs[1].1, 4)
-    XCTAssertEqual(pairs[2].0, 5)
-    XCTAssertEqual(pairs[2].1, 6)
-    XCTAssertEqual(pairs[3].0, 7)
-    XCTAssertEqual(pairs[3].1, 8)
+    expect(pairs.count) == 4
+    expect(pairs[0].0) == 1
+    expect(pairs[0].1) == 2
+    expect(pairs[1].0) == 3
+    expect(pairs[1].1) == 4
+    expect(pairs[2].0) == 5
+    expect(pairs[2].1) == 6
+    expect(pairs[3].0) == 7
+    expect(pairs[3].1) == 8
   }
 
   func test_indexed() {
@@ -203,8 +202,8 @@ class Array_ExtensionsTests: XCTestCase {
       collectedElements.append(e)
     }
 
-    XCTAssertEqual(collectedIndices, [0, 1, 2, 3, 4])
-    XCTAssertEqual(collectedElements, [1, 2, 3, 4, 5])
+    expect(collectedIndices) == [0, 1, 2, 3, 4]
+    expect(collectedElements) == [1, 2, 3, 4, 5]
 
     collectedIndices = []
     collectedElements = []
@@ -213,7 +212,7 @@ class Array_ExtensionsTests: XCTestCase {
       collectedElements.append(e)
     }
 
-    XCTAssertEqual(collectedIndices, [0, 1, 2, 3, 4])
-    XCTAssertEqual(collectedElements, [1, 2, 3, 4, 5])
+    expect(collectedIndices) == [0, 1, 2, 3, 4]
+    expect(collectedElements) == [1, 2, 3, 4, 5]
   }
 }

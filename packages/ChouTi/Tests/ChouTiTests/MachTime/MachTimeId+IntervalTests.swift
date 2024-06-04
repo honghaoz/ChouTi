@@ -5,9 +5,7 @@
 //  Copyright © 2024 ChouTi. All rights reserved.
 //
 
-import Foundation
-
-import XCTest
+import ChouTiTest
 
 import ChouTi
 
@@ -17,14 +15,14 @@ final class MachTimeId_IntervalTests: XCTestCase {
     let start: UInt64 = 1000000
     let end: UInt64 = 2000000
     let interval = machTimeInterval(from: start, to: end)
-    XCTAssertGreaterThan(interval, 0)
+    expect(interval).to(beGreaterThan(0))
   }
 
   func testMachTimeIdIntervalSince() {
     let start: MachTimeId = 1000000
     let end: MachTimeId = 2000000
     let interval = end.interval(since: start)
-    XCTAssertGreaterThan(interval, 0)
+    expect(interval).to(beGreaterThan(0))
   }
 
   func testMachTimeIdIntervalWithMachAbsoluteTime() {
@@ -36,7 +34,7 @@ final class MachTimeId_IntervalTests: XCTestCase {
     let end = MachTimeId.id()
     let interval = end.interval(since: start)
 
-    XCTAssertGreaterThan(interval, 0)
+    expect(interval).to(beGreaterThan(0))
   }
 
   func testMachTimeIntervalWithMachAbsoluteTime() {
@@ -48,6 +46,6 @@ final class MachTimeId_IntervalTests: XCTestCase {
     let end = mach_absolute_time()
     let interval = machTimeInterval(from: start, to: end)
 
-    XCTAssertGreaterThan(interval, 0)
+    expect(interval).to(beGreaterThan(0))
   }
 }

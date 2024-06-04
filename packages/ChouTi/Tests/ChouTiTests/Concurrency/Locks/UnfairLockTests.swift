@@ -5,7 +5,7 @@
 //  Copyright © 2024 ChouTi. All rights reserved.
 //
 
-import XCTest
+import ChouTiTest
 
 import ChouTi
 
@@ -14,16 +14,16 @@ final class UnfairLockTests: XCTestCase {
   func testLockUnlock() {
     let lock = UnfairLock()
     lock.lock()
-    XCTAssertFalse(lock.tryLock())
+    expect(lock.tryLock()) == false
     lock.unlock()
   }
 
   func testTryLock() {
     let lock = UnfairLock()
-    XCTAssertTrue(lock.tryLock())
+    expect(lock.tryLock()) == true
     lock.unlock()
-    XCTAssertTrue(lock.tryLock())
-    XCTAssertFalse(lock.tryLock())
+    expect(lock.tryLock()) == true
+    expect(lock.tryLock()) == false
     lock.unlock()
   }
 
@@ -32,7 +32,7 @@ final class UnfairLockTests: XCTestCase {
     let result = lock.withLock { () -> String in
       "Hello, World!"
     }
-    XCTAssertEqual(result, "Hello, World!")
+    expect(result) == "Hello, World!"
   }
 
   func testLockConcurrency() {
@@ -53,7 +53,7 @@ final class UnfairLockTests: XCTestCase {
     }
 
     wait(for: [expectation], timeout: 10.0)
-    XCTAssertEqual(counter, 10000)
+    expect(counter) == 10000
   }
 
   func testLockConcurrency2() {
@@ -67,7 +67,7 @@ final class UnfairLockTests: XCTestCase {
       }
     }
 
-    XCTAssertEqual(counter, iterations)
+    expect(counter) == iterations
   }
 
   func testLockPerformance() {
@@ -81,7 +81,7 @@ final class UnfairLockTests: XCTestCase {
           counter += 1
         }
       }
-      XCTAssertEqual(counter, iterations)
+      expect(counter) == iterations
       counter = 0
     }
   }

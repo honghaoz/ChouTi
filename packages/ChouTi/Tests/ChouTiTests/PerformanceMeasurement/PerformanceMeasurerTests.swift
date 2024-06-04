@@ -5,7 +5,6 @@
 //  Copyright © 2024 ChouTi. All rights reserved.
 //
 
-import XCTest
 import ChouTiTest
 
 import ChouTi
@@ -26,7 +25,7 @@ final class PerformanceMeasurerTests: XCTestCase {
 
     let consoleOutput = captureConsoleOutput {
       let elapsedTime = measurer.end()
-      XCTAssertGreaterThan(elapsedTime, 0)
+      expect(elapsedTime).to(beGreaterThan(0))
     }
 
     expect(consoleOutput, consoleOutput).to(beEmpty())
@@ -37,7 +36,7 @@ final class PerformanceMeasurerTests: XCTestCase {
 
     let consoleOutput = captureConsoleOutput {
       let elapsedTime = measurer.end()
-      XCTAssertEqual(elapsedTime, 0)
+      expect(elapsedTime) == 0
     }
 
     if !isCommandLine {
@@ -75,7 +74,7 @@ final class PerformanceMeasurerTests: XCTestCase {
     }
 
     let elapsedTime = measurer.end()
-    XCTAssertGreaterThan(elapsedTime, 0)
+    expect(elapsedTime).to(beGreaterThan(0))
 
     do {
       let consoleOutput = captureConsoleOutput {
@@ -127,7 +126,7 @@ final class PerformanceMeasurerTests: XCTestCase {
 
     let consoleOutput = captureConsoleOutput {
       let timeElapsed = PerformanceMeasurer.end()
-      XCTAssertGreaterThan(timeElapsed, 0)
+      expect(timeElapsed).to(beGreaterThan(0))
     }
 
     expect(consoleOutput, consoleOutput).to(beEmpty())
@@ -152,7 +151,7 @@ final class PerformanceMeasurerTests: XCTestCase {
           _ = UUID().uuidString
         }
       }
-      XCTAssertGreaterThan(timeElapsed, 0)
+      expect(timeElapsed).to(beGreaterThan(0))
     }
 
     expect(consoleOutput, consoleOutput).to(beEmpty())
@@ -168,7 +167,7 @@ final class PerformanceMeasurerTests: XCTestCase {
         return 100
       }
       expect(result) == 100
-      XCTAssertGreaterThan(timeElapsed, 0)
+      expect(timeElapsed).to(beGreaterThan(0))
     }
 
     expect(consoleOutput, consoleOutput).to(beEmpty())
@@ -191,7 +190,7 @@ final class PerformanceMeasurerTests: XCTestCase {
         }
         return try throwFunction()
       }
-      XCTAssertGreaterThan(timeElapsed, 0)
+      expect(timeElapsed).to(beGreaterThan(0))
     }
 
     expect(consoleOutput, consoleOutput).to(beEmpty())
@@ -213,7 +212,7 @@ final class PerformanceMeasurerTests: XCTestCase {
       let timeElapsed = try PerformanceMeasurer.measure(repeatCount: 5) {
         _ = try work()
       }
-      XCTAssertGreaterThan(timeElapsed, 0)
+      expect(timeElapsed).to(beGreaterThan(0))
     }
     expect(consoleOutput, consoleOutput).to(beEmpty())
   }
@@ -233,7 +232,7 @@ final class PerformanceMeasurerTests: XCTestCase {
         let timeElapsed = try PerformanceMeasurer.measure(tag: "TestTag", repeatCount: 5) {
           _ = try work()
         }
-        XCTAssertGreaterThan(timeElapsed, 0)
+        expect(timeElapsed).to(beGreaterThan(0))
       }
       if !isCommandLine {
         expect(consoleOutput.contains("[TestTag] Elapsed time: "), consoleOutput) == true
@@ -245,7 +244,7 @@ final class PerformanceMeasurerTests: XCTestCase {
         let timeElapsed = try PerformanceMeasurer.measure(tag: "TestTag", tagLength: 12, repeatCount: 5) {
           _ = try work()
         }
-        XCTAssertGreaterThan(timeElapsed, 0)
+        expect(timeElapsed).to(beGreaterThan(0))
       }
       if !isCommandLine {
         expect(consoleOutput.contains("[TestTag     ] Elapsed time: "), consoleOutput) == true
@@ -257,7 +256,7 @@ final class PerformanceMeasurerTests: XCTestCase {
         let timeElapsed = try PerformanceMeasurer.measure(tag: "TestTag", tagLength: 12, tagPad: "*", repeatCount: 5) {
           _ = try work()
         }
-        XCTAssertGreaterThan(timeElapsed, 0)
+        expect(timeElapsed).to(beGreaterThan(0))
       }
       if !isCommandLine {
         expect(consoleOutput.contains("[TestTag*****] Elapsed time: "), consoleOutput) == true
@@ -269,7 +268,7 @@ final class PerformanceMeasurerTests: XCTestCase {
         let timeElapsed = try PerformanceMeasurer.measure(tag: "TestTag", tagLength: 12, tagPad: "*", useScientificNumber: true, repeatCount: 5) {
           _ = try work()
         }
-        XCTAssertGreaterThan(timeElapsed, 0)
+        expect(timeElapsed).to(beGreaterThan(0))
       }
       if !isCommandLine {
         expect(consoleOutput.contains("[TestTag*****] Elapsed time: "), consoleOutput) == true
