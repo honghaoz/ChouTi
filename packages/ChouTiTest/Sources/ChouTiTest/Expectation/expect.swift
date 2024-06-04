@@ -37,7 +37,7 @@ public func expect<T>(_ expression: @autoclosure () throws -> T?, _ description:
     let value = try expression()
     return OptionalExpression(value: { value }, thrownError: nil, description: description, file: file, line: line)
   } catch {
-    fatalError("throw error expression is already handled by expect(_:_:file:line:) -> Expression<T>") // swiftlint:disable:this fatal_error
+    return OptionalExpression(value: { fatalError("unexpected") }, thrownError: error, description: description, file: file, line: line)
   }
 }
 

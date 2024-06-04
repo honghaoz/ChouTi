@@ -143,6 +143,28 @@ class ExpectFailureMessageTests: FailureCapturingTestCase {
     assertFailure(expectedMessage: expectedMessage)
   }
 
+  func test_expressionThrows() {
+    do {
+      let expectedMessage = #"failed - expect not to throw error: "Error Domain=test Code=1 "(null)"""#
+
+      func fooFunc() throws -> Int {
+        throw NSError(domain: "test", code: 1, userInfo: nil)
+      }
+      expect(try fooFunc()) == 1
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      let expectedMessage = #"failed - expect not to throw error: "Error Domain=test Code=1 "(null)"""#
+
+      func fooFunc() throws -> Int {
+        throw NSError(domain: "test", code: 1, userInfo: nil)
+      }
+      expect(try fooFunc()) != 1
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
   // MARK: - Optional
 
   func testNil() {
@@ -185,6 +207,20 @@ class ExpectFailureMessageTests: FailureCapturingTestCase {
     do {
       let expectedMessage = #"failed - expect "Number" ("nil") to not be nil"#
       expect(nil as Int?, "Number") != nil
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
+  func test_optionalExpressionThrows() {
+    do {
+      let expectedMessage = #"failed - expect not to throw error: "expected ')'""#
+      expect(try "".wholeMatch(of: Regex("("))) == nil
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      let expectedMessage = #"failed - expect not to throw error: "expected ')'""#
+      expect(try "".wholeMatch(of: Regex("("))) != nil
       assertFailure(expectedMessage: expectedMessage)
     }
   }

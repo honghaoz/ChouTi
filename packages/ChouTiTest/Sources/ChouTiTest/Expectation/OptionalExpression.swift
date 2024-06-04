@@ -36,8 +36,9 @@ public struct OptionalExpression<T> {
   /// Evaluate the expression with an expectation.
   /// - Parameter expectation: The expectation to evaluate.
   public func to(_ expectation: some OptionalExpectation<T, Never>) {
-    guard thrownError == nil else {
-      fatalError("Impossible to throw error") // swiftlint:disable:this fatal_error
+    if let thrownError {
+      XCTFail("expect not to throw error: \"\(thrownError)\"", file: file, line: line)
+      return
     }
 
     let value = value()
@@ -55,8 +56,9 @@ public struct OptionalExpression<T> {
   /// Evaluate the expression to **not** meet the expectation.
   /// - Parameter expectation: The expectation to evaluate.
   public func toNot(_ expectation: some OptionalExpectation<T, Never>) {
-    guard thrownError == nil else {
-      fatalError("Impossible to throw error") // swiftlint:disable:this fatal_error
+    if let thrownError {
+      XCTFail("expect not to throw error: \"\(thrownError)\"", file: file, line: line)
+      return
     }
 
     let value = value()
