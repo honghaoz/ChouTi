@@ -14,7 +14,7 @@ class DispatchWorkItem_ExtensionsTests: XCTestCase {
   private var backgroundQueue: DispatchQueue!
 
   override func setUp() {
-    backgroundQueue = .shared(qos: .userInteractive)
+    backgroundQueue = .make(label: "test-queue")
   }
 
   func test_zeroDelay() {

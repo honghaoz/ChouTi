@@ -44,19 +44,4 @@ final class DispatchQueue_SharedSerialQueuesTests: XCTestCase {
     expect(customQueue.label) == "io.chouti.queue.qos-default"
     expect(customQueue.qos) == .default
   }
-
-  func test_makeSerialQueue() {
-    do {
-      let serialQueue = DispatchQueue.makeSerialQueue(label: "test")
-      expect(serialQueue.label) == "io.chouti.serial-queue.test"
-      expect(serialQueue.qos) == .default
-    }
-
-    // set qos
-    do {
-      let serialQueue = DispatchQueue.makeSerialQueue(label: "test", qos: .userInteractive)
-      expect(serialQueue.label) == "io.chouti.serial-queue.test"
-      expect(serialQueue.qos) == .userInteractive
-    }
-  }
 }

@@ -11,7 +11,7 @@ import ChouTi
 
 final class DispatchQueue_OnSpecificQueueTests: XCTestCase {
 
-  private let queue = DispatchQueue.make(label: "test-queue", autoreleaseFrequency: .workItem, target: .shared())
+  private let queue = DispatchQueue.make(label: "test-queue", autoreleaseFrequency: .workItem)
 
   func test_isOnQueue_nonMakeQueue() {
     let queue = DispatchQueue(label: "test-queue-non-make-queue")
@@ -268,19 +268,19 @@ final class DispatchQueue_OnSpecificQueueTests: XCTestCase {
 //    }
 //
 //    let foo1 = Foo(id: "workItem")
-//    let queue1 = DispatchQueue.make(label: "autoreleaseFrequency.workItem", autoreleaseFrequency: .workItem, target: .shared())
+//    let queue1 = DispatchQueue.make(label: "autoreleaseFrequency.workItem", autoreleaseFrequency: .workItem)
 //    queue1.asyncAfter(deadline: .now() + 1) {
 //      foo1.dummy()
 //    }
 //
 //    let foo2 = Foo(id: "never")
-//    let queue2 = DispatchQueue.make(label: "autoreleaseFrequency.never", autoreleaseFrequency: .never, target: .shared())
+//    let queue2 = DispatchQueue.make(label: "autoreleaseFrequency.never", autoreleaseFrequency: .never)
 //    queue2.asyncAfter(deadline: .now() + 1) {
 //      foo2.dummy()
 //    }
 //
 //    let foo3 = Foo(id: "inherit")
-//    let queue3 = DispatchQueue.make(label: "autoreleaseFrequency.inherit", autoreleaseFrequency: .inherit, target: .shared())
+//    let queue3 = DispatchQueue.make(label: "autoreleaseFrequency.inherit", autoreleaseFrequency: .inherit)
 //    queue3.asyncAfter(deadline: .now() + 1) {
 //      foo3.dummy()
 //    }

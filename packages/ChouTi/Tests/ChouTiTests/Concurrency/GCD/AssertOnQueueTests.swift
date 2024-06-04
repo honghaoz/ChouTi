@@ -12,7 +12,7 @@ import ChouTi
 class AssertOnQueueTests: XCTestCase {
 
   func test_assertOnQueue() {
-    let queue = DispatchQueue.makeSerialQueue(label: "test")
+    let queue = DispatchQueue.make(label: "test")
     queue.sync {
       assertOnQueue(queue)
     }

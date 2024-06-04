@@ -362,10 +362,10 @@ class DelayTaskTests: XCTestCase {
     let waitExpectation = XCTestExpectation(description: "wait")
 
     var value = 0
-    delay(0.1, leeway: .zero, queue: .shared(qos: .userInteractive)) {
+    delay(0.1, leeway: .zero) {
       value = 1
     }
-    .then(delay: 0.1, leeway: .zero, queue: .shared(qos: .userInteractive)) {
+    .then(delay: 0.1, leeway: .zero) {
       value = 2
     }
 
@@ -375,7 +375,7 @@ class DelayTaskTests: XCTestCase {
       expect(value) == 1
     }
 
-    delay(0.25, leeway: .zero, queue: .shared(qos: .userInteractive)) {
+    delay(0.25, leeway: .zero) {
       expect(value) == 2
       waitExpectation.fulfill()
     }
@@ -386,10 +386,10 @@ class DelayTaskTests: XCTestCase {
   func test_chainedTask_cancelBeforeExecuting() {
     var value = 1
 
-    let t1 = delay(0.2, leeway: .zero, queue: .shared(qos: .userInteractive)) {
+    let t1 = delay(0.2, leeway: .zero) {
       value = 2
     }
-    let t2 = t1.then(delay: 0.2, leeway: .zero, queue: .shared(qos: .userInteractive)) {
+    let t2 = t1.then(delay: 0.2, leeway: .zero) {
       value = 3
     }
 
@@ -426,10 +426,10 @@ class DelayTaskTests: XCTestCase {
     let t2Expectation = XCTestExpectation(description: "t2 should not execute")
     t2Expectation.isInverted = true
 
-    let t1 = delay(0.05, leeway: .zero, queue: .shared(qos: .userInteractive)) {
+    let t1 = delay(0.05, leeway: .zero) {
       _ = 2
     }
-    let t2 = t1.then(delay: 0.1, leeway: .zero, queue: .shared(qos: .userInteractive)) {
+    let t2 = t1.then(delay: 0.1, leeway: .zero) {
       t2Expectation.fulfill()
     }
 
@@ -442,7 +442,7 @@ class DelayTaskTests: XCTestCase {
     let t2Expectation = XCTestExpectation(description: "t2 should not execute")
     t2Expectation.isInverted = true
 
-    let t1 = delay(0.05, leeway: .zero, queue: .shared(qos: .userInteractive)) {
+    let t1 = delay(0.05, leeway: .zero) {
       _ = 2
     }
 
@@ -450,7 +450,7 @@ class DelayTaskTests: XCTestCase {
       expect(message) == "queue is unavailable when scheduling"
     }
 
-    var queue2: DispatchQueue? = DispatchQueue.makeSerialQueue(label: "queue2")
+    var queue2: DispatchQueue? = DispatchQueue.make(label: "queue2")
     t1.then(delay: 0.1, leeway: .zero, queue: queue2!) { // swiftlint:disable:this force_unwrapping
       t2Expectation.fulfill()
     }
@@ -467,13 +467,13 @@ class DelayTaskTests: XCTestCase {
 
     var value = 1
 
-    let t1 = delay(0.2, leeway: .zero, queue: .shared(qos: .userInteractive)) {
+    let t1 = delay(0.2, leeway: .zero) {
       value = 2
     }
-    let t2 = t1.then(delay: 0.2, leeway: .zero, queue: .shared(qos: .userInteractive)) {
+    let t2 = t1.then(delay: 0.2, leeway: .zero) {
       value = 3
     }
-    let t3 = t2.then(delay: 0.2, leeway: .zero, queue: .shared(qos: .userInteractive)) {
+    let t3 = t2.then(delay: 0.2, leeway: .zero) {
       value = 4
     }
 
@@ -521,12 +521,13 @@ class DelayTaskTests: XCTestCase {
   }
 
   func test_chainedTask_earlyExecute() {
+    let queue = DispatchQueue.make(label: "test-queue")
     let task2Expectation = XCTestExpectation(description: "task should be executed")
     task2Expectation.assertForOverFulfill = true
 
-    let t1 = delay(0.1, leeway: .zero, queue: .shared(qos: .userInteractive)) {}
+    let t1 = delay(0.1, leeway: .zero, queue: queue) {}
 
-    t1.then(delay: 0.1, leeway: .zero, queue: .shared(qos: .userInteractive)) {
+    t1.then(delay: 0.1, leeway: .zero, queue: queue) {
       task2Expectation.fulfill()
     }
 
@@ -551,10 +552,12 @@ class DelayTaskTests: XCTestCase {
     let expectation = XCTestExpectation(description: "task should be executed")
     expectation.assertForOverFulfill = true
 
+    let queue = DispatchQueue.make(label: "hey")
+
     delay(0.05) {
       _ = 1
     }
-    .then(delay: 0.05, queue: .shared(qos: .userInteractive)) {
+    .then(delay: 0.05, queue: queue) {
       expectation.fulfill()
     }
 
@@ -566,7 +569,7 @@ class DelayTaskTests: XCTestCase {
     expectation.assertForOverFulfill = true
 
     delay(0.1) {}
-      .then(delay: 0.1, qos: .userInteractive, flags: [], queue: .shared(qos: .userInteractive)) {
+      .then(delay: 0.1, qos: .userInteractive, flags: [], queue: .main) {
         expectation.fulfill()
       }
 

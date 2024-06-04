@@ -12,7 +12,7 @@ import ChouTiTest
 
 class DispatchTimerTests: XCTestCase {
 
-  private let queue = DispatchQueue.makeSerialQueue(label: "test", qos: .userInteractive)
+  private let queue = DispatchQueue.make(label: "test", qos: .userInteractive)
 
   // MARK: - Once
 

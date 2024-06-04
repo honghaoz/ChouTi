@@ -62,18 +62,4 @@ public extension DispatchQueue {
       return .defaultQueue
     }
   }
-
-  /// Make a serial queue using a shared serial queue as the target queue.
-  ///
-  /// Using shared serial queue as target queue can reduce the number of threads in the system.
-  ///
-  /// - Parameters:
-  ///   - label: The label of the queue.
-  ///   - qos: The quality-of-service class. Default value is `.default`.
-  /// - Returns: A serial queue.
-  @inlinable
-  @inline(__always)
-  static func makeSerialQueue(label: String, qos: DispatchQoS = .default) -> DispatchQueue {
-    make(label: "io.chouti.serial-queue.\(label)", qos: qos, attributes: [], target: shared(qos: qos))
-  }
 }

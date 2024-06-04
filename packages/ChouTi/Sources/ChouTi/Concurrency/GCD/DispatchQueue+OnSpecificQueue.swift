@@ -25,14 +25,14 @@ public extension DispatchQueue {
   ///   - qos: The quality-of-service level to associate with the queue.
   ///   - attributes: The attributes to associate with the queue.
   ///   - autoreleaseFrequency: The frequency with which to autorelease objects created by the blocks that the queue schedules.
-  ///   - target: The target queue on which to execute blocks.
+  ///   - target: The target queue on which to execute blocks. Default value is `.global()` (non-overcommit queue).
   /// - Returns: A new queue.
   static func make(
     label: String,
     qos: DispatchQoS = .unspecified,
     attributes: DispatchQueue.Attributes = [],
     autoreleaseFrequency: DispatchQueue.AutoreleaseFrequency = .inherit,
-    target: DispatchQueue? = nil
+    target: DispatchQueue? = .global()
   ) -> DispatchQueue {
     /// https://swiftrocks.com/discovering-which-dispatchqueue-a-method-is-running-on
 
@@ -54,13 +54,14 @@ public extension DispatchQueue {
      Set .global() for target queue.
      https://forums.swift.org/t/what-is-the-default-target-queue-for-a-serial-queue/18094/19
      https://mjtsai.com/blog/2021/03/16/underused-and-overused-gcd-patterns/
+     https://forums.swift.org/t/what-is-the-default-target-queue-for-a-serial-queue/18094/3
      */
     let queue = DispatchQueue(
       label: label,
       qos: qos,
       attributes: attributes,
       autoreleaseFrequency: autoreleaseFrequency,
-      target: target ?? .global() // use non-overcommit global queue
+      target: target
     )
     queue.setSpecific(key: queueNameKey, value: label)
     return queue
@@ -104,7 +105,6 @@ public extension DispatchQueue {
   /// - `DispatchQueue.make(label:qos:attributes:autoreleaseFrequency:target:)`
   /// - `DispatchQueue.makeMain()`
   /// - `DispatchQueue.shared(qos:)`
-  /// - `DispatchQueue.makeSerialQueue(label:qos:)`
   ///
   /// - Parameters:
   ///   - queue: The queue to check.
@@ -184,7 +184,6 @@ public extension DispatchQueue {
   ///   - `DispatchQueue.make(label:qos:attributes:autoreleaseFrequency:target:)`
   ///   - `DispatchQueue.makeMain()`
   ///   - `DispatchQueue.shared(qos:)`
-  ///   - `DispatchQueue.makeSerialQueue(label:qos:)`
   ///
   /// - Parameters:
   ///   - queue: The queue to dispatch the block.
@@ -219,7 +218,6 @@ public extension DispatchQueue {
   ///   - `DispatchQueue.make(label:qos:attributes:autoreleaseFrequency:target:)`
   ///   - `DispatchQueue.makeMain()`
   ///   - `DispatchQueue.shared(qos:)`
-  ///   - `DispatchQueue.makeSerialQueue(label:qos:)`
   ///
   /// - Parameters:
   ///   - queue: The queue to dispatch the work item.
@@ -249,7 +247,6 @@ public extension DispatchQueue {
   ///   - `DispatchQueue.make(label:qos:attributes:autoreleaseFrequency:target:)`
   ///   - `DispatchQueue.makeMain()`
   ///   - `DispatchQueue.shared(qos:)`
-  ///   - `DispatchQueue.makeSerialQueue(label:qos:)`
   ///
   /// - Parameters:
   ///   - queue: The queue to dispatch the block.
@@ -275,7 +272,6 @@ public extension DispatchQueue {
   ///   - `DispatchQueue.make(label:qos:attributes:autoreleaseFrequency:target:)`
   ///   - `DispatchQueue.makeMain()`
   ///   - `DispatchQueue.shared(qos:)`
-  ///   - `DispatchQueue.makeSerialQueue(label:qos:)`
   ///
   /// - Parameters:
   ///   - delay: The delay time before executing the block.
@@ -310,7 +306,6 @@ public extension DispatchQueue {
   ///   - `DispatchQueue.make(label:qos:attributes:autoreleaseFrequency:target:)`
   ///   - `DispatchQueue.makeMain()`
   ///   - `DispatchQueue.shared(qos:)`
-  ///   - `DispatchQueue.makeSerialQueue(label:qos:)`
   ///
   /// - Parameters:
   ///   - work: The block to execute.
@@ -341,7 +336,6 @@ public extension DispatchQueue {
 ///   - `DispatchQueue.make(label:qos:attributes:autoreleaseFrequency:target:)`
 ///   - `DispatchQueue.makeMain()`
 ///   - `DispatchQueue.shared(qos:)`
-///   - `DispatchQueue.makeSerialQueue(label:qos:)`
 ///
 /// - Parameters:
 ///   - queue: The queue to dispatch the block.
@@ -379,7 +373,6 @@ public func onQueueAsync(queue: DispatchQueue,
 ///   - `DispatchQueue.make(label:qos:attributes:autoreleaseFrequency:target:)`
 ///   - `DispatchQueue.makeMain()`
 ///   - `DispatchQueue.shared(qos:)`
-///   - `DispatchQueue.makeSerialQueue(label:qos:)`
 ///
 /// - Parameters:
 ///   - queue: The queue to dispatch the work item.
@@ -410,7 +403,6 @@ public func onQueueAsync(queue: DispatchQueue,
 ///   - `DispatchQueue.make(label:qos:attributes:autoreleaseFrequency:target:)`
 ///   - `DispatchQueue.makeMain()`
 ///   - `DispatchQueue.shared(qos:)`
-///   - `DispatchQueue.makeSerialQueue(label:qos:)`
 ///
 /// - Parameters:
 ///   - queue: The queue to dispatch the block.
