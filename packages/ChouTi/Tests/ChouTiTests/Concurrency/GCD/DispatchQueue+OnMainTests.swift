@@ -12,6 +12,8 @@ import ChouTi
 
 final class DispatchQueue_OnMainAsyncTests: XCTestCase {
 
+  private let queue = DispatchQueue.make(label: "test-queue")
+
   func test_onMainAsync_fromMain() {
     do {
       var isExecuted = false
@@ -189,7 +191,7 @@ final class DispatchQueue_OnMainAsyncTests: XCTestCase {
   func test_onMainAsync_fromBackground() {
     do {
       var isExecuted = false
-      DispatchQueue.shared().async {
+      queue.async {
         expect(Thread.isMainThread) == false
         DispatchQueue.onMainAsync {
           expect(Thread.isMainThread) == true
@@ -202,7 +204,7 @@ final class DispatchQueue_OnMainAsyncTests: XCTestCase {
 
     do {
       var isExecuted = false
-      DispatchQueue.shared().async {
+      queue.async {
         expect(Thread.isMainThread) == false
         onMainAsync {
           expect(Thread.isMainThread) == true
@@ -216,7 +218,7 @@ final class DispatchQueue_OnMainAsyncTests: XCTestCase {
     // workItem
     do {
       var isExecuted = false
-      DispatchQueue.shared().async {
+      queue.async {
         expect(Thread.isMainThread) == false
         let workItem = DispatchWorkItem {
           expect(Thread.isMainThread) == true
@@ -230,7 +232,7 @@ final class DispatchQueue_OnMainAsyncTests: XCTestCase {
 
     do {
       var isExecuted = false
-      DispatchQueue.shared().async {
+      queue.async {
         expect(Thread.isMainThread) == false
         let workItem = DispatchWorkItem {
           expect(Thread.isMainThread) == true
@@ -246,7 +248,7 @@ final class DispatchQueue_OnMainAsyncTests: XCTestCase {
   func test_onMainAsync_fromBackground_positiveDelay() {
     do {
       var isExecuted = false
-      DispatchQueue.shared().async {
+      queue.async {
         expect(Thread.isMainThread) == false
         DispatchQueue.onMainAsync(delay: 0.01) {
           expect(Thread.isMainThread) == true
@@ -259,7 +261,7 @@ final class DispatchQueue_OnMainAsyncTests: XCTestCase {
 
     do {
       var isExecuted = false
-      DispatchQueue.shared().async {
+      queue.async {
         expect(Thread.isMainThread) == false
         onMainAsync(delay: 0.01) {
           expect(Thread.isMainThread) == true
@@ -296,7 +298,7 @@ final class DispatchQueue_OnMainAsyncTests: XCTestCase {
   func test_onMainSync_fromBackground() {
     let expectation = XCTestExpectation(description: "expectation")
 
-    DispatchQueue.shared().async {
+    queue.async {
       expect(Thread.isMainThread) == false
 
       var isExecuted = false

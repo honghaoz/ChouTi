@@ -11,6 +11,8 @@ import ChouTi
 
 class AssertOnMainThreadTests: XCTestCase {
 
+  private let queue = DispatchQueue.make(label: "test-queue")
+
   func test_assertOnMainThread() {
     assertOnMainThread()
 
@@ -18,13 +20,13 @@ class AssertOnMainThreadTests: XCTestCase {
       assertOnMainThread()
     }
 
-    DispatchQueue.shared(qos: .utility).sync {
+    queue.sync {
       assertOnMainThread()
     }
 
     let expectation = expectation(description: "on background thread")
 
-    DispatchQueue.shared(qos: .userInteractive).async {
+    queue.async {
       Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
         expect(message.contains("Should be on main thread. Current thread: <NSThread:")) == true
       }
@@ -46,7 +48,7 @@ class AssertOnMainThreadTests: XCTestCase {
 
     let expectation = expectation(description: "on background thread")
 
-    DispatchQueue.shared(qos: .userInteractive).async {
+    queue.async {
       assertNotOnMainThread()
 
       expectation.fulfill()
