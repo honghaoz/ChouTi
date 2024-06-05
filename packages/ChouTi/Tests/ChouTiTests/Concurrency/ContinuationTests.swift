@@ -79,6 +79,29 @@ final class ContinuationTests: XCTestCase {
     }
   }
 
+  func testContinuationResumeWithResultFailure3() async {
+    enum SomeError: Swift.Error {
+      case someError
+    }
+
+    func callWithCompletion(completion: (Result<String, SomeError>) -> Void) {
+      completion(.failure(.someError))
+    }
+
+    let expectedError = SomeError.someError
+
+    do {
+      let result: String = try await withThrowingContinuation { continuation in
+        callWithCompletion { result in
+          continuation.resume(with: result)
+        }
+      }
+      fail("The continuation should have thrown an error")
+    } catch {
+      expect(error as NSError) == expectedError as NSError
+    }
+  }
+
   func testContinuationResumeReturningVoid() async {
     await withContinuation { (continuation: Continuation<Void, Never>) in
       continuation.resume()
