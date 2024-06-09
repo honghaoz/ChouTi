@@ -107,13 +107,13 @@ public enum Device {
       "Mac15,13", // MacBook Air (15-inch, M3, 2024)
     ])
 
-#if DEBUG
+    #if DEBUG
     let lastUpdatedAt = Date(timeIntervalSince1970: 1710432000) // 2024-03-15
     let now = Date()
     if now.hasBeen(.months(6), since: lastUpdatedAt) {
       ChouTi.assertFailure("Please update the notch models.")
     }
-#endif
+    #endif
 
     return notchModels.contains(modelIdentifier)
   }
