@@ -1,9 +1,18 @@
 # Change Log
 
-## [0.0.4](https://github.com/honghaoz/ChouTi/releases/tag/0.0.4) (2024-00-00)
+## [0.0.4](https://github.com/honghaoz/ChouTi/releases/tag/0.0.4) (2024-06-12)
 
+- Increased code coverage.
+- Framework `ChouTi`:
+  - Added `Device.uuid()`
+  - Updated `MachTimeId.id()` to generate an absolute unique ID.
+  - Updated `DelayTask` with simplified `cancel` and internal locks.
+  - Updated `isRunningXCTest` to a static method of `Thread`.
+  - Fixed `DispatchGroup.async()` to not call `work` block if timed out.
+  - Removed `makeSerialQueue`, use `make(...)` instead.
 - Framework `ChouTiTest`:
-  - Updated: `import ChouTiTest` now imports `XCTest` as well
+  - Updated: `import ChouTiTest` now imports `XCTest` as well.
+- Various scripts update.
 
 ## [0.0.3](https://github.com/honghaoz/ChouTi/releases/tag/0.0.3) (2024-05-26)
 
