@@ -70,9 +70,17 @@ final class DeviceTests: XCTestCase {
   }
   #endif
 
-  // Test free disk space
   func testFreeDiskSpaceInBytes() {
     let freeDiskSpace = Device.freeDiskSpaceInBytes
     expect(freeDiskSpace).to(beGreaterThan(0))
+  }
+
+  func testUUID() throws {
+    try expect(Device.uuid().unwrap().isEmpty) == false
+
+    // test UUID doesn't change
+    let uuid1 = try Device.uuid().unwrap()
+    let uuid2 = try Device.uuid().unwrap()
+    expect(uuid1) == uuid2
   }
 }

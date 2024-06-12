@@ -91,7 +91,7 @@ final class ContinuationTests: XCTestCase {
     let expectedError = SomeError.someError
 
     do {
-      let result: String = try await withThrowingContinuation { continuation in
+      _ = try await withThrowingContinuation { continuation in
         callWithCompletion { result in
           continuation.resume(with: result)
         }

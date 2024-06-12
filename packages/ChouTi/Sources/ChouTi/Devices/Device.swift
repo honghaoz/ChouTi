@@ -125,6 +125,8 @@ public enum Device {
   // TODO: add iOS
   #endif
 
+  // MARK: - All
+
   /// Get the free disk space in bytes.
   public static var freeDiskSpaceInBytes: Int64 {
     do {
@@ -140,6 +142,40 @@ public enum Device {
         return 0
       }
     }
+  }
+
+  /// Get a unique device UUID.
+  /// - Returns: A uuid string.
+  public static func uuid() -> String? {
+    #if os(macOS)
+    let platformExpert = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceMatching("IOPlatformExpertDevice"))
+    defer {
+      IOObjectRelease(platformExpert)
+    }
+
+    if platformExpert == 0 {
+      ChouTi.assertFailure("service doesn't exist")
+      return nil
+    }
+
+    // get the platform UUID property from the service
+    let cfUUID = IORegistryEntryCreateCFProperty(platformExpert, kIOPlatformUUIDKey as CFString, kCFAllocatorDefault, 0)
+
+    guard let uuid = cfUUID?.takeUnretainedValue() as? String else {
+      ChouTi.assertFailure("failed to convert to string")
+      return nil
+    }
+
+    return uuid
+
+    // https://forums.developer.apple.com/forums/thread/117978
+    // https://gist.github.com/ericdke/ed2d8bd3d127c25bcc6b
+    #elseif canImport(UIKit)
+    return UIDevice.current.identifierForVendor?.uuidString
+    #else
+    ChouTi.assertFailure("Unsupported platform")
+    return nil
+    #endif
   }
 }
 
