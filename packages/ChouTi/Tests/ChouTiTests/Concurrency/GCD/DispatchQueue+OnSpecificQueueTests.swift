@@ -31,6 +31,11 @@ final class DispatchQueue_OnSpecificQueueTests: XCTestCase {
     }
   }
 
+  func test_isOnQueue_ignoreCommonQueue() async {
+    let queue = DispatchQueue.global()
+    expect(DispatchQueue.isOnQueue(queue)) == false
+  }
+
   func testRunOnQueue() {
     queue.sync {
       var hasRun = false

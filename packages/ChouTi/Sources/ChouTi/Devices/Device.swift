@@ -64,23 +64,23 @@ public enum Device {
   }
 
   public static func modelIdentifier() -> String? {
+    let service = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceMatching("IOPlatformExpertDevice"))
+    defer {
+      IOObjectRelease(service)
+    }
+
+    guard let modelData = IORegistryEntryCreateCFProperty(service, "model" as CFString, kCFAllocatorDefault, 0).takeRetainedValue() as? Data else {
+      return nil
+    }
+
+    return String(decoding: modelData, as: UTF8.self).trimmingCharacters(in: .controlCharacters)
+
     // https://stackoverflow.com/questions/20070333/obtain-model-identifier-string-on-os-x
     // https://www.reddit.com/r/swift/comments/gwf9fa/how_do_i_find_the_model_of_the_mac_in_swift/
     // https://mactracker.ca
     // https://support.apple.com/en-us/HT201862
     // https://support.apple.com/en-sa/HT201300
     // https://stackoverflow.com/questions/32370037/is-there-a-way-of-getting-a-macs-icon-given-its-model-number/32381289#32381289
-
-    let service = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceMatching("IOPlatformExpertDevice"))
-    defer {
-      IOObjectRelease(service)
-    }
-
-    if let modelData = IORegistryEntryCreateCFProperty(service, "model" as CFString, kCFAllocatorDefault, 0).takeRetainedValue() as? Data {
-      return String(decoding: modelData, as: UTF8.self).trimmingCharacters(in: .controlCharacters)
-    }
-
-    return nil
   }
 
   /// Check if the MacBook has a notch.
@@ -148,18 +148,18 @@ public enum Device {
   /// - Returns: A uuid string.
   public static func uuid() -> String? {
     #if os(macOS)
-    let platformExpert = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceMatching("IOPlatformExpertDevice"))
+    let service = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceMatching("IOPlatformExpertDevice"))
     defer {
-      IOObjectRelease(platformExpert)
+      IOObjectRelease(service)
     }
 
-    if platformExpert == 0 {
+    if service == 0 {
       ChouTi.assertFailure("service doesn't exist")
       return nil
     }
 
     // get the platform UUID property from the service
-    let cfUUID = IORegistryEntryCreateCFProperty(platformExpert, kIOPlatformUUIDKey as CFString, kCFAllocatorDefault, 0)
+    let cfUUID = IORegistryEntryCreateCFProperty(service, kIOPlatformUUIDKey as CFString, kCFAllocatorDefault, 0)
 
     guard let uuid = cfUUID?.takeUnretainedValue() as? String else {
       ChouTi.assertFailure("failed to convert to string")
