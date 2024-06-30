@@ -29,7 +29,7 @@ public protocol DelayTaskType: AnyObject {
   /// Chain a new delay task.
   /// - Parameters:
   ///   - delayedSeconds: The delayed seconds.
-  ///   - task: The closure to run on the main queue.
+  ///   - task: The closure to run. The closure will be executed on the main queue.
   /// - Returns: The chained delay task.
   @discardableResult
   func then(delay delayedSeconds: TimeInterval, task: @escaping () -> Void) -> DelayTaskType
@@ -38,7 +38,7 @@ public protocol DelayTaskType: AnyObject {
   /// - Parameters:
   ///   - delayedSeconds: The delayed seconds.
   ///   - leeway: The leeway for for the delay.
-  ///   - task: The closure to run on the main queue.
+  ///   - task: The closure to run. The closure will be executed on the main queue.
   /// - Returns: The chained delay task.
   @discardableResult
   func then(delay delayedSeconds: TimeInterval, leeway: TimerLeeway?, task: @escaping () -> Void) -> DelayTaskType
@@ -362,9 +362,9 @@ extension PrivateDelayTask {
 ///   - leeway: The leeway for the delay.
 ///   - qos: The quality of service of the task.
 ///   - flags: The flags of the underlying work item.
-///   - queue: The dispatch queue to run on.
+///   - queue: The dispatch queue to run on. Default is main queue.
 ///   - task: The closure to run.
-/// - Returns: The delay task.
+/// - Returns: The delay task. The task is strongly retained.
 @discardableResult
 public func delay(_ delayedSeconds: TimeInterval,
                   leeway: TimerLeeway? = nil,
@@ -391,9 +391,9 @@ public func delay(_ delayedSeconds: TimeInterval,
 ///   - leeway: The leeway for the delay.
 ///   - qos: The quality of service of the task.
 ///   - flags: The flags of the underlying work item.
-///   - queue: The dispatch queue to run on.
+///   - queue: The dispatch queue to run on. Default is main queue.
 ///   - task: The closure to run.
-/// - Returns: The delay task.
+/// - Returns: The delay task. The task is strongly retained.
 @discardableResult
 public func delay(_ duration: Duration,
                   leeway: TimerLeeway? = nil,
@@ -411,7 +411,7 @@ public func delay(_ duration: Duration,
 ///   - leeway: The leeway for the delay.
 ///   - qos: The quality of service of the task.
 ///   - flags: The flags of the underlying work item.
-///   - queue: The dispatch queue to run on.
+///   - queue: The dispatch queue to run on. Default is main queue.
 public func delay(_ delayedSeconds: TimeInterval,
                   leeway: TimerLeeway? = nil,
                   qos: DispatchQoS = .unspecified,
@@ -431,7 +431,7 @@ public func delay(_ delayedSeconds: TimeInterval,
 ///   - leeway: The leeway for the delay.
 ///   - qos: The quality of service of the task.
 ///   - flags: The flags of the underlying work item.
-///   - queue: The dispatch queue to run on.
+///   - queue: The dispatch queue to run on. Default is main queue.
 public func delay(_ duration: Duration,
                   leeway: TimerLeeway? = nil,
                   qos: DispatchQoS = .unspecified,
