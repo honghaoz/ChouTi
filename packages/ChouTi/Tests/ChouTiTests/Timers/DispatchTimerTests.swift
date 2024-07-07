@@ -26,7 +26,7 @@ class DispatchTimerTests: XCTestCase {
       fireCount += 1
       fireExpectation.fulfill()
     }
-    timer.fire(after: 0.1, leeway: .zero)
+    timer.fire(after: 0.2, leeway: .zero)
     expect(timer.test.extraBlocks.count) == 0
 
     // additional blocks

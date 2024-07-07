@@ -137,6 +137,8 @@ if [[ "$OS" == *"macOS"* ]]; then
   # use swift test:
   # pass 'TEST' compiler flag so the code can use "#if TEST" to conditionally 'import XCTest'.
   set -o pipefail && swift test -Xswiftc -DTEST | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
+  # TODO: can use '--parallel --xunit-output test-results.xml' to generate test results and re-run failed tests.
+
   # use xcodebuild:
   # DESTINATION="platform=macOS,name=Any Mac"
   # set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?

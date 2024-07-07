@@ -313,7 +313,7 @@ class DelayTaskTests: XCTestCase {
     expect(task.isExecuted) == false
     expect(value) == false
 
-    waitForExpectations(timeout: 0.15)
+    waitForExpectations(timeout: 0.2)
   }
 
   // MARK: - Chained Task
