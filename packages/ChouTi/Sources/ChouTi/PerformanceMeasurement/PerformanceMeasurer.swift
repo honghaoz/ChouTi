@@ -150,6 +150,28 @@ public extension PerformanceMeasurer {
     let timeElapsed = CACurrentMediaTime() - startTime
     return (result, timeElapsed)
   }
+
+  /// Measure the execution time of the block.
+  ///
+  /// Example:
+  /// ```swift
+  /// // no print
+  /// let (result, elapsedTime) = try await PerformanceMeasurer.measure {
+  ///   try await foo()
+  /// }
+  /// print("elapsed time: \(elapsedTime)")
+  /// ```
+  ///
+  /// - Parameters:
+  ///   - block: The execution block to measure. The block returns a value.
+  /// - Returns: The tuple of the value with the elapsed duration.
+  @discardableResult
+  static func measure<Result>(_ block: () async throws -> Result) async rethrows -> (Result, TimeInterval) {
+    let startTime = CACurrentMediaTime()
+    let result = try await block()
+    let timeElapsed = CACurrentMediaTime() - startTime
+    return (result, timeElapsed)
+  }
 }
 
 // MARK: - Repeat
@@ -199,8 +221,10 @@ public extension PerformanceMeasurer {
       - tag: The tag for the print log. If not provided, will not print.
       - tagLength: The tag min length. If the tag is shorter than this length, it will be padded with `tagPad`.
       - tagPad: The padding character if the tag is shorter than `tagLength`.
+      - useScientificNumber: If should use scientific number.
       - repeatCount: The repeat count to run the block.
       - block: The block to measure.
+    - Returns: The total execution time.
    */
   @discardableResult
   static func measure(tag: String? = nil,
@@ -214,6 +238,48 @@ public extension PerformanceMeasurer {
 
     for _ in 0 ..< repeatCount {
       try block()
+    }
+
+    let timeElapsed = CACurrentMediaTime() - startTime
+
+    if var tag = tag {
+      if let tagLength {
+        tag = tag.padding(toLength: max(tag.count, tagLength), withPad: tagPad.map { String($0) } ?? " ", startingAt: 0)
+      }
+
+      if useScientificNumber {
+        // swiftlint:disable:next force_unwrapping
+        Swift.print("[\(tag)] Elapsed time: \(PerformanceMeasurer.numberFormatter.string(for: timeElapsed)!)")
+      } else {
+        Swift.print("[\(tag)] Elapsed time: \(timeElapsed)")
+      }
+    }
+
+    return timeElapsed
+  }
+
+  /// Measure the execution time of the block by repeating the block multiple times and print the elapsed time.
+  ///
+  /// - Parameters:
+  ///   - tag: The tag for the print log. If not provided, will not print.
+  ///   - tagLength: The tag min length. If the tag is shorter than this length, it will be padded with `tagPad`.
+  ///   - tagPad: The padding character if the tag is shorter than `tagLength`.
+  ///   - useScientificNumber: If should use scientific number.
+  ///   - repeatCount: The repeat count to run the block.
+  ///   - block: The block to measure.
+  /// - Returns: The total execution time.
+  @discardableResult
+  static func measure(tag: String? = nil,
+                      tagLength: Int? = nil,
+                      tagPad: Character? = nil,
+                      useScientificNumber: Bool = false,
+                      repeatCount: Int,
+                      _ block: BlockAsyncThrowsVoid) async rethrows -> CFTimeInterval
+  {
+    let startTime = CACurrentMediaTime()
+
+    for _ in 0 ..< repeatCount {
+      try await block()
     }
 
     let timeElapsed = CACurrentMediaTime() - startTime
