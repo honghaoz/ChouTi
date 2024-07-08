@@ -75,6 +75,8 @@ public extension Logger {
     /// The minimum required disk space to write logs.
     private let minimumRequiredDiskSpace: UInt64 = 524288000 // 500 * 1024 * 1024 (500 MB)
 
+    private let queue = DispatchQueue.make(label: "FileLogDestination")
+
     /// Create a file log destination.
     /// - Parameters:
     ///   - folder: The folder to store log files. Default is "~/Documents/logs"
@@ -123,41 +125,13 @@ public extension Logger {
       #endif
     }
 
-    /// Trim log file if current log file is too big.
-    private func trimLinesIfNecessary() throws {
-      guard logFileSize > maxSizeInBytes else {
-        return
+    public func write(_ string: String) {
+      queue.async { [weak self] in
+        self?._write(string)
       }
-
-      // not exactly sure why ".mappedIfSafe", but seems like a reasonable option.
-      // https://stackoverflow.com/questions/36809449/which-nsdatareadingoptions-should-be-used-when-reading-a-local-file
-      guard var data = try? Data(contentsOf: logFile, options: .mappedIfSafe), !data.isEmpty else {
-        ChouTi.assertFailure("Trimming the current log file failed")
-        return
-      }
-
-      let newline = Data("\n".utf8)
-
-      var position = 0
-      // trim line by line until hit the trim size
-      while (logFileSize - UInt64(position)) > (maxSizeInBytes - trimSize) {
-        guard let range = data.firstRange(of: newline, in: position ..< data.count) else {
-          break
-        }
-        position = range.startIndex.advanced(by: 1) // trim one line
-      }
-
-      #if DEBUG
-      print("📃 [Logger][\(typeName(self))] current log file size: \(logFileSize) bytes, trimming log file by: \(position)")
-      #endif
-
-      logFileSize -= UInt64(position)
-      data.removeSubrange(0 ..< position)
-
-      try data.write(to: logFile, options: .atomic)
     }
 
-    public func write(_ string: String) {
+    private func _write(_ string: String) {
       // Make sure we have enough disk space left. This prevents a crash due to a lack of space.
       guard Device.freeDiskSpaceInBytes > minimumRequiredDiskSpace else {
         #if DEBUG
@@ -212,6 +186,40 @@ public extension Logger {
           ChouTi.assertFailure("error while write log file", metadata: ["error": "\(error)"])
         }
       }
+    }
+
+    /// Trim log file if current log file is too big.
+    private func trimLinesIfNecessary() throws {
+      guard logFileSize > maxSizeInBytes else {
+        return
+      }
+
+      // not exactly sure why ".mappedIfSafe", but seems like a reasonable option.
+      // https://stackoverflow.com/questions/36809449/which-nsdatareadingoptions-should-be-used-when-reading-a-local-file
+      guard var data = try? Data(contentsOf: logFile, options: .mappedIfSafe), !data.isEmpty else {
+        ChouTi.assertFailure("Trimming the current log file failed")
+        return
+      }
+
+      let newline = Data("\n".utf8)
+
+      var position = 0
+      // trim line by line until hit the trim size
+      while (logFileSize - UInt64(position)) > (maxSizeInBytes - trimSize) {
+        guard let range = data.firstRange(of: newline, in: position ..< data.count) else {
+          break
+        }
+        position = range.startIndex.advanced(by: 1) // trim one line
+      }
+
+      #if DEBUG
+      print("📃 [Logger][\(typeName(self))] current log file size: \(logFileSize) bytes, trimming log file by: \(position)")
+      #endif
+
+      logFileSize -= UInt64(position)
+      data.removeSubrange(0 ..< position)
+
+      try data.write(to: logFile, options: .atomic)
     }
 
     // MARK: - Constants
