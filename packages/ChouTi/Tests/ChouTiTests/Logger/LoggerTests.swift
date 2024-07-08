@@ -206,6 +206,8 @@ final class LoggerTests: XCTestCase {
     logger.warning("warning")
     logger.error("error")
 
+    wait(timeout: 1) // wait for async operation
+
     // Check log file at
     // ~/Documents/logs/test.log
     let logFolderURL = try FileManager.default
@@ -268,6 +270,8 @@ final class LoggerTests: XCTestCase {
     logger.info("info")
     logger.warning("warning")
     logger.error("error")
+
+    wait(timeout: 1) // wait for async operation
 
     let logFileContent = try String(contentsOf: logFileURL)
     let lines = logFileContent.components(separatedBy: "\n")
@@ -337,6 +341,8 @@ final class LoggerTests: XCTestCase {
 
     logger.debug("debug") // 126 bytes
     logger.debug("debug2") // 252 bytes -> trim
+
+    wait(timeout: 1) // wait for async operation
 
     let logFileContent = try String(contentsOf: logFileURL)
     let lines = logFileContent.components(separatedBy: "\n")

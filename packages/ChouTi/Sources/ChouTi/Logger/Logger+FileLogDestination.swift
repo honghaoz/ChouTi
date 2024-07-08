@@ -75,7 +75,7 @@ public extension Logger {
     /// The minimum required disk space to write logs.
     private let minimumRequiredDiskSpace: UInt64 = 524288000 // 500 * 1024 * 1024 (500 MB)
 
-    private let queue = DispatchQueue.make(label: "FileLogDestination")
+    private let queue = DispatchQueue.make(label: "io.chouti.ChouTi.FileLogDestination")
 
     /// Create a file log destination.
     /// - Parameters:
