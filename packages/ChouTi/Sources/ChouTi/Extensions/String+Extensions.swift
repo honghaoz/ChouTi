@@ -10,13 +10,26 @@ import Foundation
 public extension String {
 
   /// Get flag emoji from country code.
+  ///
+  /// Invalid input returns 🏴‍☠️ as a fallback.
   var countryFlagEmoji: String {
+    let unknwonFlag = "🏴‍☠️"
+
     let countryCode = self.uppercased()
+    guard countryCode.count == 2 else {
+      return unknwonFlag
+    }
+
     let base: UInt32 = 127397
     var s = ""
     for v in countryCode.unicodeScalars {
-      s.unicodeScalars.append(UnicodeScalar(base + v.value)!)
+      if let scalar = UnicodeScalar(base + v.value) {
+        s.unicodeScalars.append(scalar)
+      } else {
+        return unknwonFlag
+      }
     }
+
     return String(s)
   }
 }

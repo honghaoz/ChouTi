@@ -25,5 +25,10 @@ class String_ExtensionsTests: XCTestCase {
     expect("SG".countryFlagEmoji) == "🇸🇬"
     expect("MY".countryFlagEmoji) == "🇲🇾"
     expect("DE".countryFlagEmoji) == "🇩🇪"
+
+    // bad inputs
+    expect("".countryFlagEmoji) == "🏴‍☠️"
+    expect("U".countryFlagEmoji) == "🏴‍☠️"
+    expect("US1".countryFlagEmoji) == "🏴‍☠️"
   }
 }
