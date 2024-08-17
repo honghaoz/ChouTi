@@ -93,6 +93,7 @@ public enum Duration: Comparable {
     switch self {
     case .zero:
       return .nanoseconds(0)
+
     case .nanoseconds(let amount):
       guard let integer = Int(exactly: amount) else {
         if assertIfNotExact {
@@ -165,6 +166,7 @@ public enum Duration: Comparable {
         return .nanoseconds(nanosecondsInteger)
       }
       return .seconds(integer)
+
     case .forever:
       return .never
     }
