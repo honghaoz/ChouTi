@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.0.5](https://github.com/honghaoz/ChouTi/releases/tag/0.0.5) (2024-08-16)
+
+- Added a sync version of `PerformanceMeasurer`.
+- `FileLogDestination` now uses a background queue to write logs.
+- Added `countryFlagEmoji` to `String`.
+
 ## [0.0.4](https://github.com/honghaoz/ChouTi/releases/tag/0.0.4) (2024-06-12)
 
 - Increased code coverage.
