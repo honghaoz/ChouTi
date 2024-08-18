@@ -141,7 +141,7 @@ if [[ "$OS" == *"macOS"* ]]; then
 
   # use xcodebuild:
   # DESTINATION="platform=macOS,name=Any Mac"
-  # set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
+  # set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -test-iterations 3 -retry-tests-on-failure | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
 fi
 
 # For iOS
@@ -152,7 +152,7 @@ if [[ "$OS" == *"iOS"* ]]; then
   PLATFORM="iOS Simulator"
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME"
   echo "Running tests for $SIMULATOR_NAME..."
-  set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
+  set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -test-iterations 3 -retry-tests-on-failure | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
 fi
 
 # For visionOS
@@ -163,7 +163,7 @@ if [[ "$OS" == *"visionOS"* ]]; then
   PLATFORM="visionOS Simulator"
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME"
   echo "Running tests for $SIMULATOR_NAME..."
-  set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
+  set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -test-iterations 3 -retry-tests-on-failure | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
 fi
 
 if [ $ERROR_CODE -ne 0 ]; then

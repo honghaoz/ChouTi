@@ -295,20 +295,19 @@ final class DispatchQueue_OnMainAsyncTests: XCTestCase {
   }
 
   func test_onMainSync_fromBackground() {
-    let expectation = XCTestExpectation(description: "expectation")
+    var isExecuted = false
 
     queue.async {
       expect(Thread.isMainThread) == false
 
-      var isExecuted = false
       DispatchQueue.onMainSync {
         expect(Thread.isMainThread) == true
         isExecuted = true
       }
+
       expect(isExecuted) == true
-      expectation.fulfill()
     }
 
-    wait(for: [expectation], timeout: 5)
+    expect(isExecuted).toEventually(beTrue())
   }
 }
