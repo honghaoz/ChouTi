@@ -1,4 +1,4 @@
-# Change Log
+# CHANGELOG
 
 ## [0.0.5](https://github.com/honghaoz/ChouTi/releases/tag/0.0.5) (2024-08-16)
 
