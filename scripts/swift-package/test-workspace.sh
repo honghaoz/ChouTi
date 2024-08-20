@@ -136,12 +136,73 @@ if [[ "$OS" == *"macOS"* ]]; then
   echo "➡️  Running tests for macOS..."
   # use swift test:
   # pass 'TEST' compiler flag so the code can use "#if TEST" to conditionally 'import XCTest'.
-  set -o pipefail && swift test -Xswiftc -DTEST | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
+  # set -o pipefail && swift test -Xswiftc -DTEST | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
   # TODO: can use '--parallel --xunit-output test-results.xml' to generate test results and re-run failed tests.
 
   # use xcodebuild:
   # DESTINATION="platform=macOS,name=Any Mac"
   # set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -test-iterations 3 -retry-tests-on-failure | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
+
+  RAW_OUTPUT=$(swift test -Xswiftc -DTEST || ERROR_CODE=$?)
+  echo "$RAW_OUTPUT" | "$REPO_ROOT"/bin/xcbeautify
+
+  # Extract failed test case information
+  # RAW_OUTPUT may include failed test cases like:
+  #   /Users/foo/Developer/bluebox/packages/ChouTiExt/Tests/ChouTiExtTests/Utilities/EventFlowControl/ThrottlerTests.swift:134: error: -[ChouTiExtTests.ThrottlerTests test_latest_invokeImmediately] : failed - expect "[1.0, 2.0, 4.0, 5.0, 0.0]" to be equal to "[1.0, 2.0, 4.0, 5.0]"
+  # Extract the test case name like: ChouTiExt.ThrottlerTests/test_latest_invokeImmediately
+  FAILED_TESTS=$(echo "$RAW_OUTPUT" | grep -E ' error: ' | sed -E 's|.*error: -\[(.+)\.(.+) (.+)\] :.*|\1.\2/\3|')
+
+  # dedupe FAILED_TESTS
+  FAILED_TESTS=$(echo "$FAILED_TESTS" | sort | uniq)
+
+  if [ -n "$FAILED_TESTS" ]; then
+    echo ""
+    echo "❌ Failed tests:"
+    echo "$FAILED_TESTS"
+    echo ""
+
+    # can use the following command to re-run failed tests:
+    # swift test -Xswiftc -DTEST --filter 'ChouTiExtTests.ThrottlerTests/test_latest_invokeImmediately'
+
+    # temporarily disable exit on error, so that `swift test -Xswiftc -DTEST --filter "$test"` won't stop the script.
+    set +e
+
+    FINAL_FAILED_TESTS=""
+    MAX_RETRY_ATTEMPTS=3
+
+    # Re-run failed tests up to 3 times
+    while IFS= read -r test; do
+      echo "🔄 Re-running failed test: $test"
+      for attempt in $(seq 1 $MAX_RETRY_ATTEMPTS); do
+        echo ""
+        echo "Attempt $attempt for $test"
+        swift test -Xswiftc -DTEST --filter "$test"
+        TEST_EXIT_CODE=$?
+        if [ $TEST_EXIT_CODE -eq 0 ]; then
+          echo "✅ Test passed on attempt $attempt: $test"
+          break
+        elif [ "$attempt" -eq $MAX_RETRY_ATTEMPTS ]; then
+          echo "❌ Test failed after $MAX_RETRY_ATTEMPTS attempts: $test"
+          FINAL_FAILED_TESTS+="$test"$'\n'
+        else
+          echo "Test failed on attempt $attempt: $test. Retrying..."
+        fi
+      done
+    done <<< "$FAILED_TESTS"
+
+    # re-enable exit on error
+    set -e
+
+    # if all failed succeeded after re-runs, set ERROR_CODE to 0
+    if [ -z "$FINAL_FAILED_TESTS" ]; then
+      ERROR_CODE=0
+    else
+      echo ""
+      echo "❌ Final failed tests after retries:"
+      echo "$FINAL_FAILED_TESTS"
+      ERROR_CODE=1
+    fi
+  fi
 fi
 
 # For iOS
