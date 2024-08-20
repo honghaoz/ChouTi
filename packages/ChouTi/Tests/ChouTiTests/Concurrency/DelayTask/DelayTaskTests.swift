@@ -607,4 +607,36 @@ class DelayTaskTests: XCTestCase {
     let tolerance: TimeInterval = delayedSeconds / 5 // 20%
     expect(elapsedTime).to(beLessThanOrEqual(to: delayedSeconds + tolerance))
   }
+
+  func testConcurrentExecution() {
+    let expectation = self.expectation(description: "All tasks should complete")
+    expectation.expectedFulfillmentCount = 100
+
+    let queue = DispatchQueue(label: "testQueue", attributes: .concurrent)
+
+    for _ in 0 ..< 100 {
+      queue.async {
+        delay(Double.random(in: 0.001 ... 0.1)) {
+          expectation.fulfill()
+        }
+      }
+    }
+
+    wait(for: [expectation], timeout: 1.0)
+  }
+
+  func testLongChain() {
+    let expectation = self.expectation(description: "Long chain should complete")
+
+    var task: DelayTaskType = delay(0.01) {}
+    for _ in 0 ..< 100 {
+      task = task.then(delay: 0.01) {}
+    }
+
+    task.then(delay: 0.01) {
+      expectation.fulfill()
+    }
+
+    wait(for: [expectation], timeout: 2.0)
+  }
 }

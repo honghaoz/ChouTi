@@ -97,6 +97,7 @@ private final class PrivateDelayTask: DelayTaskType {
   /// The unique id of the task.
   private let id = MachTimeId.id()
 
+  /// The lock to protect the task's state.
   private let taskLock = UnfairLock()
 
   /// Whether this task is canceled.
@@ -296,6 +297,11 @@ private final class PrivateDelayTask: DelayTaskType {
 
 extension PrivateDelayTask {
 
+  /// Chain a new delay task.
+  /// - Parameters:
+  ///   - delayedSeconds: The delayed seconds.
+  ///   - task: The closure to run. The closure will be executed on the main queue.
+  /// - Returns: The chained delay task.
   @inlinable
   @inline(__always)
   @discardableResult
@@ -303,6 +309,12 @@ extension PrivateDelayTask {
     then(delay: delayedSeconds, leeway: nil, queue: .main, task: task)
   }
 
+  /// Chain a new delay task.
+  /// - Parameters:
+  ///   - delayedSeconds: The delayed seconds.
+  ///   - leeway: The leeway for the delay.
+  ///   - task: The closure to run. The closure will be executed on the main queue.
+  /// - Returns: The chained delay task.
   @inlinable
   @inline(__always)
   @discardableResult
@@ -310,6 +322,12 @@ extension PrivateDelayTask {
     then(delay: delayedSeconds, leeway: leeway, queue: .main, task: task)
   }
 
+  /// Chain a new delay task.
+  /// - Parameters:
+  ///   - delayedSeconds: The delayed seconds.
+  ///   - queue: The dispatch queue to run on.
+  ///   - task: The closure to run.
+  /// - Returns: The chained delay task.
   @inlinable
   @inline(__always)
   @discardableResult
@@ -317,6 +335,14 @@ extension PrivateDelayTask {
     then(delay: delayedSeconds, leeway: nil, qos: .unspecified, flags: [], queue: queue, task: task)
   }
 
+  /// Chain a new delay task.
+  /// - Parameters:
+  ///   - delayedSeconds: The delayed seconds.
+  ///   - qos: The quality of service of the task.
+  ///   - flags: The flags of the underlying work item.
+  ///   - queue: The dispatch queue to run on.
+  ///   - task: The closure to run.
+  /// - Returns: The chained delay task.
   @inlinable
   @inline(__always)
   @discardableResult
@@ -324,6 +350,13 @@ extension PrivateDelayTask {
     then(delay: delayedSeconds, leeway: nil, qos: qos, flags: flags, queue: queue, task: task)
   }
 
+  /// Chain a new delay task.
+  /// - Parameters:
+  ///   - delayedSeconds: The delayed seconds.
+  ///   - leeway: The leeway for the delay.
+  ///   - queue: The dispatch queue to run on.
+  ///   - task: The closure to run.
+  /// - Returns: The chained delay task.
   @inlinable
   @inline(__always)
   @discardableResult
@@ -331,6 +364,17 @@ extension PrivateDelayTask {
     then(delay: delayedSeconds, leeway: leeway, qos: .unspecified, flags: [], queue: queue, task: task)
   }
 
+  /// Chain a new delay task.
+  /// - Parameters:
+  ///   - delayedSeconds: The delayed seconds.
+  ///   - leeway: The leeway for the delay.
+  ///   - qos: The quality of service of the task.
+  ///   - flags: The flags of the underlying work item.
+  ///   - queue: The dispatch queue to run on.
+  ///   - task: The closure to run.
+  /// - Returns: The chained delay task.
+  @inlinable
+  @inline(__always)
   @discardableResult
   func then(delay delayedSeconds: TimeInterval,
             leeway: TimerLeeway? = nil,
