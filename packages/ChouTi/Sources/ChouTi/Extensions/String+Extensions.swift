@@ -13,21 +13,22 @@ public extension String {
   ///
   /// Invalid input returns 🏴‍☠️ as a fallback.
   var countryFlagEmoji: String {
-    let unknwonFlag = "🏴‍☠️"
+    let unknownFlag = "🏴‍☠️"
 
     let countryCode = self.uppercased()
-    guard countryCode.count == 2 else {
-      return unknwonFlag
+    guard countryCode.count == 2,
+          countryCode.allSatisfy({ $0.isASCII && $0.isLetter })
+    else {
+      return unknownFlag
     }
 
     let base: UInt32 = 127397
     var s = ""
     for v in countryCode.unicodeScalars {
-      if let scalar = UnicodeScalar(base + v.value) {
-        s.unicodeScalars.append(scalar)
-      } else {
-        return unknwonFlag
+      guard let scalar = UnicodeScalar(base + v.value) else {
+        return unknownFlag
       }
+      s.unicodeScalars.append(scalar)
     }
 
     return String(s)

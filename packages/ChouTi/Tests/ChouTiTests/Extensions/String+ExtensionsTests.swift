@@ -30,5 +30,18 @@ class String_ExtensionsTests: XCTestCase {
     expect("".countryFlagEmoji) == "🏴‍☠️"
     expect("U".countryFlagEmoji) == "🏴‍☠️"
     expect("US1".countryFlagEmoji) == "🏴‍☠️"
+
+    // Non-ASCII characters
+    expect("🇺🇸".countryFlagEmoji) == "🏴‍☠️"
+    expect("中国".countryFlagEmoji) == "🏴‍☠️"
+    expect("日本".countryFlagEmoji) == "🏴‍☠️"
+
+    // Special characters
+    expect("@#".countryFlagEmoji) == "🏴‍☠️"
+    expect("12".countryFlagEmoji) == "🏴‍☠️"
+
+    // Mixed characters
+    expect("US🇺🇸".countryFlagEmoji) == "🏴‍☠️"
+    expect("CN中国".countryFlagEmoji) == "🏴‍☠️"
   }
 }
