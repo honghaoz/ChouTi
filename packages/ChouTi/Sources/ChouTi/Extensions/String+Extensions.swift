@@ -25,9 +25,11 @@ public extension String {
     let base: UInt32 = 127397
     var s = ""
     for v in countryCode.unicodeScalars {
-      guard let scalar = UnicodeScalar(base + v.value) else {
-        return unknownFlag
-      }
+      // Force unwrap is safe here because:
+      // 1. We've verified the input is two ASCII letters (A-Z)
+      // 2. ASCII values for A-Z (65-90) when added to the base (127397)
+      //    always result in valid Unicode scalars (127462-127487)
+      let scalar = UnicodeScalar(base + v.value)! // swiftlint:disable:this force_unwrapping
       s.unicodeScalars.append(scalar)
     }
 

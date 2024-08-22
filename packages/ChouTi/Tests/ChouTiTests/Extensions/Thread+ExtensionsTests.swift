@@ -15,6 +15,14 @@ class Thread_ExtensionsTests: XCTestCase {
     expect(Thread.isRunningXCTest) == true
   }
 
+  func test_isRunningXCTest_withNonStringKey() {
+    let mockThreadDictionary: NSDictionary = [
+      123: "Some value", // Non-string key
+    ]
+
+    expect(Thread._isRunningXCTest(threadDictionary: mockThreadDictionary)) == false
+  }
+
   func test_callStackSymbolsString() {
     let callStackSymbolsString = Thread.callStackSymbolsString()
     expect(callStackSymbolsString.isEmpty) == false

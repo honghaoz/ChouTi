@@ -60,17 +60,21 @@ public extension Thread {
            - 4 : <XCTContext: 0x6000021324e0>
            - 5 : <XCTContext: 0x600002142ee0>
       */
-    Thread.main.threadDictionary.allKeys.contains { key in
+    _isRunningXCTest(threadDictionary: Thread.main.threadDictionary)
+
+    // alternative:
+    // let isRunningUnitTests = NSClassFromString("XCTest") != nil
+  }
+
+  static func _isRunningXCTest(threadDictionary: NSDictionary) -> Bool {
+    threadDictionary.allKeys.contains { key in
       guard let key = key as? String else {
         return false
       }
       return
-        key.range(of: "xctest", options: .caseInsensitive) != nil || // doesn't work on Xcode 15
+        key.range(of: "xctest", options: .caseInsensitive) != nil ||
         key.contains("kXCTContextStackThreadKey")
     }
-
-    // alternative:
-    // let isRunningUnitTests = NSClassFromString("XCTest") != nil
   }
 
   /// Get a prettified call stack symbols string.

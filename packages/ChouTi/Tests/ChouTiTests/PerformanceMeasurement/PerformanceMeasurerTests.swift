@@ -277,6 +277,81 @@ final class PerformanceMeasurerTests: XCTestCase {
     }
   }
 
+  // MARK: - Async Repeat
+
+  func testMeasureAsyncRepeat() async throws {
+    func work() async throws -> Int {
+      // simulate some async work
+      try await Task.sleep(nanoseconds: 10000000) // 10 milliseconds
+      return 100
+    }
+
+    let consoleOutput = await captureConsoleOutput {
+      let timeElapsed = try await PerformanceMeasurer.measure(repeatCount: 5) {
+        _ = try await work()
+      }
+      expect(timeElapsed).to(beGreaterThan(0.05)) // At least 50ms (5 * 10ms)
+    }
+    expect(consoleOutput, consoleOutput).to(beEmpty())
+  }
+
+  func testMeasureAsyncRepeatWithPrint() async throws {
+    func work() async throws -> Int {
+      // simulate some async work
+      try await Task.sleep(nanoseconds: 10000000) // 10 milliseconds
+      return 100
+    }
+
+    do {
+      let consoleOutput = await captureConsoleOutput {
+        let timeElapsed = try await PerformanceMeasurer.measure(tag: "TestTag", repeatCount: 5) {
+          _ = try await work()
+        }
+        expect(timeElapsed).to(beGreaterThan(0.05))
+      }
+      if !isCommandLine {
+        expect(consoleOutput.contains("[TestTag] Elapsed time: "), consoleOutput) == true
+      }
+    }
+
+    do {
+      let consoleOutput = await captureConsoleOutput {
+        let timeElapsed = try await PerformanceMeasurer.measure(tag: "TestTag", tagLength: 12, repeatCount: 5) {
+          _ = try await work()
+        }
+        expect(timeElapsed).to(beGreaterThan(0.05))
+      }
+      if !isCommandLine {
+        expect(consoleOutput.contains("[TestTag     ] Elapsed time: "), consoleOutput) == true
+      }
+    }
+
+    do {
+      let consoleOutput = await captureConsoleOutput {
+        let timeElapsed = try await PerformanceMeasurer.measure(tag: "TestTag", tagLength: 12, tagPad: "*", repeatCount: 5) {
+          _ = try await work()
+        }
+        expect(timeElapsed).to(beGreaterThan(0.05))
+      }
+      if !isCommandLine {
+        expect(consoleOutput.contains("[TestTag*****] Elapsed time: "), consoleOutput) == true
+      }
+    }
+
+    do {
+      let consoleOutput = await captureConsoleOutput {
+        let timeElapsed = try await PerformanceMeasurer.measure(tag: "TestTag", tagLength: 12, tagPad: "*", useScientificNumber: true, repeatCount: 5) {
+          _ = try await work()
+        }
+        expect(timeElapsed).to(beGreaterThan(0.05))
+      }
+      if !isCommandLine {
+        expect(consoleOutput.contains("[TestTag*****] Elapsed time: "), consoleOutput) == true
+        expect(consoleOutput.contains("e-"), consoleOutput) == true
+      }
+    }
+  }
+
   private var isCommandLine: Bool {
     #if TEST
     // TEST flag is set via `swift test -Xswiftc -DTEST`
@@ -292,6 +367,26 @@ final class PerformanceMeasurerTests: XCTestCase {
     dup2(pipe.fileHandleForWriting.fileDescriptor, fileno(stdout))
 
     try? block()
+
+    pipe.fileHandleForWriting.closeFile()
+    dup2(originalStandardOutput, fileno(stdout))
+    let data = pipe.fileHandleForReading.readDataToEndOfFile()
+    pipe.fileHandleForReading.closeFile()
+
+    return String(decoding: data, as: UTF8.self)
+  }
+
+  // Helper function to capture console output in async context
+  private func captureConsoleOutput(_ block: () async throws -> Void) async -> String {
+    let pipe = Pipe()
+    let originalStandardOutput = dup(fileno(stdout))
+    dup2(pipe.fileHandleForWriting.fileDescriptor, fileno(stdout))
+
+    do {
+      try await block()
+    } catch {
+      print("Error occurred: \(error)")
+    }
 
     pipe.fileHandleForWriting.closeFile()
     dup2(originalStandardOutput, fileno(stdout))
