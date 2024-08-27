@@ -1,7 +1,7 @@
 # ChouTi
 
 [![build](https://github.com/honghaoz/ChouTi/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/honghaoz/ChouTi/actions/workflows/build.yml?query=branch%3Amaster)
-![swift](https://img.shields.io/badge/Swift-5.9-F05138.svg)
+![swift](https://img.shields.io/badge/swift-5.9-F05138.svg)
 ![platforms](https://img.shields.io/badge/platforms-iOS%2013%20%7C%20macOS%2010.5-007fea.svg)
 
 **ChouTi** is a repository of Swift packages that provides frameworks, utilities and extensions to enhance development on iOS and macOS.
