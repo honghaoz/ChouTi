@@ -124,9 +124,37 @@ class CGSize_ExtensionsTests: XCTestCase {
   func testAspectRatio() {
     let size1 = CGSize(12, 23)
     expect(size1.aspectRatio) == 0.5217391304347826
+
+    do {
+      Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
+        expect(message) == "Getting aspect ratio with zero height."
+        expect(metadata) == ["width": "0.0", "height": "0.0"]
+      }
+
+      expect(CGSize(0, 0).aspectRatio) == .greatestFiniteMagnitude
+
+      Assert.resetTestAssertionFailureHandler()
+    }
+
+    do {
+      Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
+        expect(message) == "Getting aspect ratio with zero height."
+        expect(metadata) == ["width": "10.0", "height": "0.0"]
+      }
+
+      expect(CGSize(10, 0).aspectRatio) == .greatestFiniteMagnitude
+
+      Assert.resetTestAssertionFailureHandler()
+    }
+
+    expect(CGSize(CGFloat.nan).aspectRatio.isNaN) == true
+    expect(CGSize(CGFloat.infinity).aspectRatio.isNaN) == true
+    expect(CGSize(CGFloat.greatestFiniteMagnitude).aspectRatio) == 1
+    expect(CGSize(CGFloat.leastNonzeroMagnitude).aspectRatio) == 1
   }
 
   func testShape() {
+    expect(CGSize.zero.isPortrait) == true
     expect(CGSize(12, 23).isPortrait) == true
     expect(CGSize(32, 23).isPortrait) == false
     expect(CGSize(32, 32).isPortrait) == true
@@ -138,6 +166,7 @@ class CGSize_ExtensionsTests: XCTestCase {
     expect(CGSize(12, 23).isSquare) == false
     expect(CGSize(32, 23).isSquare) == false
     expect(CGSize(32, 32).isSquare) == true
+    expect(CGSize(0, 0).isSquare) == true
   }
 
   func testRoundUpWithScaleFactor() {

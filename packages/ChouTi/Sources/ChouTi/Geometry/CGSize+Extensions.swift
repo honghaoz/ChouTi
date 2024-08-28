@@ -6,7 +6,6 @@
 //
 
 import CoreGraphics
-import ChouTi
 
 public extension CGSize {
 
@@ -233,19 +232,29 @@ public extension CGSize {
   // MARK: - Shapes
 
   /// Get the aspect ratio (width / height).
+  ///
+  /// - Note: This will return `greatestFiniteMagnitude` if height is zero.
   @inlinable
   @inline(__always)
   var aspectRatio: CGFloat {
-    width / height
+    guard height != 0 else {
+      ChouTi.assertFailure("Getting aspect ratio with zero height.", metadata: [
+        "width": "\(width)",
+        "height": "\(height)",
+      ])
+      return .greatestFiniteMagnitude
+    }
+    return width / height
   }
 
   /// Check if the size is a portrait size.
   ///
   /// Square shape is counted as portrait.
-  @inlinable
-  @inline(__always)
   var isPortrait: Bool {
-    aspectRatio <= 1
+    if self == .zero {
+      return true
+    }
+    return aspectRatio <= 1
   }
 
   /// Check if the size is a landscape size.
@@ -254,14 +263,19 @@ public extension CGSize {
   @inlinable
   @inline(__always)
   var isLandScape: Bool {
-    aspectRatio > 1
+    !isPortrait
   }
 
   /// Check if the size is a square.
+  ///
+  /// Zero size is also counted as square.
   @inlinable
   @inline(__always)
   var isSquare: Bool {
-    aspectRatio == 1
+    if width == 0, height == 0 {
+      return true
+    }
+    return aspectRatio == 1
   }
 }
 
