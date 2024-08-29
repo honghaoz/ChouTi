@@ -220,7 +220,7 @@ fi
 if [[ "$OS" == *"tvOS"* ]]; then
   echo ""
   echo "➡️  Running tests for tvOS..."
-  SIMULATOR_NAME=$(xcrun simctl list devices available | grep 'Apple TV' | grep -Eo 'Apple TV \d+' | sort -t ' ' -k 2 -nr | head -1)
+  SIMULATOR_NAME=$(xcrun simctl list devices available | grep 'Apple TV' | head -n 1 | awk -F'(' '{print $1}' | xargs)
   PLATFORM="tvOS Simulator"
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME"
   echo "Running tests for $SIMULATOR_NAME..."

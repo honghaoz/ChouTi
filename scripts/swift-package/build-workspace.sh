@@ -176,7 +176,7 @@ fi
 if [[ "$OS" == *"tvOS"* ]]; then
   echo ""
   echo "➡️  Building for tvOS ($CONFIGURATION)..."
-  SIMULATOR_NAME=$(xcrun simctl list devices available | grep 'Apple TV' | grep -Eo 'Apple TV \d+' | sort -t ' ' -k 2 -nr | head -1)
+  SIMULATOR_NAME=$(xcrun simctl list devices available | grep 'Apple TV' | head -n 1 | awk -F'(' '{print $1}' | xargs)
   PLATFORM="tvOS Simulator"
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME"
   set -o pipefail && xcodebuild build -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -configuration "$CONFIGURATION" | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
