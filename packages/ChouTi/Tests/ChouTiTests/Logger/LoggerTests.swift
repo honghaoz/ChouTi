@@ -189,7 +189,6 @@ final class LoggerTests: XCTestCase {
     expect(destination.logs).toEventuallyNot(beEmpty())
   }
 
-  @available(iOS 16, *)
   func test_fileDestination() throws {
     // remove log file if exists
     let logPath = "~/Documents/logs/test.log"
@@ -248,7 +247,6 @@ final class LoggerTests: XCTestCase {
     }
   }
 
-  @available(iOS 16, *)
   func test_fileDestination_customFolder() throws {
     let logFolderURL = try FileManager.default
       .url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
@@ -256,7 +254,7 @@ final class LoggerTests: XCTestCase {
     let logFileURL = logFolderURL.appendingPathComponent("test.log")
 
     // remove log file if exists
-    let logFilePath = logFileURL.path()
+    let logFilePath = logFileURL.path
     if FileManager.default.fileExists(atPath: logFilePath) {
       try FileManager.default.removeItem(atPath: logFilePath)
     }
@@ -386,15 +384,20 @@ final class LoggerTests: XCTestCase {
     expect(logger1) != logger3
   }
 
-  @available(iOS 16, *)
   func test_CustomStringConvertible() throws {
     let logger = Logger()
     // Logger<0x0000600002df5080>
-    expect(try logger.description.firstMatch(of: Regex("Logger<0x[0-9a-f]+>"))) != nil
+    let pattern = "Logger<0x[0-9a-f]+>"
+    let regex = try NSRegularExpression(pattern: pattern, options: [])
+    let range = NSRange(location: 0, length: logger.description.utf16.count)
+    expect(regex.firstMatch(in: logger.description, options: [], range: range)) != nil
 
     logger.tag = "tag"
     // Logger<0x0000600002df5080>(tag)
-    expect(try logger.description.firstMatch(of: Regex("Logger<0x[0-9a-f]+>\\(tag\\)"))) != nil
+    let taggedPattern = "Logger<0x[0-9a-f]+>\\(tag\\)"
+    let taggedRegex = try NSRegularExpression(pattern: taggedPattern, options: [])
+    let taggedRange = NSRange(location: 0, length: logger.description.utf16.count)
+    expect(taggedRegex.firstMatch(in: logger.description, options: [], range: taggedRange)) != nil
   }
 }
 

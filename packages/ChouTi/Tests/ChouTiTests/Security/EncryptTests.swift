@@ -42,7 +42,7 @@ class EncryptTests: XCTestCase {
   func testDifferentKeys() throws {
     let content = "Secret message"
     let data = try encrypt(content: content, xiaoyi: "aa", "bbbbb", "cccccc", "dddddd", "eeeeee", "fffffff")
-    if #available(macOS 14.4, *) {
+    if #available(macOS 14.4, tvOS 17.4, *) {
       expect(
         try decrypt(encryptedData: data, xiaoyi: "bb", "bbbbb", "cccccc", "dddddd", "eeeeee", "fffffff")
       ).to(
@@ -79,7 +79,7 @@ class EncryptTests: XCTestCase {
 
   func testInvalidEncryptedData() {
     let invalidData = Data("This is not valid encrypted data".utf8)
-    if #available(macOS 14.4, *) {
+    if #available(macOS 14.4, tvOS 17.4, *) {
       expect(
         try decrypt(encryptedData: invalidData, xiaoyi: "aa", "bbbbb", "cccccc", "dddddd", "eeeeee", "fffffff")
       ).to(

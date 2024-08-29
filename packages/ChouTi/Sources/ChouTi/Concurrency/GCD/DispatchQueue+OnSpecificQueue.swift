@@ -159,7 +159,12 @@ public extension DispatchQueue {
   #if DEBUG
   /// Check if current queue is on the Swift Concurrency (`async`/`await``) cooperative queue.
   static func isOnCooperativeQueue() -> Bool {
+    #if os(tvOS)
+    // it seems like tvOS does not use the cooperative queue
+    DispatchQueue.currentQueueLabel == "com.apple.root.default-qos"
+    #else
     DispatchQueue.currentQueueLabel.hasSuffix(Constants.cooperativeQueueSuffix)
+    #endif
   }
   #endif
 

@@ -41,6 +41,8 @@ final class DeviceTests: XCTestCase {
       fail("Unsupported device type")
     }
     #elseif os(visionOS)
+    #elseif os(tvOS)
+    expect(Device.deviceType) == .tv
     #else
     fail("Unsupported device type")
     #endif

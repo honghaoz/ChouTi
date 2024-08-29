@@ -20,6 +20,7 @@ public enum Device {
     case iPhone
     case iPad
     case mac
+    case tv
     // case vision
   }
 
@@ -32,6 +33,8 @@ public enum Device {
     }
     #elseif os(macOS)
     return .mac
+    #elseif os(tvOS)
+    return .tv
     #elseif os(visionOS)
     return .iPhone // TODO: support vision
     #else
@@ -129,10 +132,7 @@ public enum Device {
 
   /// Get the free disk space in bytes.
   public static var freeDiskSpaceInBytes: Int64 {
-    do {
-      let freeSpace = try URL(fileURLWithPath: NSHomeDirectory() as String).resourceValues(forKeys: [URLResourceKey.volumeAvailableCapacityForImportantUsageKey]).volumeAvailableCapacityForImportantUsage
-      return freeSpace.assert() ?? 0
-    } catch {
+    let getAvailableSpace = {
       do {
         let systemAttributes = try FileManager.default.attributesOfFileSystem(forPath: NSHomeDirectory() as String)
         let freeSpace = (systemAttributes[FileAttributeKey.systemFreeSize] as? NSNumber)?.int64Value
@@ -142,6 +142,18 @@ public enum Device {
         return 0
       }
     }
+    #if os(tvOS)
+    return getAvailableSpace()
+    #else
+    do {
+      let freeSpace = try URL(fileURLWithPath: NSHomeDirectory() as String)
+        .resourceValues(forKeys: [URLResourceKey.volumeAvailableCapacityForImportantUsageKey])
+        .volumeAvailableCapacityForImportantUsage
+      return freeSpace.assert() ?? 0
+    } catch {
+      return getAvailableSpace()
+    }
+    #endif
   }
 
   /// Get a unique device UUID.

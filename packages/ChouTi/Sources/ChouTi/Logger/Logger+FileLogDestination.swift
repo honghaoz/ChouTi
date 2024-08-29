@@ -173,7 +173,7 @@ public extension Logger {
           // }
 
           self.assert()?.logFileSize = try {
-            if #available(OSX 10.15.4, iOS 13.4, *) {
+            if #available(OSX 10.15.4, iOS 13.4, tvOS 13.4, *) {
               return try fileHandle.offset()
             } else {
               return fileHandle.offsetInFile
