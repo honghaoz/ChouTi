@@ -34,7 +34,13 @@ final class DispatchQueue_OnSpecificQueueTests: XCTestCase {
   func test_isOnQueue_ignoreCommonQueue() async {
     let queue = DispatchQueue.global()
     #if os(tvOS)
-    expect(DispatchQueue.isOnQueue(queue)) == true
+    // tvOS 15 uses "com.apple.root.default-qos"
+    // tvOS 17 uses "com.apple.root.default-qos.cooperative"
+    if #available(tvOS 17, *) {
+      expect(DispatchQueue.isOnQueue(queue)) == false
+    } else {
+      expect(DispatchQueue.isOnQueue(queue)) == true
+    }
     #else
     expect(DispatchQueue.isOnQueue(queue)) == false
     #endif
