@@ -3,11 +3,11 @@
 //  ChouTi
 //
 //  Created by Honghao Zhang on 2019-07-11.
-//  Copyright © 2020 Honghao Zhang (github.com/honghaoz).
+//  Copyright © 2020 Honghao Zhang.
 //
 //  MIT License
 //
-//  Copyright (c) 2020 Honghao Zhang
+//  Copyright (c) 2020 Honghao Zhang (github.com/honghaoz)
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to
