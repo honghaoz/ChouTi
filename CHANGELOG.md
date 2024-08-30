@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [0.0.6](https://github.com/honghaoz/ChouTi/releases/tag/0.0.6) (2024-08-29)
+
+- Framework `ChouTi`:
+  - Added `BinaryFloatingPoint` rounding utilities.
+  - Added `FloatingPoint.isApproximatelyEqual`
+  - Added `CGPoint`, `CGSize` and `CGRect` utilities.
+  - Added `clamp` and `lerp` utilities.
+  - Added `Encrypt` and `Obfuscation` utilities.
+  - Added `AssociatedObject` utilities.
+  - Added `System` utilities.
+  - Added tvOS & visionOS support.
+  - Improved documentation.
+
 ## [0.0.5](https://github.com/honghaoz/ChouTi/releases/tag/0.0.5) (2024-08-16)
 
 - Added a sync version of `PerformanceMeasurer`.

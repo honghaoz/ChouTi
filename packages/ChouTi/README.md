@@ -13,7 +13,7 @@ Add the following to your `Package.swift` file:
 ```swift
 dependencies: [
   // add the package to your package dependencies
-  .package(url: "https://github.com/honghaoz/ChouTi", from: "0.0.5"),
+  .package(url: "https://github.com/honghaoz/ChouTi", from: "0.0.6"),
 ],
 targets: [
   // add ChouTi to your target dependencies
