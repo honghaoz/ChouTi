@@ -58,8 +58,14 @@ public struct EscapingExpression<T> {
   ///   - interval: The repeating interval to evaluate the expression. Default is 0.01 seconds.
   ///   - timeout: The timeout to stop evaluating the expression. Default is 3 seconds.
   public func toEventually(_ expectation: some Expectation<T, Never>, interval: TimeInterval = 0.01, timeout: TimeInterval = 3) {
-    precondition(interval > 0, "interval must be greater than 0.")
-    precondition(timeout > interval, "timeout must be greater than interval.")
+    guard interval > 0 else {
+      XCTFail("interval must be greater than 0.", file: file, line: line)
+      return
+    }
+    guard timeout > interval else {
+      XCTFail("timeout must be greater than interval.", file: file, line: line)
+      return
+    }
 
     let testExpectation = XCTestExpectation()
     var lastValue: T?
@@ -116,8 +122,14 @@ public struct EscapingExpression<T> {
   ///   - interval: The repeating interval to evaluate the expression. Default is 0.01 seconds.
   ///   - timeout: The timeout to stop evaluating the expression. Default is 3 seconds.
   public func toEventuallyNot(_ expectation: some Expectation<T, Never>, interval: TimeInterval = 0.01, timeout: TimeInterval = 3) {
-    precondition(interval > 0, "interval must be greater than 0.")
-    precondition(timeout > interval, "timeout must be greater than interval.")
+    guard interval > 0 else {
+      XCTFail("interval must be greater than 0.", file: file, line: line)
+      return
+    }
+    guard timeout > interval else {
+      XCTFail("timeout must be greater than interval.", file: file, line: line)
+      return
+    }
 
     let testExpectation = XCTestExpectation()
     var lastValue: T?

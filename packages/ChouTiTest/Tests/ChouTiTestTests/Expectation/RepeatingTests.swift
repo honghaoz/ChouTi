@@ -1,8 +1,8 @@
 //
-//  Repeating.swift
+//  RepeatingTests.swift
 //  ChouTi
 //
-//  Created by Honghao Zhang on 3/5/20.
+//  Created by Honghao Zhang on 8/30/24.
 //  Copyright © 2020 Honghao Zhang.
 //
 //  MIT License
@@ -28,41 +28,44 @@
 //  IN THE SOFTWARE.
 //
 
-import Foundation
+@testable import ChouTiTest
+import XCTest
 
-/// Repeats a block of code at a specified interval on a specified queue.
-/// - Parameters:
-///   - interval: The interval at which to repeat the block.
-///   - timeout: The maximum time to repeat the block.
-///   - queue: The queue on which to repeat the block.
-///   - block: The block to repeat.
-/// - Returns: A token that can be used to stop the repeating task.
-func repeating(interval: TimeInterval,
-               timeout: TimeInterval = .greatestFiniteMagnitude,
-               queue: DispatchQueue = .main,
-               block: @escaping (Int) -> Bool)
-{
-  guard interval > 0, timeout > interval else {
-    return
+class RepeatingTests: XCTestCase {
+
+  func testRepeating() {
+    let expectation = XCTestExpectation()
+    var count = 0
+    repeating(interval: 0.01, timeout: 0.05, queue: .main) { _ in
+      count += 1
+      if count == 3 {
+        expectation.fulfill()
+        return true
+      }
+      return false
+    }
+    wait(for: [expectation], timeout: 0.1)
   }
 
-  var loopCount = 0
+  func testRepeating_invalidInterval() {
+    let expectation = XCTestExpectation()
+    expectation.isInverted = true
 
-  func invoke() {
-    if Double(loopCount) * interval > timeout {
-      return
+    repeating(interval: 0, timeout: 0.05, queue: .main) { _ in
+      expectation.fulfill()
+      return true
     }
-    if block(loopCount) {
-      return
-    }
-
-    loopCount += 1
-    queue.asyncAfter(deadline: .now() + interval) {
-      invoke()
-    }
+    wait(for: [expectation], timeout: 0.1)
   }
 
-  queue.async {
-    invoke()
+  func testRepeating_invalidTimeout() {
+    let expectation = XCTestExpectation()
+    expectation.isInverted = true
+
+    repeating(interval: 0.01, timeout: 0, queue: .main) { _ in
+      expectation.fulfill()
+      return true
+    }
+    wait(for: [expectation], timeout: 0.1)
   }
 }
