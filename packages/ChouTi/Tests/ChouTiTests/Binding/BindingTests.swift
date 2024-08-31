@@ -238,7 +238,7 @@ class BindingTests: XCTestCase {
     var binding: (some BindingType<Bool>)? = Binding(true).emitCurrentValue()
 
     var called: Bool?
-    binding!.onDeallocate {
+    binding!.onDeallocate { // swiftlint:disable:this force_unwrapping
       called = true
     }
 
@@ -250,7 +250,7 @@ class BindingTests: XCTestCase {
     var binding: (some BindingType<Bool>)? = Binding(true).emitCurrentValue()
 
     var called: Bool?
-    let token = binding!.onDeallocate {
+    let token = binding!.onDeallocate { // swiftlint:disable:this force_unwrapping
       called = true
     }
 
@@ -267,7 +267,7 @@ class BindingTests: XCTestCase {
         receivedValue = newValue
       }
 
-    bindingObservationStorage.store(observation!)
+    bindingObservationStorage.store(observation!) // swiftlint:disable:this force_unwrapping
     observation = nil
 
     number = 20
@@ -397,7 +397,7 @@ class BindingTests: XCTestCase {
     weak var weakMappedBinding: (any BindingType)? = Binding(1).map { "\($0)" }.store(in: store)
     expect(weakMappedBinding) != nil
 
-    expect(store.contains(weakBinding!)) == true
+    expect(store.contains(weakBinding!)) == true // swiftlint:disable:this force_unwrapping
 
     store.removeAll()
     expect(weakBinding) == nil
@@ -431,9 +431,9 @@ class BindingTests: XCTestCase {
     weak var weakMappedBinding: (any BindingType)? = Binding(1).map { "\($0)" }.store(in: store)
     expect(weakMappedBinding) != nil
 
-    store.remove(weakBinding!)
-    store.remove(weakAnyBinding!)
-    store.remove(weakMappedBinding!)
+    store.remove(weakBinding!) // swiftlint:disable:this force_unwrapping
+    store.remove(weakAnyBinding!) // swiftlint:disable:this force_unwrapping
+    store.remove(weakMappedBinding!) // swiftlint:disable:this force_unwrapping
 
     expect(weakBinding) == nil
     expect(weakAnyBinding) == nil
@@ -457,7 +457,7 @@ class BindingTests: XCTestCase {
     weak var weakBinding: (any BindingType)? = Binding(1).store(in: store)
     expect(weakBinding) != nil
 
-    store.store(weakBinding!, for: "key")
+    store.store(weakBinding!, for: "key") // swiftlint:disable:this force_unwrapping
     expect(store.binding(for: "key")) != nil
 
     expect(store.remove(for: "key")) != nil
@@ -521,7 +521,7 @@ class BindingTests: XCTestCase {
 
     expect(binding.test_registered_observations.count) == 1
     expect(storage.test_observations.count) == 1
-    expect(storage.test_observations[ObjectIdentifier(weakObservation!)] === weakObservation!) == true
+    expect(storage.test_observations[ObjectIdentifier(weakObservation!)] === weakObservation!) == true // swiftlint:disable:this force_unwrapping
 
     storage.removeAll()
     expect(weakObservation) == nil
@@ -655,14 +655,14 @@ class BindingTests: XCTestCase {
     var mappedBinding: (some BindingType<Bool>)? = sourceBinding.map { $0 % 2 == 0 }
     weak var mappedBindingWeak: (some BindingType<Bool>)? = mappedBinding
     let storage = BindingObservationStorage()
-    binding.subscribe(to: mappedBinding!).store(in: storage)
+    binding.subscribe(to: mappedBinding!).store(in: storage) // swiftlint:disable:this force_unwrapping
 
     sourceBinding.value = 3
     expect(binding.value) == false
     sourceBinding.value = 6
     expect(binding.value) == true
 
-    expect(mappedBinding!.test_registered_observations.count) == 1
+    expect(mappedBinding!.test_registered_observations.count) == 1 // swiftlint:disable:this force_unwrapping
 
     expect(binding.test_registered_observations.count) == 0
 
@@ -688,16 +688,17 @@ class BindingTests: XCTestCase {
 
     // update from upstream
     expect(binding.value) == true
-    expect(mappedBinding!.value) == "yes"
+    expect(mappedBinding!.value) == "yes" // swiftlint:disable:this force_unwrapping
 
     binding.value = false
     expect(binding.value) == false
+    // swiftlint:disable:next force_unwrapping
     expect(mappedBinding!.value) == "yes" // mapped binding is not observed yet, still holds the old value
 
     _ = mappedBinding?.observe { _ in } // setup observation
 
     binding.value = false
-    expect(mappedBinding!.value) == "no"
+    expect(mappedBinding!.value) == "no" // swiftlint:disable:this force_unwrapping
 
     expect(binding.test_registered_observations.count) == 1
     mappedBinding = nil
@@ -738,16 +739,17 @@ class BindingTests: XCTestCase {
     }
 
     expect(binding.value) == true
-    expect(mappedBinding!.value) == "yes"
+    expect(mappedBinding!.value) == "yes" // swiftlint:disable:this force_unwrapping
 
     binding.value = false
     expect(binding.value) == false
+    // swiftlint:disable:next force_unwrapping
     expect(mappedBinding!.value) == "yes" // mapped binding is not observed yet, still holds the old value
 
     _ = mappedBinding?.observe { _ in } // setup observation
 
     binding.value = false
-    expect(mappedBinding!.value) == "no"
+    expect(mappedBinding!.value) == "no" // swiftlint:disable:this force_unwrapping
 
     expect(binding.test_registered_observations.count) == 1
     mappedBinding = nil
@@ -888,7 +890,7 @@ class BindingTests: XCTestCase {
     }
 
     var called: Bool?
-    mappedBinding!.onDeallocate {
+    mappedBinding!.onDeallocate { // swiftlint:disable:this force_unwrapping
       called = true
     }
 
@@ -904,7 +906,7 @@ class BindingTests: XCTestCase {
     }
 
     var called: Bool?
-    let token = mappedBinding!.onDeallocate {
+    let token = mappedBinding!.onDeallocate { // swiftlint:disable:this force_unwrapping
       called = true
     }
 
@@ -970,14 +972,14 @@ class BindingTests: XCTestCase {
     var upstream: Binding<Int>? = Binding<Int>(1)
     weak var upstreamWeak: Binding<Int>? = upstream
 
-    expect(upstream!.test_registered_observations.count) == 0
+    expect(upstream!.test_registered_observations.count) == 0 // swiftlint:disable:this force_unwrapping
 
-    var mapped: (some BindingType<Int>)? = upstream!.removeDuplicates()
+    var mapped: (some BindingType<Int>)? = upstream!.removeDuplicates() // swiftlint:disable:this force_unwrapping
     _ = mapped?.observe { _ in } // setup observation
 
-    expect(upstream!.test_registered_observations.count) == 1
+    expect(upstream!.test_registered_observations.count) == 1 // swiftlint:disable:this force_unwrapping
 
-    expect(mapped!.test_registered_observations.count) == 0
+    expect(mapped!.test_registered_observations.count) == 0 // swiftlint:disable:this force_unwrapping
 
     upstream = nil
     expect(upstreamWeak) != nil
@@ -989,18 +991,18 @@ class BindingTests: XCTestCase {
   func test_removeDuplicates_releaseMapped() {
     let upstream: Binding<Int>? = Binding<Int>(1)
 
-    expect(upstream!.test_registered_observations.count) == 0
+    expect(upstream!.test_registered_observations.count) == 0 // swiftlint:disable:this force_unwrapping
 
-    var mapped: (some BindingType<Int>)? = upstream!.removeDuplicates()
+    var mapped: (some BindingType<Int>)? = upstream!.removeDuplicates() // swiftlint:disable:this force_unwrapping
     _ = mapped?.observe { _ in } // setup observation
 
-    expect(upstream!.test_registered_observations.count) == 1
+    expect(upstream!.test_registered_observations.count) == 1 // swiftlint:disable:this force_unwrapping
 
-    expect(mapped!.test_registered_observations.count) == 0
+    expect(mapped!.test_registered_observations.count) == 0 // swiftlint:disable:this force_unwrapping
 
     mapped = nil
 
-    expect(upstream!.test_registered_observations.count) == 0
+    expect(upstream!.test_registered_observations.count) == 0 // swiftlint:disable:this force_unwrapping
   }
 
   func test_removeDuplicates_implicitPredict_readInitialValue() {
@@ -1029,24 +1031,25 @@ class BindingTests: XCTestCase {
 
     // test initial values
     expect(binding.value) == true
+    // swiftlint:disable:next force_unwrapping
     expect(another!.value) == "" // connect doesn't update value
 
     // update from self
     binding.value = false
-    expect(another!.value) == "no"
+    expect(another!.value) == "no" // swiftlint:disable:this force_unwrapping
     binding.value = true
-    expect(another!.value) == "yes"
+    expect(another!.value) == "yes" // swiftlint:disable:this force_unwrapping
 
     // update from another
-    another!.value = "random"
+    another!.value = "random" // swiftlint:disable:this force_unwrapping
     expect(binding.value) == false
 
-    another!.value = "test"
+    another!.value = "test" // swiftlint:disable:this force_unwrapping
     expect(binding.value) == true
 
     expect(binding.test_registered_observations.count) == 1
 
-    expect(another!.test_registered_observations.count) == 1
+    expect(another!.test_registered_observations.count) == 1 // swiftlint:disable:this force_unwrapping
 
     another = nil
 
@@ -1072,30 +1075,31 @@ class BindingTests: XCTestCase {
 
     // test initial values
     expect(binding.value) == true
+    // swiftlint:disable:next force_unwrapping
     expect(another!.value) == "" // connect doesn't update value
 
     // update from self
     binding.value = false
-    expect(another!.value) == "no"
+    expect(another!.value) == "no" // swiftlint:disable:this force_unwrapping
     binding.value = true
-    expect(another!.value) == "yes"
+    expect(another!.value) == "yes" // swiftlint:disable:this force_unwrapping
 
     // update from another
-    another!.value = "random"
+    another!.value = "random" // swiftlint:disable:this force_unwrapping
     expect(binding.value) == false
 
-    another!.value = "test"
+    another!.value = "test" // swiftlint:disable:this force_unwrapping
     expect(binding.value) == true
 
     expect(binding.test_registered_observations.count) == 1
 
-    expect(another!.test_registered_observations.count) == 1
+    expect(another!.test_registered_observations.count) == 1 // swiftlint:disable:this force_unwrapping
 
     binding = nil
 
-    expect(another!.test_registered_observations.count) == 1
+    expect(another!.test_registered_observations.count) == 1 // swiftlint:disable:this force_unwrapping
 
-    another!.value = "aaa"
+    another!.value = "aaa" // swiftlint:disable:this force_unwrapping
   }
 
   func test_connect_no_observation() {
@@ -1114,19 +1118,20 @@ class BindingTests: XCTestCase {
 
     // test initial values
     expect(binding.value) == true
+    // swiftlint:disable:next force_unwrapping
     expect(another!.value) == "" // connect doesn't update value
 
     // update from self
     binding.value = false
-    expect(another!.value) == ""
+    expect(another!.value) == "" // swiftlint:disable:this force_unwrapping
     binding.value = true
-    expect(another!.value) == ""
+    expect(another!.value) == "" // swiftlint:disable:this force_unwrapping
 
     // update from another
-    another!.value = "random"
+    another!.value = "random" // swiftlint:disable:this force_unwrapping
     expect(binding.value) == true
 
-    another!.value = "test"
+    another!.value = "test" // swiftlint:disable:this force_unwrapping
     expect(binding.value) == true
   }
 
@@ -1488,7 +1493,7 @@ class BindingTests: XCTestCase {
     var combinedBinding: (some BindingType<(Bool, String)>)? = Binding(true).combine(with: Binding("123"))
 
     var called: Bool?
-    combinedBinding!.onDeallocate {
+    combinedBinding!.onDeallocate { // swiftlint:disable:this force_unwrapping
       called = true
     }
 
@@ -1500,7 +1505,7 @@ class BindingTests: XCTestCase {
     var combinedBinding: (some BindingType<(Bool, String)>)? = Binding(true).combine(with: Binding("123"))
 
     var called: Bool?
-    let token = combinedBinding!.onDeallocate {
+    let token = combinedBinding!.onDeallocate { // swiftlint:disable:this force_unwrapping
       called = true
     }
 
@@ -1985,10 +1990,10 @@ class BindingTests: XCTestCase {
       .observe {
         receivedValue = $0
       }
-      .store(in: object!.bindingObservationStorage)
+      .store(in: object!.bindingObservationStorage) // swiftlint:disable:this force_unwrapping
 
-    expect(object!.bindingObservationStorage) === object!.bindingObservationStorage
-    expect(object!.bindingObservationStorage.test_observations.count) == 1
+    expect(object!.bindingObservationStorage) === object!.bindingObservationStorage // swiftlint:disable:this force_unwrapping
+    expect(object!.bindingObservationStorage.test_observations.count) == 1 // swiftlint:disable:this force_unwrapping
 
     binding.value = "2"
     expect(receivedValue) == "2"

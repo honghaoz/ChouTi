@@ -106,7 +106,7 @@ class DynamicLookupTests: XCTestCase {
     expect(lookup.lazyProperty<String>("ageString")) == nil
     expect(lookup.lazyProperty("ageString")) == nil
     expect(lookup.lazyProperty("ageString") == nil) == false
-    expect(lookup.lazyProperty("ageString")! == nil) == true
+    expect(lookup.lazyProperty("ageString")! == nil) == true // swiftlint:disable:this force_unwrapping
 
     // trigger lazy property
     person.triggerLazyProperty()
