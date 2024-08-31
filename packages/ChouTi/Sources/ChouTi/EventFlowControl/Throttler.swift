@@ -28,28 +28,6 @@
 //  IN THE SOFTWARE.
 //
 
-//
-//  Copyright (c) 2020 Honghao Zhang (github.com/honghaoz)
-//
-//  Permission is hereby granted, free of charge, to any person obtaining a copy
-//  of this software and associated documentation files (the "Software"), to
-//  deal in the Software without restriction, including without limitation the
-//  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-//  sell copies of the Software, and to permit persons to whom the Software is
-//  furnished to do so, subject to the following conditions:
-//
-//  The above copyright notice and this permission notice shall be included in
-//  all copies or substantial portions of the Software.
-//
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-//  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-//  IN THE SOFTWARE.
-//
-
 import Foundation
 
 /**
@@ -93,10 +71,12 @@ public final class Throttler {
   private let queue: DispatchQueue
 
   private let invokeImmediately: Bool
-  private var lastFireTime: Date = Date.distantPast
+  private var lastFireTime: TimeInterval = Date.distantPast.timeIntervalSince1970
 
-  private var delayTask: DispatchWorkItem?
+  private var delayTask: CancellableToken?
   private var blockToCall: BlockVoid?
+
+  private var clock: Clock = SystemClock()
 
   /// Initialize a new throttler.
   ///
@@ -136,28 +116,28 @@ public final class Throttler {
       if delay <= 0 {
         self.blockToCall?()
         self.blockToCall = nil
-        self.lastFireTime = Date()
+        self.lastFireTime = self.clock.now()
         return
       } else {
-        self.delayTask = DispatchWorkItem.delay(delay, queue: self.queue) { [weak self] in
+        self.delayTask = self.clock.delay(delay, queue: self.queue) { [weak self] in
           guard let self = self else {
             return
           }
           self.blockToCall?()
           self.blockToCall = nil
-          self.lastFireTime = Date()
+          self.lastFireTime = clock.now()
           self.delayTask = nil
         }
       }
     }
 
     if invokeImmediately {
-      let delayTime = interval - Date().timeIntervalSince(lastFireTime)
+      let delayTime = interval - (clock.now() - lastFireTime)
       if delayTime <= 0 {
         // if the time interval is already passed since the last fire time, invoke the block immediately.
         blockToCall?()
         blockToCall = nil
-        lastFireTime = Date()
+        lastFireTime = clock.now()
         return
       } else {
         scheduleDelayTask(delayTime)
@@ -166,6 +146,29 @@ public final class Throttler {
       scheduleDelayTask(interval)
     }
   }
+
+  // MARK: - Testing
+
+  #if DEBUG
+
+  var test: Test { Test(host: self) }
+
+  class Test {
+
+    private let host: Throttler
+
+    fileprivate init(host: Throttler) {
+      ChouTi.assert(Thread.isRunningXCTest, "test namespace should only be used in test target.")
+      self.host = host
+    }
+
+    var clock: Clock {
+      get { host.clock }
+      set { host.clock = newValue }
+    }
+  }
+
+  #endif
 }
 
 // - See also:

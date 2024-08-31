@@ -33,7 +33,7 @@ import Foundation
 // MARK: - DelayTaskType
 
 /// A delay task type that can be canceled and chained.
-public protocol DelayTaskType: AnyObject {
+public protocol DelayTaskType: AnyObject, CancellableToken {
 
   /// Indicates whether the task is canceled.
   var isCanceled: Bool { get }

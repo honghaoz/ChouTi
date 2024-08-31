@@ -220,7 +220,7 @@ final class LoggerTests: XCTestCase {
     }
 
     let logger = Logger()
-    let fileDestination = LogDestination.file("test.log").wrapped as! Logger.FileLogDestination
+    let fileDestination = LogDestination.file("test.log").wrapped as! Logger.FileLogDestination // swiftlint:disable:this force_cast
     fileDestination.test.queue = DispatchQueue.makeMain()
     logger.destinations = [fileDestination]
 
@@ -283,7 +283,7 @@ final class LoggerTests: XCTestCase {
 
     let logger = Logger()
 
-    let fileDestination = LogDestination.file(folder: logFolderURL, fileName: "test.log").wrapped as! Logger.FileLogDestination
+    let fileDestination = LogDestination.file(folder: logFolderURL, fileName: "test.log").wrapped as! Logger.FileLogDestination // swiftlint:disable:this force_cast
     fileDestination.test.queue = DispatchQueue.makeMain()
     logger.destinations = [fileDestination]
 
@@ -355,7 +355,7 @@ final class LoggerTests: XCTestCase {
 
     let logger = Logger()
 
-    let fileDestination = LogDestination.file(folder: logFolderURL, fileName: "test.log", maxSizeInBytes: 200).wrapped as! Logger.FileLogDestination
+    let fileDestination = LogDestination.file(folder: logFolderURL, fileName: "test.log", maxSizeInBytes: 200).wrapped as! Logger.FileLogDestination // swiftlint:disable:this force_cast
     fileDestination.test.queue = DispatchQueue.makeMain()
     logger.destinations = [fileDestination]
 

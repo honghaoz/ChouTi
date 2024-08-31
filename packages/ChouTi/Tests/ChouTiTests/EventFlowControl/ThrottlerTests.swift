@@ -30,7 +30,7 @@
 
 import ChouTiTest
 
-import ChouTi
+@testable import ChouTi
 
 class ThrottlerTests: XCTestCase {
 
@@ -65,48 +65,9 @@ class ThrottlerTests: XCTestCase {
   }
 
   func test_latest() {
-    let expectation = expectation(description: "wait")
-
-    let throttler = Throttler(interval: 0.05, latest: true, queue: queue)
-
-    var receivedValues: [Float] = []
-
-    throttler.throttle {
-      receivedValues.append(1)
-    }
-    expect(receivedValues) == [] // throttled
-
-    throttler.throttle {
-      receivedValues.append(2)
-    }
-    expect(receivedValues) == [] // throttled
-
-    delay(0.075, leeway: .zero) {
-      expect(receivedValues) == [2] // last appended value (latest)
-
-      throttler.throttle {
-        receivedValues.append(3) // throttled
-      }
-      expect(receivedValues) == [2]
-
-      throttler.throttle {
-        receivedValues.append(4) // throttled
-      }
-      expect(receivedValues) == [2]
-    }
-
-    delay(0.2, leeway: .zero) {
-      expect(receivedValues) == [2, 4] // last appended value (latest)
-      expectation.fulfill()
-    }
-
-    wait(for: [expectation], timeout: 5)
-  }
-
-  func test_first() {
-    let expectation = expectation(description: "wait")
-
-    let throttler = Throttler(interval: 0.1, latest: false, queue: queue)
+    let throttler = Throttler(interval: 1, latest: true, queue: .main)
+    let clock = MockClock(currentTime: 0)
+    throttler.test.clock = clock
 
     var receivedValues: [Float] = []
 
@@ -120,74 +81,104 @@ class ThrottlerTests: XCTestCase {
     }
     expect(receivedValues) == [] // throttled
 
-    delay(0.15, leeway: .zero) {
-      expect(receivedValues) == [1] // first appended value (non-latest)
+    clock.advance(to: 1.1)
 
-      throttler.throttle {
-        receivedValues.append(3)
-      }
-      expect(receivedValues) == [1] // throttled
+    expect(receivedValues) == [2] // the latest value is appended
 
-      throttler.throttle {
-        receivedValues.append(4)
-      }
-      expect(receivedValues) == [1] // throttled
+    throttler.throttle {
+      receivedValues.append(3) // throttled
     }
+    expect(receivedValues) == [2]
 
-    delay(0.3, leeway: .zero) {
-      expect(receivedValues) == [1, 3] // first appended value (non-latest)
-      expectation.fulfill()
+    throttler.throttle {
+      receivedValues.append(4) // throttled
     }
+    expect(receivedValues) == [2]
 
-    wait(for: [expectation], timeout: 5)
+    clock.advance(to: 2.5)
+
+    expect(receivedValues) == [2, 4] // the latest value is appended
   }
 
   func test_latest_invokeImmediately() {
-    let expectation = expectation(description: "wait")
-
-    let throttler = Throttler(interval: 0.1, latest: true, invokeImmediately: true, queue: queue)
+    let throttler = Throttler(interval: 0.1, latest: true, invokeImmediately: true, queue: .main)
+    let clock = MockClock(currentTime: 0)
+    throttler.test.clock = clock
 
     var receivedValues: [Float] = []
 
     throttler.throttle {
       receivedValues.append(1)
     }
-    expect(receivedValues) == [1] // invoked immediately
+    expect(receivedValues) == [1] // the value is appended immediately because this is the first value
 
     throttler.throttle {
       receivedValues.append(2)
     }
     expect(receivedValues) == [1] // throttled
 
-    delay(0.15, leeway: .zero) {
-      expect(receivedValues) == [1, 2] // last appended value (latest)
-
-      throttler.throttle {
-        receivedValues.append(3) // throttled
-      }
-      expect(receivedValues) == [1, 2]
-
-      throttler.throttle {
-        receivedValues.append(4) // throttled
-      }
-      expect(receivedValues) == [1, 2]
+    throttler.throttle {
+      receivedValues.append(3)
     }
+    expect(receivedValues) == [1] // throttled
 
-    delay(0.3, leeway: .zero) {
-      expect(receivedValues) == [1, 2, 4] // last appended value (latest)
+    clock.advance(to: 0.1)
+
+    expect(receivedValues) == [1, 3] // the latest value is appended
+
+    throttler.throttle {
+      receivedValues.append(4) // throttled
     }
+    expect(receivedValues) == [1, 3]
 
-    delay(0.4, leeway: .zero) {
-      expect(receivedValues) == [1, 2, 4]
-      throttler.throttle {
-        receivedValues.append(5)
-      }
-      expect(receivedValues) == [1, 2, 4, 5] // invoked immediately
-
-      expectation.fulfill()
+    throttler.throttle {
+      receivedValues.append(5) // throttled
     }
+    expect(receivedValues) == [1, 3]
 
-    wait(for: [expectation], timeout: 1)
+    clock.advance(to: 0.2)
+    expect(receivedValues) == [1, 3, 5] // the latest value is appended
+
+    clock.advance(to: 0.4) // long time after the last value
+    throttler.throttle {
+      receivedValues.append(6)
+    }
+    expect(receivedValues) == [1, 3, 5, 6] // the value is appended immediately
+  }
+
+  func test_first() {
+    let throttler = Throttler(interval: 0.1, latest: false, queue: .main)
+    let clock = MockClock(currentTime: 0)
+    throttler.test.clock = clock
+
+    var receivedValues: [Float] = []
+
+    throttler.throttle {
+      receivedValues.append(1)
+    }
+    expect(receivedValues) == [] // throttled
+
+    throttler.throttle {
+      receivedValues.append(2)
+    }
+    expect(receivedValues) == [] // throttled
+
+    clock.advance(to: 0.15)
+
+    expect(receivedValues) == [1] // first appended value (non-latest)
+
+    throttler.throttle {
+      receivedValues.append(3)
+    }
+    expect(receivedValues) == [1] // throttled
+
+    throttler.throttle {
+      receivedValues.append(4)
+    }
+    expect(receivedValues) == [1] // throttled
+
+    clock.advance(to: 0.3)
+    expect(receivedValues) == [1, 3] // first appended value (non-latest)
   }
 
   func test_self_deallocated() {

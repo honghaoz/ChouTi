@@ -88,6 +88,12 @@ public extension CancellableToken where Self: Hashable {
   }
 }
 
+// MARK: - Common
+
+extension DispatchWorkItem: CancellableToken {}
+
+// MARK: - CancellableTokenGroup
+
 /// A token that can group other tokens together.
 ///
 /// Cancelling the token group will cancel all underlying tokens.
@@ -120,6 +126,8 @@ public final class CancellableTokenGroup: CancellableToken, CustomStringConverti
     "CancellableTokenGroup(\(rawPointer(self)))"
   }
 }
+
+// MARK: - ValueCancellableToken
 
 /// A `CancellableToken` implementation that can hold a value.
 public final class ValueCancellableToken<T>: CancellableToken, CustomStringConvertible {
