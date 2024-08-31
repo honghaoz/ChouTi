@@ -45,6 +45,16 @@ class OptionalExpectTests: XCTestCase {
     expect(validValue) != nil
   }
 
+  func testBeNil_Any() {
+    let validValue: Any? = 1
+    let nilValue: Any? = nil
+
+    expect(nilValue).to(beNil())
+    expect(validValue).toNot(beNil())
+    expect(nilValue) == nil
+    expect(validValue) != nil
+  }
+
   func testBeIdentical() {
     class Foo: CustomStringConvertible {
       let value: Int

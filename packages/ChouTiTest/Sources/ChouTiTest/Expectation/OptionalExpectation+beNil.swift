@@ -38,7 +38,11 @@ public struct BeNilExpectation<T>: ExpressibleByNilLiteral, OptionalExpectation 
   public init(nilLiteral: ()) {}
 
   public func evaluate(_ actualValue: T?) -> Bool {
-    actualValue == nil
+    if T.self == Any.self {
+      return actualValue == nil || String(describing: actualValue) == "Optional(nil)"
+    } else {
+      return actualValue == nil
+    }
   }
 
   public var description: String {

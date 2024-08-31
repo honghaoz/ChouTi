@@ -242,4 +242,34 @@ class ExpectEventuallyFailureMessageTests: FailureCapturingTestCase {
       assertFailure(expectedMessage: expectedMessage)
     }
   }
+
+  func testEventually_invalidInterval() {
+    func calculate() -> Bool {
+      return false
+    }
+
+    do {
+      expect(calculate()).toEventually(beTrue(), interval: 0)
+      let expectedMessage = "failed - interval must be greater than 0."
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      expect(calculate()).toEventually(beTrue(), interval: 1, timeout: 0.5)
+      let expectedMessage = "failed - timeout must be greater than interval."
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      expect(calculate()).toEventuallyNot(beTrue(), interval: 0)
+      let expectedMessage = "failed - interval must be greater than 0."
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      expect(calculate()).toEventuallyNot(beTrue(), interval: 1, timeout: 0.5)
+      let expectedMessage = "failed - timeout must be greater than interval."
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
 }
