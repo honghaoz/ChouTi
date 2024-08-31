@@ -37,14 +37,14 @@ class BindingType_TypeEraseWrapperBaseTypeTests: XCTestCase {
   func testCasting() {
     let binding = Binding(true)
     expect(binding.as(Binding<Bool>.self)) != nil
-    if #available(iOS 16.0.0, macOS 13.0, *) {
+    if #available(iOS 16.0.0, macOS 13.0, tvOS 16.0, *) {
       expect(binding.as((any BindingType<Bool>).self)) != nil
     }
 
     let anyBinding: any BindingType<Bool> = AnyBinding(binding)
     expect(anyBinding as? Binding<Bool>) == nil
     expect(anyBinding.as(Binding<Bool>.self)) != nil
-    if #available(iOS 16.0.0, macOS 13.0, *) {
+    if #available(iOS 16.0.0, macOS 13.0, tvOS 16.0, *) {
       expect(anyBinding.as((any BindingType<Bool>).self)) != nil
     }
 
