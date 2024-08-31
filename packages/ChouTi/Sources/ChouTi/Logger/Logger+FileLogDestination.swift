@@ -77,7 +77,7 @@ public extension Logger {
     private let logFile: URL
 
     /// The max log file size.
-    public let maxSizeInBytes: UInt64
+    private let maxSizeInBytes: UInt64
 
     // TODO: support file rotation
     //
@@ -86,7 +86,7 @@ public extension Logger {
     // default is 5 MB. Just is used if logFileAmount > 1
     //
     /// Number of log files used in rotation, default is 1 which deactivates file rotation
-    // public let maxLogFilesCount: UInt // 1
+    // let maxLogFilesCount: UInt // 1
     // private func rotateFileIfNeeded() { }
 
     /// Current log file size.
@@ -98,14 +98,14 @@ public extension Logger {
     /// The minimum required disk space to write logs.
     private let minimumRequiredDiskSpace: UInt64 = 524288000 // 500 * 1024 * 1024 (500 MB)
 
-    private let queue = DispatchQueue.make(label: "io.chouti.ChouTi.FileLogDestination")
+    private var queue = DispatchQueue.make(label: "io.chouti.ChouTi.FileLogDestination")
 
     /// Create a file log destination.
     /// - Parameters:
     ///   - folder: The folder to store log files. Default is "~/Documents/logs"
     ///   - fileName: The log file name.
     ///   - maxSizeInBytes: The max log file size in bytes, default is 5 MB.
-    public init(folder: URL? = nil, fileName: String, maxSizeInBytes: UInt64? = nil) {
+    init(folder: URL? = nil, fileName: String, maxSizeInBytes: UInt64? = nil) {
       if let logFolder = folder ?? Constants.logsFolder {
         self.logFolder = logFolder
       } else {
@@ -149,7 +149,7 @@ public extension Logger {
     }
 
     public func write(_ string: String) {
-      queue.async { [weak self] in
+      queue.asyncIfNeeded { [weak self] in
         self?._write(string)
       }
     }
@@ -251,6 +251,29 @@ public extension Logger {
 
       static let logsFolder = FileManager.userDocuments?.appendingPathComponent("logs")
     }
+
+    // MARK: - Testing
+
+    #if DEBUG
+
+    var test: Test { Test(host: self) }
+
+    class Test {
+
+      private let host: FileLogDestination
+
+      fileprivate init(host: FileLogDestination) {
+        ChouTi.assert(Thread.isRunningXCTest, "test namespace should only be used in test target.")
+        self.host = host
+      }
+
+      var queue: DispatchQueue {
+        get { host.queue }
+        set { host.queue = newValue }
+      }
+    }
+
+    #endif
   }
 
   // MARK: - Error

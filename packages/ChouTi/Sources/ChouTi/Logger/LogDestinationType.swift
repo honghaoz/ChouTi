@@ -43,8 +43,6 @@ public protocol LogDestinationType: TextOutputStream {
 
 public extension LogDestinationType {
 
-  @inlinable
-  @inline(__always)
   func asLogDestination() -> LogDestination {
     LogDestination(wrapped: self)
   }

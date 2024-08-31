@@ -220,15 +220,14 @@ final class LoggerTests: XCTestCase {
     }
 
     let logger = Logger()
-    let fileDestination = LogDestination.file("test.log")
+    let fileDestination = LogDestination.file("test.log").wrapped as! Logger.FileLogDestination
+    fileDestination.test.queue = DispatchQueue.makeMain()
     logger.destinations = [fileDestination]
 
     logger.debug("debug")
     logger.info("info")
     logger.warning("warning")
     logger.error("error")
-
-    wait(timeout: 1) // wait for async operation
 
     // Check log file at
     // ~/Documents/logs/test.log
@@ -284,15 +283,14 @@ final class LoggerTests: XCTestCase {
 
     let logger = Logger()
 
-    let fileDestination = LogDestination.file(folder: logFolderURL, fileName: "test.log")
+    let fileDestination = LogDestination.file(folder: logFolderURL, fileName: "test.log").wrapped as! Logger.FileLogDestination
+    fileDestination.test.queue = DispatchQueue.makeMain()
     logger.destinations = [fileDestination]
 
     logger.debug("debug")
     logger.info("info")
     logger.warning("warning")
     logger.error("error")
-
-    wait(timeout: 1) // wait for async operation
 
     let logFileContent = try String(contentsOf: logFileURL)
     let lines = logFileContent.components(separatedBy: "\n")
@@ -357,13 +355,12 @@ final class LoggerTests: XCTestCase {
 
     let logger = Logger()
 
-    let fileDestination = LogDestination.file(folder: logFolderURL, fileName: "test.log", maxSizeInBytes: 200)
+    let fileDestination = LogDestination.file(folder: logFolderURL, fileName: "test.log", maxSizeInBytes: 200).wrapped as! Logger.FileLogDestination
+    fileDestination.test.queue = DispatchQueue.makeMain()
     logger.destinations = [fileDestination]
 
     logger.debug("debug") // 126 bytes
     logger.debug("debug2") // 252 bytes -> trim
-
-    wait(timeout: 1) // wait for async operation
 
     let logFileContent = try String(contentsOf: logFileURL)
     let lines = logFileContent.components(separatedBy: "\n")
