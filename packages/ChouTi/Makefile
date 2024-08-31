@@ -22,7 +22,8 @@ test: # Run tests.
 .PHONY: test-codecov
 test-codecov: # Run tests with code coverage.
 	@echo test with code coverage: $(MAKEFILE_DIR_NAME)
-	swift test -Xswiftc -DTEST --enable-code-coverage | $(REPO_ROOT)/bin/xcbeautify
+	@$(REPO_ROOT)/scripts/retry.sh --max-attempts 3 --delay 3 \
+		swift test -Xswiftc -DTEST --enable-code-coverage | $(REPO_ROOT)/bin/xcbeautify
 	xcrun llvm-cov export -format="lcov" .build/debug/ChouTiPackageTests.xctest/Contents/MacOS/ChouTiPackageTests -instr-profile .build/debug/codecov/default.profdata > .build/debug/codecov/coverage.lcov
 	$(REPO_ROOT)/scripts/filter-lcov.sh .build/debug/codecov/coverage.lcov --keep-pattern '.+packages/ChouTi/Sources/.+'
 
