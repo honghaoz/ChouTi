@@ -68,6 +68,7 @@ class ThrottlerTests: XCTestCase {
     let throttler = Throttler(interval: 1, latest: true, queue: .main)
     let clock = MockClock(currentTime: 0)
     throttler.test.clock = clock
+    _ = throttler.test.clock
 
     var receivedValues: [Float] = []
 
