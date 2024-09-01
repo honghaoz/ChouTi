@@ -105,7 +105,7 @@ public extension Logger {
     ///   - folder: The folder to store log files. Default is "~/Documents/logs"
     ///   - fileName: The log file name.
     ///   - maxSizeInBytes: The max log file size in bytes, default is 5 MB.
-    init(folder: URL? = nil, fileName: String, maxSizeInBytes: UInt64? = nil) {
+    public init(folder: URL? = nil, fileName: String, maxSizeInBytes: UInt64? = nil) {
       if let logFolder = folder ?? Constants.logsFolder {
         self.logFolder = logFolder
       } else {
