@@ -30,7 +30,7 @@
 
 import ChouTiTest
 
-import ChouTi
+@testable import ChouTi
 
 class LeadingDebouncerTests: XCTestCase {
 
@@ -64,61 +64,57 @@ class LeadingDebouncerTests: XCTestCase {
   }
 
   func test() {
-    let expectation = expectation(description: "wait")
-
+    let clock = MockClock()
     let debouncer = LeadingDebouncer(interval: 0.1)
+    debouncer.test.clock = clock
+    _ = debouncer.test.clock
+
     let debouncer2 = LeadingDebouncer(interval: 0.1)
+    debouncer2.test.clock = clock
+    _ = debouncer2.test.clock
 
     var receivedValues: [Float] = []
 
-    delay(0.05, leeway: .zero, queue: queue) {
-      // first should pass
-      debouncer.debounce {
-        receivedValues.append(1)
-      }
-      expect(receivedValues) == [1]
-      expect(debouncer2.debounce()) == true
+    clock.advance(to: 0.05)
+
+    // first should pass
+    debouncer.debounce {
+      receivedValues.append(1)
     }
+    expect(receivedValues) == [1]
+    expect(debouncer2.debounce()) == true
 
-    delay(0.1, leeway: .zero, queue: queue) {
-      // should ignore
-      debouncer.debounce {
-        receivedValues.append(2)
-      }
-      expect(receivedValues) == [1]
-      expect(debouncer2.debounce()) == false
+    clock.advance(to: 0.1)
+    // should ignore
+    debouncer.debounce {
+      receivedValues.append(2)
     }
+    expect(receivedValues) == [1]
+    expect(debouncer2.debounce()) == false
 
-    delay(0.15, leeway: .zero, queue: queue) {
-      // should ignore, only 0.15 passed
-      debouncer.debounce {
-        receivedValues.append(3)
-      }
-      expect(receivedValues) == [1]
-      expect(debouncer2.debounce()) == false
+    clock.advance(to: 0.15)
+    // should ignore, only 0.15 passed
+    debouncer.debounce {
+      receivedValues.append(3)
     }
+    expect(receivedValues) == [1]
+    expect(debouncer2.debounce()) == false
 
-    delay(0.3, leeway: .zero, queue: queue) {
-      // should pass, 0.2s passed
-      debouncer.debounce {
-        receivedValues.append(4)
-      }
-      expect(receivedValues) == [1, 4]
-      expect(debouncer2.debounce()) == true
+    clock.advance(to: 0.3)
+    // should pass, 0.2s passed
+    debouncer.debounce {
+      receivedValues.append(4)
     }
+    expect(receivedValues) == [1, 4]
+    expect(debouncer2.debounce()) == true
 
-    delay(0.45, leeway: .zero, queue: queue) {
-      // should pass, 0.025s passed
-      debouncer.debounce {
-        receivedValues.append(5)
-      }
-      expect(receivedValues) == [1, 4, 5]
-      expect(debouncer2.debounce()) == true
-
-      expectation.fulfill()
+    clock.advance(to: 0.45)
+    // should pass, 0.025s passed
+    debouncer.debounce {
+      receivedValues.append(5)
     }
-
-    wait(for: [expectation], timeout: 1)
+    expect(receivedValues) == [1, 4, 5]
+    expect(debouncer2.debounce()) == true
   }
 }
 
@@ -155,45 +151,43 @@ class TrailingDebouncerTests: XCTestCase {
   }
 
   func test() {
-    let expectation = expectation(description: "wait")
-
-    let debouncer = TrailingDebouncer(interval: 0.05, queue: queue)
+    let debouncer = TrailingDebouncer(interval: 0.05)
+    let clock = MockClock()
+    debouncer.test.clock = clock
+    _ = debouncer.test.clock
 
     var receivedValues: [Float] = []
 
-    delay(0.025, leeway: .zero, queue: queue) {
+    clock.advance(to: 0.025)
+    do {
       let isDebounced = debouncer.debounce {
         receivedValues.append(0.01)
       }
       expect(isDebounced) == false
     }
 
-    delay(0.05, leeway: .zero, queue: queue) {
+    clock.advance(to: 0.05)
+    do {
       let isDebounced = debouncer.debounce {
         receivedValues.append(0.02)
       }
       expect(isDebounced) == true
     }
 
-    delay(0.075, leeway: .zero, queue: queue) {
+    clock.advance(to: 0.075)
+    do {
       let isDebounced = debouncer.debounce {
         receivedValues.append(0.03)
       }
       expect(isDebounced) == true
     }
 
-    delay(0.1225, leeway: .zero, queue: queue) {
-      // should no value
-      expect(receivedValues).to(beEmpty())
-    }
+    clock.advance(to: 0.1225)
+    // should no value
+    expect(receivedValues).to(beEmpty())
 
-    delay(0.1375, leeway: .zero, queue: queue) {
-      // should have callback
-      expect(receivedValues) == [0.03]
-
-      expectation.fulfill()
-    }
-
-    wait(for: [expectation], timeout: 1)
+    clock.advance(to: 0.1375)
+    // should have callback
+    expect(receivedValues) == [0.03]
   }
 }

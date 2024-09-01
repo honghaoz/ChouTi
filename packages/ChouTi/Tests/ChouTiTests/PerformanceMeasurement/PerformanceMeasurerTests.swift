@@ -216,7 +216,7 @@ final class PerformanceMeasurerTests: XCTestCase {
       expect(timeElapsed).to(beGreaterThan(0))
     }
 
-    expect(consoleOutput, consoleOutput) == "caught error: foo\n"
+    expect(consoleOutput, consoleOutput).to(beEmpty())
   }
 
   func testMeasureBlockReturnValueAsync() async throws {
@@ -430,11 +430,7 @@ final class PerformanceMeasurerTests: XCTestCase {
     let originalStandardOutput = dup(fileno(stdout))
     dup2(pipe.fileHandleForWriting.fileDescriptor, fileno(stdout))
 
-    do {
-      try block()
-    } catch {
-      print("caught error: \(error)")
-    }
+    try? block()
 
     pipe.fileHandleForWriting.closeFile()
     dup2(originalStandardOutput, fileno(stdout))
@@ -450,11 +446,7 @@ final class PerformanceMeasurerTests: XCTestCase {
     let originalStandardOutput = dup(fileno(stdout))
     dup2(pipe.fileHandleForWriting.fileDescriptor, fileno(stdout))
 
-    do {
-      try await block()
-    } catch {
-      print("caught error: \(error)")
-    }
+    try? await block()
 
     pipe.fileHandleForWriting.closeFile()
     dup2(originalStandardOutput, fileno(stdout))

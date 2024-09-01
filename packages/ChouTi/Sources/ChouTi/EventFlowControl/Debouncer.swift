@@ -68,7 +68,9 @@ import Foundation
 public final class LeadingDebouncer {
 
   private let interval: TimeInterval
-  private var lastRunTime: Date = .distantPast
+  private var lastRunTime: TimeInterval = Date.distantPast.timeIntervalSince1970
+
+  private var clock: Clock = SystemClock()
 
   /// Initialize a LeadingDebouncer.
   ///
@@ -86,11 +88,11 @@ public final class LeadingDebouncer {
   ///
   /// - Returns: `true` if it's good to pass the debounce.
   public func debounce() -> Bool {
-    let now = Date()
+    let now = clock.now()
     defer {
       lastRunTime = now
     }
-    if now.timeIntervalSince(lastRunTime) > interval {
+    if now - lastRunTime > interval {
       return true // only trigger event if the gap is greater than the interval
     } else {
       return false
@@ -101,14 +103,37 @@ public final class LeadingDebouncer {
   ///
   /// - Parameter block: The block to debounce, it will be called synchronously if the debounce is good to pass.
   public func debounce(block: () -> Void) {
-    let now = Date()
+    let now = clock.now()
     defer {
       lastRunTime = now
     }
-    if now.timeIntervalSince(lastRunTime) > interval {
+    if now - lastRunTime > interval {
       block()
     }
   }
+
+  // MARK: - Testing
+
+  #if DEBUG
+
+  var test: Test { Test(host: self) }
+
+  class Test {
+
+    private let host: LeadingDebouncer
+
+    fileprivate init(host: LeadingDebouncer) {
+      ChouTi.assert(Thread.isRunningXCTest, "test namespace should only be used in test target.")
+      self.host = host
+    }
+
+    var clock: Clock {
+      get { host.clock }
+      set { host.clock = newValue }
+    }
+  }
+
+  #endif
 }
 
 // MARK: - TrailingDebouncer
@@ -142,7 +167,9 @@ public final class TrailingDebouncer {
   private let interval: TimeInterval
   private let queue: DispatchQueue
 
-  private var delayedTask: DispatchWorkItem?
+  private var delayedTask: CancellableToken?
+
+  private var clock: Clock = SystemClock()
 
   /// Initialize a TrailingDebouncer.
   ///
@@ -174,13 +201,36 @@ public final class TrailingDebouncer {
       lastTaskWasCancelled = true
     }
 
-    delayedTask = DispatchWorkItem.delay(interval, queue: queue, task: { [weak self] in
+    delayedTask = clock.delay(interval, queue: queue) { [weak self] in
       block()
       self?.delayedTask = nil
-    })
+    }
 
     return lastTaskWasCancelled
   }
+
+  // MARK: - Testing
+
+  #if DEBUG
+
+  var test: Test { Test(host: self) }
+
+  class Test {
+
+    private let host: TrailingDebouncer
+
+    fileprivate init(host: TrailingDebouncer) {
+      ChouTi.assert(Thread.isRunningXCTest, "test namespace should only be used in test target.")
+      self.host = host
+    }
+
+    var clock: Clock {
+      get { host.clock }
+      set { host.clock = newValue }
+    }
+  }
+
+  #endif
 }
 
 // - See also:
