@@ -36,23 +36,27 @@ class LerpTests: XCTestCase {
 
   func testLerp() {
     // common
-    XCTAssertEqual(lerp(start: 0, end: 100, t: 0.5), 50)
-    XCTAssertEqual(lerp(start: 10.0, end: 20.0, t: 0.1), 11.0)
-    XCTAssertEqual(lerp(start: 10.0, end: 10.0, t: 0.1), 10.0)
+    expect(lerp(start: 0, end: 100, t: 0.5)) == 50
+    expect(lerp(start: 10.0, end: 20.0, t: 0.1)) == 11.0
+    expect(lerp(start: 10.0, end: 10.0, t: 0.1)) == 10.0
+
     // clamps
-    XCTAssertEqual(lerp(start: 10.0, end: 20.0, t: -1.1), 10)
-    XCTAssertEqual(lerp(start: 10.0, end: 20.0, t: 1.1), 20)
+    expect(lerp(start: 10.0, end: 20.0, t: -1.1)) == 10
+    expect(lerp(start: 10.0, end: 20.0, t: 1.1)) == 20
+
     // revered
-    XCTAssertEqual(lerp(start: 20.0, end: 10.0, t: 0.1), 19.0)
+    expect(lerp(start: 20.0, end: 10.0, t: 0.1)) == 19.0
 
     // common
-    XCTAssertEqual(0.lerp(end: 100, t: 0.5), 50)
-    XCTAssertEqual(10.0.lerp(end: 20.0, t: 0.1), 11.0)
-    XCTAssertEqual(10.lerp(end: 10.0, t: 0.1), 10.0)
+    expect(0.lerp(end: 100, t: 0.5)) == 50
+    expect(10.0.lerp(end: 20.0, t: 0.1)) == 11.0
+    expect(10.lerp(end: 10.0, t: 0.1)) == 10.0
+
     // clamps
-    XCTAssertEqual(10.lerp(end: 20.0, t: -1.1), 10)
-    XCTAssertEqual(10.lerp(end: 20.0, t: 1.1), 20)
+    expect(10.lerp(end: 20.0, t: -1.1)) == 10
+    expect(10.lerp(end: 20.0, t: 1.1)) == 20
+
     // revered
-    XCTAssertEqual(20.lerp(end: 10.0, t: 0.1), 19.0)
+    expect(20.lerp(end: 10.0, t: 0.1)) == 19.0
   }
 }

@@ -58,6 +58,12 @@ final class IndexedLinkedListTests: XCTestCase {
     expect(list[2].value) == 3
   }
 
+  func testInitWithValues() {
+    let list = IndexedLinkedList<Int>(1)
+    expect(list.count) == 1
+    expect(list[0].value) == 1
+  }
+
   func testIndexOfNode() {
     let list = IndexedLinkedList<Int>()
     let node1 = LinkedListNode<Int>(value: 1)
