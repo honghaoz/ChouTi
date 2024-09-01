@@ -123,7 +123,7 @@ class MockClockTests: XCTestCase {
     expect(clock.test.scheduledTasks.count) == 0
 
     clock.advance(by: 1)
-    wait(for: [expectation], timeout: 1)
+    wait(for: [expectation], timeout: 0.1)
   }
 
   func test_delay_duplicated_time() {

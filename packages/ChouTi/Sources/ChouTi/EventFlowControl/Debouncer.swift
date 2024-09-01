@@ -70,7 +70,7 @@ public final class LeadingDebouncer {
   private let interval: TimeInterval
   private var lastRunTime: TimeInterval = Date.distantPast.timeIntervalSince1970
 
-  private var clock: Clock = SystemClock()
+  private var clock: Clock = ClockProvider.current
 
   /// Initialize a LeadingDebouncer.
   ///
@@ -111,29 +111,6 @@ public final class LeadingDebouncer {
       block()
     }
   }
-
-  // MARK: - Testing
-
-  #if DEBUG
-
-  var test: Test { Test(host: self) }
-
-  class Test {
-
-    private let host: LeadingDebouncer
-
-    fileprivate init(host: LeadingDebouncer) {
-      ChouTi.assert(Thread.isRunningXCTest, "test namespace should only be used in test target.")
-      self.host = host
-    }
-
-    var clock: Clock {
-      get { host.clock }
-      set { host.clock = newValue }
-    }
-  }
-
-  #endif
 }
 
 // MARK: - TrailingDebouncer
@@ -169,7 +146,7 @@ public final class TrailingDebouncer {
 
   private var delayedTask: CancellableToken?
 
-  private var clock: Clock = SystemClock()
+  private var clock: Clock = ClockProvider.current
 
   /// Initialize a TrailingDebouncer.
   ///
@@ -208,29 +185,6 @@ public final class TrailingDebouncer {
 
     return lastTaskWasCancelled
   }
-
-  // MARK: - Testing
-
-  #if DEBUG
-
-  var test: Test { Test(host: self) }
-
-  class Test {
-
-    private let host: TrailingDebouncer
-
-    fileprivate init(host: TrailingDebouncer) {
-      ChouTi.assert(Thread.isRunningXCTest, "test namespace should only be used in test target.")
-      self.host = host
-    }
-
-    var clock: Clock {
-      get { host.clock }
-      set { host.clock = newValue }
-    }
-  }
-
-  #endif
 }
 
 // - See also:

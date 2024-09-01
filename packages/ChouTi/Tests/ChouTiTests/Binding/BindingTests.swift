@@ -2168,6 +2168,9 @@ class BindingTests: XCTestCase {
   }
 
   func test_delay_release() {
+    let clock = MockClock()
+    ClockProvider.current = clock
+
     let binding = Binding(1)
     var received: Int?
     var delayedBinding: (any BindingType<Int>)? = binding
@@ -2185,8 +2188,10 @@ class BindingTests: XCTestCase {
     delayedBinding = nil
     observation = nil
 
-    Waiter.wait(timeout: 0.2)
+    clock.advance(to: 0.2)
     expect(received) == nil // not updated
+
+    ClockProvider.reset()
   }
 
   func test_receiveOn_twice() {
@@ -2244,6 +2249,9 @@ class BindingTests: XCTestCase {
   // MARK: - Debounce
 
   func test_leadingDebounce() {
+    let clock = MockClock()
+    ClockProvider.current = clock
+
     let binding = Binding(0)
 
     var count: Int = 0
@@ -2274,25 +2282,30 @@ class BindingTests: XCTestCase {
     expect(received) == 1
     expect(count) == 1
 
-    Waiter.wait(timeout: 0.15)
+    clock.advance(to: 0.15)
+
     binding.value = 4
     expect(received) == 4
     expect(count) == 2
+
+    ClockProvider.reset()
   }
 
   func test_trailingDebounce() {
-    let queue = DispatchQueue.make(label: "test")
+    let clock = MockClock()
+    ClockProvider.current = clock
+
     let binding = Binding(0)
 
     var count: Int = 0
     var received: Int?
     let newBinding = binding
-      .trailingDebounce(for: 0.1, queue: queue)
+      .trailingDebounce(for: 0.1, queue: .main)
     expect(newBinding.value) == 0
 
     newBinding
       .observe { value in
-        expect(DispatchQueue.isOnQueue(queue)) == true
+        expect(DispatchQueue.isOnQueue(.main)) == true
         count += 1
         received = value
       }
@@ -2309,26 +2322,31 @@ class BindingTests: XCTestCase {
     expect(received) == nil
     expect(count) == 0
 
-    Waiter.wait(timeout: 0.3)
+    clock.advance(to: 0.11)
+
     expect(received) == 2
     expect(count) == 1
+
+    ClockProvider.reset()
   }
 
   // MARK: - Throttle
 
   func test_throttle_latest() {
-    let queue = DispatchQueue.make(label: "test")
+    let clock = MockClock()
+    ClockProvider.current = clock
+
     let binding = Binding(0)
 
     var count: Int = 0
     var received: Int?
     let newBinding = binding
-      .throttle(for: 0.2, latest: true, queue: queue)
+      .throttle(for: 0.2, latest: true, queue: .main)
     expect(newBinding.value) == 0
 
     newBinding
       .observe { value in
-        expect(DispatchQueue.isOnQueue(queue)) == true
+        expect(DispatchQueue.isOnQueue(.main)) == true
         count += 1
         received = value
       }
@@ -2345,25 +2363,30 @@ class BindingTests: XCTestCase {
     expect(received) == nil
     expect(count) == 0
 
-    Waiter.wait(timeout: 0.4)
+    clock.advance(to: 0.21)
+
     expect(received) == 2
     expect(count) == 1
 
     binding.value = 3
     expect(received) == 2
     expect(count) == 1
+
+    ClockProvider.reset()
   }
 
   func test_throttle_first() {
-    let queue = DispatchQueue.make(label: "test")
+    let clock = MockClock()
+    ClockProvider.current = clock
+
     let binding = Binding(0)
 
     var count: Int = 0
     var received: Int?
     binding
-      .throttle(for: 0.2, latest: false, queue: queue)
+      .throttle(for: 0.2, latest: false, queue: .main)
       .observe { value in
-        expect(DispatchQueue.isOnQueue(queue)) == true
+        expect(DispatchQueue.isOnQueue(.main)) == true
         count += 1
         received = value
       }
@@ -2380,13 +2403,16 @@ class BindingTests: XCTestCase {
     expect(received) == nil
     expect(count) == 0
 
-    Waiter.wait(timeout: 0.4)
+    clock.advance(to: 0.21)
+
     expect(received) == 1
     expect(count) == 1
 
     binding.value = 3
     expect(received) == 1
     expect(count) == 1
+
+    ClockProvider.reset()
   }
 
   func test_bindingWithGetter_whenBackingStoreChanged_publisherNotEmit() {

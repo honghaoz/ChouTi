@@ -76,7 +76,7 @@ public final class Throttler {
   private var delayTask: CancellableToken?
   private var blockToCall: BlockVoid?
 
-  private var clock: Clock = SystemClock()
+  private var clock: Clock = ClockProvider.current
 
   /// Initialize a new throttler.
   ///
@@ -146,29 +146,6 @@ public final class Throttler {
       scheduleDelayTask(interval)
     }
   }
-
-  // MARK: - Testing
-
-  #if DEBUG
-
-  var test: Test { Test(host: self) }
-
-  class Test {
-
-    private let host: Throttler
-
-    fileprivate init(host: Throttler) {
-      ChouTi.assert(Thread.isRunningXCTest, "test namespace should only be used in test target.")
-      self.host = host
-    }
-
-    var clock: Clock {
-      get { host.clock }
-      set { host.clock = newValue }
-    }
-  }
-
-  #endif
 }
 
 // - See also:

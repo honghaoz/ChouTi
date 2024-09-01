@@ -36,6 +36,17 @@ class LeadingDebouncerTests: XCTestCase {
 
   private let queue = DispatchQueue.make(label: "io.chouti.LeadingDebouncerTests")
 
+  private var clock: MockClock!
+
+  override func setUp() {
+    clock = MockClock()
+    ClockProvider.current = clock
+  }
+
+  override func tearDown() {
+    ClockProvider.reset()
+  }
+
   func test_invalid_interval() {
     Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
       expect(message) == "The interval should be greater than 0."
@@ -64,14 +75,8 @@ class LeadingDebouncerTests: XCTestCase {
   }
 
   func test() {
-    let clock = MockClock()
     let debouncer = LeadingDebouncer(interval: 0.1)
-    debouncer.test.clock = clock
-    _ = debouncer.test.clock
-
     let debouncer2 = LeadingDebouncer(interval: 0.1)
-    debouncer2.test.clock = clock
-    _ = debouncer2.test.clock
 
     var receivedValues: [Float] = []
 
@@ -122,6 +127,17 @@ class TrailingDebouncerTests: XCTestCase {
 
   private let queue = DispatchQueue.make(label: "io.chouti.TrailingDebouncerTests")
 
+  private var clock: MockClock!
+
+  override func setUp() {
+    clock = MockClock()
+    ClockProvider.current = clock
+  }
+
+  override func tearDown() {
+    ClockProvider.reset()
+  }
+
   func test_invalid_interval() {
     Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
       expect(message) == "The interval should be greater than 0."
@@ -152,9 +168,6 @@ class TrailingDebouncerTests: XCTestCase {
 
   func test() {
     let debouncer = TrailingDebouncer(interval: 0.05)
-    let clock = MockClock()
-    debouncer.test.clock = clock
-    _ = debouncer.test.clock
 
     var receivedValues: [Float] = []
 

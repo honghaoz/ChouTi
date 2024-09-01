@@ -241,7 +241,7 @@ public extension BindingType {
         getInitialValue: { $0 },
         upstreamValueChanged: { newValue, setTransformedValue in
           if delay > 0 {
-            queue.asyncAfter(deadline: .now() + delay) {
+            ClockProvider.current.delay(delay, queue: queue) {
               setTransformedValue(newValue)
             }
           } else {

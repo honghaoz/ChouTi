@@ -1,5 +1,5 @@
 //
-//  Clock.swift
+//  ClockProvider.swift
 //  ChouTi
 //
 //  Created by Honghao Zhang on 8/31/24.
@@ -28,21 +28,22 @@
 //  IN THE SOFTWARE.
 //
 
-import Foundation
+/// A provider that can be used to get the current clock.
+enum ClockProvider {
 
-/// A clock that can be used to control the flow of time.
-protocol Clock {
-
-  /// Returns the current time.
-  func now() -> TimeInterval
-
-  /// Schedules a block to be executed after a given delay.
+  /// The current clock.
   ///
-  /// - Parameters:
-  ///   - delay: The delay before the block is executed.
-  ///   - queue: The queue on which the block is executed.
-  ///   - block: The block to be executed.
-  /// - Returns: A token that can be used to cancel the scheduled block.
-  @discardableResult
-  func delay(_ delay: TimeInterval, queue: DispatchQueue, block: @escaping () -> Void) -> CancellableToken
+  /// This is useful for testing, where you can replace the clock with a mock clock.
+  /// For example:
+  /// ```
+  /// ClockProvider.current = MockClock()
+  /// ```
+  ///
+  /// - Warning: Make sure to reset the clock after the test.
+  static var current: Clock = SystemClock()
+
+  /// Resets the clock to the system clock.
+  static func reset() {
+    current = SystemClock()
+  }
 }

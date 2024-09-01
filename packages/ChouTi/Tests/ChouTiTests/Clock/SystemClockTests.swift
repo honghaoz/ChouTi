@@ -45,7 +45,7 @@ class SystemClockTests: XCTestCase {
     _ = clock.delay(0.1, queue: .main) {
       expectation.fulfill()
     }
-    wait(for: [expectation], timeout: 0.2)
+    wait(for: [expectation], timeout: 0.15)
   }
 
   func test_delay_cancelled() {
@@ -58,6 +58,6 @@ class SystemClockTests: XCTestCase {
     }
     token.cancel()
 
-    wait(for: [expectation], timeout: 0.2)
+    wait(for: [expectation], timeout: 0.15)
   }
 }

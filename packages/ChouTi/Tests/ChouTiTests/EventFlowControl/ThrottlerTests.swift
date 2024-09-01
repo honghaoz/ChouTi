@@ -36,6 +36,17 @@ class ThrottlerTests: XCTestCase {
 
   private let queue = DispatchQueue.make(label: "io.chouti.ThrottlerTests")
 
+  private var clock: MockClock!
+
+  override func setUp() {
+    clock = MockClock()
+    ClockProvider.current = clock
+  }
+
+  override func tearDown() {
+    ClockProvider.reset()
+  }
+
   func test_invalidInterval() {
     Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
       expect(message) == "The interval should be greater than 0."
@@ -66,9 +77,6 @@ class ThrottlerTests: XCTestCase {
 
   func test_latest() {
     let throttler = Throttler(interval: 1, latest: true, queue: .main)
-    let clock = MockClock(currentTime: 0)
-    throttler.test.clock = clock
-    _ = throttler.test.clock
 
     var receivedValues: [Float] = []
 
@@ -103,8 +111,6 @@ class ThrottlerTests: XCTestCase {
 
   func test_latest_invokeImmediately() {
     let throttler = Throttler(interval: 0.1, latest: true, invokeImmediately: true, queue: .main)
-    let clock = MockClock(currentTime: 0)
-    throttler.test.clock = clock
 
     var receivedValues: [Float] = []
 
@@ -149,8 +155,6 @@ class ThrottlerTests: XCTestCase {
 
   func test_first() {
     let throttler = Throttler(interval: 0.1, latest: false, queue: .main)
-    let clock = MockClock(currentTime: 0)
-    throttler.test.clock = clock
 
     var receivedValues: [Float] = []
 
