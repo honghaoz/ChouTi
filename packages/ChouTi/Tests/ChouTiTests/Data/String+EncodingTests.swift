@@ -36,6 +36,6 @@ class String_EncodingTests: XCTestCase {
 
   func test() {
     let data = "hello".utf8Data()
-    expect(data) == "hello".data(using: .utf8)
+    expect(data) == "hello".data(using: .utf8) // swiftlint:disable:this non_optional_string_data_conversion
   }
 }

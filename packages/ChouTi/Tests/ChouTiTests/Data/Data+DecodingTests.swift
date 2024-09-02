@@ -35,7 +35,7 @@ class Data_DecodingTests: XCTestCase {
 
   func test_string() {
     do {
-      let data = "Hello, World!".data(using: .utf8)! // swiftlint:disable:this force_unwrapping
+      let data = "Hello, World!".data(using: .utf8)! // swiftlint:disable:this force_unwrapping non_optional_string_data_conversion
       let string = data.string(encoding: .utf8)
       expect(string) == "Hello, World!"
     }
@@ -56,13 +56,13 @@ class Data_DecodingTests: XCTestCase {
 
   func test_utf8String() {
     do {
-      let data = "Hello, World!".data(using: .utf8)! // swiftlint:disable:this force_unwrapping
+      let data = "Hello, World!".data(using: .utf8)! // swiftlint:disable:this force_unwrapping non_optional_string_data_conversion
       let string = data.utf8String()
       expect(string) == "Hello, World!"
     }
 
     do {
-      let data = "こんにちは、世界！".data(using: .utf8)! // swiftlint:disable:this force_unwrapping
+      let data = "こんにちは、世界！".data(using: .utf8)! // swiftlint:disable:this force_unwrapping non_optional_string_data_conversion
       let string = data.utf8String()
       expect(string) == "こんにちは、世界！"
     }
