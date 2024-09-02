@@ -376,12 +376,12 @@ public final class DispatchTimer {
   #endif
 }
 
-// Notes:
-// NSTimer events are always a little later than they are scheduled.
-// GCD events with a leeway setting can be a little early or a little late.
-//
-// Reference:
-//   - https://stackoverflow.com/a/55329816/3164091
+/// Notes:
+/// NSTimer events are always a little later than they are scheduled.
+/// GCD events with a leeway setting can be a little early or a little late.
+///
+/// Reference:
+///   - https://stackoverflow.com/a/55329816/3164091
 
 /**
  iOS firing timer in the background

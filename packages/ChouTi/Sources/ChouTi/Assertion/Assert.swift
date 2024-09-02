@@ -231,9 +231,7 @@ func writeError(message: String,
 }
 #endif
 
-/*
- References:
- - https://developer.apple.com/swift/blog/?id=4
- - https://www.pointfree.co/blog/posts/70-unobtrusive-runtime-warnings-for-libraries
- - https://dsa.cs.tsinghua.edu.cn/oj/static/unix_signal.html
- */
+/// References:
+/// - https://developer.apple.com/swift/blog/?id=4
+/// - https://www.pointfree.co/blog/posts/70-unobtrusive-runtime-warnings-for-libraries
+/// - https://dsa.cs.tsinghua.edu.cn/oj/static/unix_signal.html

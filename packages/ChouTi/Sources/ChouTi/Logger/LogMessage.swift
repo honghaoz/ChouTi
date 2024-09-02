@@ -137,6 +137,7 @@ public extension LogMessage {
 // This is the string builder
 //
 // Doc: https://developer.apple.com/documentation/swift/stringinterpolationprotocol
+
 public struct LogMessageInterpolation: StringInterpolationProtocol {
 
   public typealias StringLiteralType = String
@@ -229,11 +230,11 @@ public struct LogMessageInterpolation: StringInterpolationProtocol {
   var _storage: String = "" // TODO: instead of construction string, make it lazy?
 }
 
-// Doc:
-// - https://developer.apple.com/documentation/swift/expressiblebystringinterpolation#
-// - https://github.com/apple/swift-evolution/blob/master/proposals/0228-fix-expressiblebystringinterpolation.md#fix-expressiblebystringinterpolation
-// References:
-// - https://gist.github.com/beccadax/0b46ce25b7da1049e61b4669352094b6
-// - https://alisoftware.github.io/swift/2018/12/15/swift5-stringinterpolation-part1/
-// - https://alisoftware.github.io/swift/2018/12/16/swift5-stringinterpolation-part2/
-// - https://www.hackingwithswift.com/articles/163/how-to-use-custom-string-interpolation-in-swift
+/// Doc:
+/// - https://developer.apple.com/documentation/swift/expressiblebystringinterpolation#
+/// - https://github.com/apple/swift-evolution/blob/master/proposals/0228-fix-expressiblebystringinterpolation.md#fix-expressiblebystringinterpolation
+/// References:
+/// - https://gist.github.com/beccadax/0b46ce25b7da1049e61b4669352094b6
+/// - https://alisoftware.github.io/swift/2018/12/15/swift5-stringinterpolation-part1/
+/// - https://alisoftware.github.io/swift/2018/12/16/swift5-stringinterpolation-part2/
+/// - https://www.hackingwithswift.com/articles/163/how-to-use-custom-string-interpolation-in-swift

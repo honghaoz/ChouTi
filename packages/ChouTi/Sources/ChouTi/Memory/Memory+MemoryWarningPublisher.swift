@@ -66,6 +66,7 @@ public extension Memory {
   /// - `sudo memory_pressure -S -l critical`
   ///
   /// https://stackoverflow.com/questions/54531898/how-do-you-simulate-low-memory-conditions-under-macos
+
   private static let _didReceiveMemoryWarningPublisher = PassthroughSubject<Void, Never>()
   private static var _memoryWarningMonitor: MemoryPressureMonitor?
 

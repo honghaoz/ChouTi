@@ -469,9 +469,9 @@ public extension CGRect {
     let height = height.round(nearest: pixelWidth)
     return CGRect(x: x, y: y, width: width, height: height)
 
-    // Other readings:
-    // - https://tanalin.com/en/articles/integer-scaling/
-    // - https://github.com/facebook/yoga/blob/578d197dd6652225b46af090c0b46471dc887361/yoga/Yoga.cpp#L3622
+    /// Other readings:
+    /// - https://tanalin.com/en/articles/integer-scaling/
+    /// - https://github.com/facebook/yoga/blob/578d197dd6652225b46af090c0b46471dc887361/yoga/Yoga.cpp#L3622
   }
 }
 

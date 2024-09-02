@@ -170,4 +170,5 @@ public func assertOnce(token: AnyHashable) {
   DispatchQueue.guaranteeOneTimeCall(token: token)
 }
 
-// https://stackoverflow.com/a/39983813/3164091
+/// References:
+/// https://stackoverflow.com/a/39983813/3164091

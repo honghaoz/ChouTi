@@ -39,8 +39,6 @@ infix operator ???: NilCoalescingPrecedence
 /// Examples:
 /// - `"\(anyOptionalValue ??? "nil")"`
 /// - `String(anyOptionalValue ??? "nil")`
-///
-/// Reference: https://oleb.net/blog/2016/12/optionals-string-interpolation/
 public func ??? (lhs: (some Any)?, defaultValue: @autoclosure () -> String) -> String {
   switch lhs {
   case let value?:
@@ -48,4 +46,6 @@ public func ??? (lhs: (some Any)?, defaultValue: @autoclosure () -> String) -> S
   case nil:
     return defaultValue()
   }
+
+  // https://oleb.net/blog/2016/12/optionals-string-interpolation/
 }

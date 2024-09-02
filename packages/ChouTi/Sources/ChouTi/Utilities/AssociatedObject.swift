@@ -220,13 +220,13 @@ public extension ObjectAssociatableType {
 
 // MARK: - Notes
 
-// References:
-// - [Associated Objects](http://nshipster.com/associated-objects/)
-// - [objc_setAssociatedObject with nil to remove - is policy is ignored](http://stackoverflow.com/questions/19920591/objc-setassociatedobject-with-nil-to-remove-is-policy-checked)
+/// References:
+/// - [Associated Objects](http://nshipster.com/associated-objects/)
+/// - [objc_setAssociatedObject with nil to remove - is policy is ignored](http://stackoverflow.com/questions/19920591/objc-setassociatedobject-with-nil-to-remove-is-policy-checked)
 
-// Inspiration:
-// https://github.com/b9swift/AssociatedObject/blob/main/Sources/B9AssociatedObject/B9AssociatedObject.swift
-// Can use `objc_getAssociatedObject(index, Unmanaged.passUnretained(self).toOpaque())` as the key
+/// Inspiration:
+/// https://github.com/b9swift/AssociatedObject/blob/main/Sources/B9AssociatedObject/B9AssociatedObject.swift
+/// Can use `objc_getAssociatedObject(index, Unmanaged.passUnretained(self).toOpaque())` as the key
 
-// It sounds like there are some concerns that object association will be deprecated.
-// https://forums.swift.org/t/objc-setassociatedobject-vs-swift/45188/4
+/// It sounds like there are some concerns that object association will be deprecated.
+/// https://forums.swift.org/t/objc-setassociatedobject-vs-swift/45188/4

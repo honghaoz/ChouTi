@@ -55,5 +55,5 @@ public extension String {
   }
 }
 
-// Can use StringInterpolation to make a AttributedStrings
-// https://alisoftware.github.io/swift/2018/12/16/swift5-stringinterpolation-part2/
+/// Can use StringInterpolation to make a AttributedStrings
+/// https://alisoftware.github.io/swift/2018/12/16/swift5-stringinterpolation-part2/

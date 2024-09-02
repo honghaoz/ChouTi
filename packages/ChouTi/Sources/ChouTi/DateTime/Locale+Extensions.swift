@@ -50,5 +50,5 @@ public extension Locale {
   static let enGB = Locale(identifier: "en_GB")
 }
 
-/// Reference:
+/// References:
 /// https://gist.github.com/jacobbubu/1836273

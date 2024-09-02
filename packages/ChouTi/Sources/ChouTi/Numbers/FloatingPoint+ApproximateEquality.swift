@@ -43,6 +43,6 @@ public extension FloatingPoint {
   }
 }
 
-// References:
-// https://github.com/apple/swift-evolution/blob/main/proposals/0259-approximately-equal.md
-// https://github.com/apple/swift-numerics/blob/main/Sources/RealModule/ApproximateEquality.swift
+/// See also:
+/// https://github.com/apple/swift-evolution/blob/main/proposals/0259-approximately-equal.md
+/// https://github.com/apple/swift-numerics/blob/main/Sources/RealModule/ApproximateEquality.swift

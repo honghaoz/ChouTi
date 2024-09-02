@@ -94,7 +94,8 @@ public extension Publisher {
           .eraseToAnyPublisher()
       }
     }
-
-    /// https://forums.swift.org/t/how-to-make-receive-on-deliver-value-immediately-if-already-on-the-correct-scheduler/46819/2
   }
 }
+
+/// References:
+/// https://forums.swift.org/t/how-to-make-receive-on-deliver-value-immediately-if-already-on-the-correct-scheduler/46819/2

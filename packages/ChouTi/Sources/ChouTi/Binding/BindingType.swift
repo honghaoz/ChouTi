@@ -34,15 +34,6 @@ import Foundation
 /// A type that can be observed.
 public protocol BindingType<Value>: AnyObject, Hashable, DeallocationNotifiable, BindingStorageProviding, TypeEraseWrapperBaseType {
 
-  // Primary associated types in Swift 5.7
-  // https://www.donnywals.com/what-are-primary-associated-types-in-swift-5-7/
-  //
-  // https://www.avanderlee.com/swift/some-opaque-types/
-  //
-  // https://github.com/apple/swift-evolution/blob/main/proposals/0341-opaque-parameters.md
-  // https://github.com/apple/swift-evolution/blob/main/proposals/0346-light-weight-same-type-syntax.md
-  // https://github.com/apple/swift-evolution/blob/main/proposals/0358-primary-associated-types-in-stdlib.md
-
   associatedtype Value
 
   /// The binding's value.
@@ -347,3 +338,11 @@ public extension BindingType where Value: Equatable {
     removeDuplicates(by: { $0 == $1 })
   }
 }
+
+/// References:
+/// - Primary associated types in Swift 5.7
+///   - https://www.donnywals.com/what-are-primary-associated-types-in-swift-5-7/
+///   - https://www.avanderlee.com/swift/some-opaque-types/
+///   - https://github.com/apple/swift-evolution/blob/main/proposals/0341-opaque-parameters.md
+///   - https://github.com/apple/swift-evolution/blob/main/proposals/0346-light-weight-same-type-syntax.md
+///   - https://github.com/apple/swift-evolution/blob/main/proposals/0358-primary-associated-types-in-stdlib.md

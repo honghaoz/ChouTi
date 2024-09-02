@@ -148,6 +148,6 @@ public final class Throttler {
   }
 }
 
-// - See also:
-//   - https://css-tricks.com/debouncing-throttling-explained-examples/
-//   - https://medium.com/@ellenaua/throttle-debounce-behavior-lodash-6bcae1494e03
+/// - See also:
+///   - https://css-tricks.com/debouncing-throttling-explained-examples/
+///   - https://medium.com/@ellenaua/throttle-debounce-behavior-lodash-6bcae1494e03

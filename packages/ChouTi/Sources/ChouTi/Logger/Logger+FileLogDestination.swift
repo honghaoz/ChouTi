@@ -174,7 +174,7 @@ public extension Logger {
 
         do {
           #if !os(macOS)
-          // https://pspdfkit.com/blog/2017/how-to-use-ios-data-protection/
+          /// https://pspdfkit.com/blog/2017/how-to-use-ios-data-protection/
           var attributes = try fileManager.attributesOfItem(atPath: url.path)
           attributes[FileAttributeKey.protectionKey] = FileProtectionType.none
           try fileManager.setAttributes(attributes, ofItemAtPath: url.path)
@@ -303,6 +303,6 @@ private extension FileManager {
   }
 }
 
-//  References:
-//  - https://github.com/SwiftyBeaver/SwiftyBeaver/blob/master/Sources/FileDestination.swift
-//  - https://github.com/WeTransfer/Diagnostics/blob/master/Sources/Logging/DiagnosticsLogger.swift
+///  References:
+///  - https://github.com/SwiftyBeaver/SwiftyBeaver/blob/master/Sources/FileDestination.swift
+///  - https://github.com/WeTransfer/Diagnostics/blob/master/Sources/Logging/DiagnosticsLogger.swift

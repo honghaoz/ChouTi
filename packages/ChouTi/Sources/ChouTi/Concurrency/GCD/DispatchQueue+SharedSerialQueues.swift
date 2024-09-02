@@ -32,21 +32,6 @@ import Foundation
 
 /// Provides shared serial queues to use in Apps.
 /// App shouldn't create too many serial queues, use the shared serial queue as target queue.
-///
-/// GCD readings:
-/// https://gist.github.com/tclementdev/6af616354912b0347cdf6db159c37057
-/// tips on GCD
-/// https://tclementdev.com/posts/what_went_wrong_with_the_libdispatch.html
-/// Developers do need to think hard about multithreading and need to carefully consider their program design.
-///
-/// GCD Internals
-/// http://newosxbook.com/articles/GCD.html
-///
-/// WWDC 2017 706 "Modernizing Grand Central Dispatch Usage" discussion:
-/// https://developer.apple.com/forums/thread/131099
-///
-/// An Introduction to Grand Central Dispatch
-/// https://www.humancode.us/2014/07/28/intro-to-gcd.html
 
 public extension DispatchQueue {
 
@@ -57,6 +42,7 @@ public extension DispatchQueue {
   private static let backgroundQueue = DispatchQueue.make(label: "io.chouti.queue.qos-background", qos: .background, target: .global(qos: .background))
 
   /// Get a shared serial queue based on the QoS.
+  ///
   /// - Parameter qos: The quality-of-service class. Default value is `.default`.
   /// - Returns: A shared serial queue.
   static func shared(qos: DispatchQoS = .default) -> DispatchQueue {
@@ -86,3 +72,20 @@ public extension DispatchQueue {
     }
   }
 }
+
+/// References:
+///
+/// GCD readings:
+/// https://gist.github.com/tclementdev/6af616354912b0347cdf6db159c37057
+/// tips on GCD
+/// https://tclementdev.com/posts/what_went_wrong_with_the_libdispatch.html
+/// Developers do need to think hard about multithreading and need to carefully consider their program design.
+///
+/// GCD Internals
+/// http://newosxbook.com/articles/GCD.html
+///
+/// WWDC 2017 706 "Modernizing Grand Central Dispatch Usage" discussion:
+/// https://developer.apple.com/forums/thread/131099
+///
+/// An Introduction to Grand Central Dispatch
+/// https://www.humancode.us/2014/07/28/intro-to-gcd.html

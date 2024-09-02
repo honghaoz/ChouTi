@@ -129,7 +129,7 @@ public extension PerformanceMeasurer {
 
 public extension PerformanceMeasurer {
 
-  // From: https://www.objc.io/blog/2018/06/14/quick-performance-timing/
+  /// From: https://www.objc.io/blog/2018/06/14/quick-performance-timing/
 
   /// Measure the execution time of the block.
   ///
@@ -341,5 +341,5 @@ private extension PerformanceMeasurer {
  - Can make this into a profile utility, so that it can draw a graph.
  */
 
-// References:
-//  - https://kandelvijaya.com/2016/10/25/precisiontiminginios/
+/// References:
+///  - https://kandelvijaya.com/2016/10/25/precisiontiminginios/

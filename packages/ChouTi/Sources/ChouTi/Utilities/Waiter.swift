@@ -55,12 +55,12 @@ public func wait(timeout: TimeInterval) {
   Waiter.wait(timeout: timeout)
 }
 
-// How wait(for: [expectation], timeout: 2) works.
-// https://stackoverflow.com/questions/59741819/how-does-wait-succeed-for-a-block-that-is-to-be-executed-on-the-next-dispatch
+/// How wait(for: [expectation], timeout: 2) works.
+/// https://stackoverflow.com/questions/59741819/how-does-wait-succeed-for-a-block-that-is-to-be-executed-on-the-next-dispatch
 
-// XCTWaiter.wait(for: [expectation(description: "wait")], timeout: timeout) source:
-// https://github.com/apple/swift-corelibs-xctest/blob/ab1677255f187ad6eba20f54fc4cf425ff7399d7/Sources/XCTest/Public/Asynchronous/XCTWaiter.swift#L358
+/// XCTWaiter.wait(for: [expectation(description: "wait")], timeout: timeout) source:
+/// https://github.com/apple/swift-corelibs-xctest/blob/ab1677255f187ad6eba20f54fc4cf425ff7399d7/Sources/XCTest/Public/Asynchronous/XCTWaiter.swift#L358
 
-// How to use RunLoop
-// - https://rderik.com/blog/understanding-the-runloop-model-by-creating-a-basic-shell/
-// - [Apple Threading Programming Guide](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html)
+/// How to use RunLoop
+/// - https://rderik.com/blog/understanding-the-runloop-model-by-creating-a-basic-shell/
+/// - [Apple Threading Programming Guide](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html)

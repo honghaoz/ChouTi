@@ -133,8 +133,6 @@ public extension Dictionary {
 
 public extension Dictionary where Value: Equatable {
 
-  // https://stackoverflow.com/a/48821509/3164091
-
   /// Get first key for provided value.
   ///
   /// - Parameter value: The value to search for.
@@ -154,4 +152,6 @@ public extension Dictionary where Value: Equatable {
   func allKeys(for value: Value) -> [Key] {
     compactMap { $0.value == value ? $0.key : nil }
   }
+
+  /// https://stackoverflow.com/a/48821509/3164091
 }

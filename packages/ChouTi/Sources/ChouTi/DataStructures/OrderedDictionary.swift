@@ -342,8 +342,9 @@ extension OrderedDictionary: Collection {
 
 extension OrderedDictionary: ExpressibleByDictionaryLiteral {
 
-  /// https://www.vadimbulavin.com/initialization-with-literals/
   public init(dictionaryLiteral elements: (KeyType, ValueType)...) {
+    /// https://www.vadimbulavin.com/initialization-with-literals/
+
     keys = [KeyType]()
     keys.reserveCapacity(elements.count)
 

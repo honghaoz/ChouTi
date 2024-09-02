@@ -42,9 +42,8 @@ import Foundation
 ///   - end: The end value.
 ///   - t: The interpolation value between the two floats. The value is clamped to the range [0, 1].
 /// - Returns: The interpolated value between the two values.
-///
-/// - Note: https://en.wikipedia.org/wiki/Linear_interpolation
 public func lerp<T: BinaryFloatingPoint>(start: T, end: T, t: T) -> T {
+  // https://en.wikipedia.org/wiki/Linear_interpolation
   start + (end - start) * t.clamped(to: 0.0 ... 1.0)
 }
 

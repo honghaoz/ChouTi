@@ -50,10 +50,11 @@ public let isIOS = false
 
 #if DEBUG
 /// A flag indicates if the app is being debug with Xcode.
-/// `isatty(STDERR_FILENO)` is `1` if app launches with Xcode LLDB.
-/// `isatty(STDERR_FILENO)` is `0` if app launches directly
-/// From: https://stackoverflow.com/a/44434274/3164091
 public var isDebuggingUsingXcode: Bool { isatty(STDERR_FILENO) == 1 }
+
+/// - `isatty(STDERR_FILENO)` is `1` if app launches with Xcode LLDB.
+/// - `isatty(STDERR_FILENO)` is `0` if app launches directly
+/// From: https://stackoverflow.com/a/44434274/3164091
 #endif
 
 public var isRunningAsRoot: Bool { getuid() == 0 }

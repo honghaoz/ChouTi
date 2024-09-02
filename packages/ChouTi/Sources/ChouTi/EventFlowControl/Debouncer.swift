@@ -187,6 +187,6 @@ public final class TrailingDebouncer {
   }
 }
 
-// - See also:
-//   - https://stackoverflow.com/a/34552145/3164091
-//   - https://css-tricks.com/debouncing-throttling-explained-examples/
+/// - See also:
+///   - https://stackoverflow.com/a/34552145/3164091
+///   - https://css-tricks.com/debouncing-throttling-explained-examples/

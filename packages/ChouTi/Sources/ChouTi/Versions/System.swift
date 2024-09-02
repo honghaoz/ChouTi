@@ -125,10 +125,8 @@ public enum System {
   #endif
 }
 
-/*
- References:
- - https://www.avanderlee.com/swift/available-deprecated-renamed/
- */
+/// References:
+/// - https://www.avanderlee.com/swift/available-deprecated-renamed/
 
 /**
  From WWDC 2022 uiframewroks-lounge:

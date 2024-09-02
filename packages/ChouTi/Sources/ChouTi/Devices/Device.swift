@@ -101,12 +101,12 @@ public enum Device {
 
     return String(decoding: modelData, as: UTF8.self).trimmingCharacters(in: .controlCharacters)
 
-    // https://stackoverflow.com/questions/20070333/obtain-model-identifier-string-on-os-x
-    // https://www.reddit.com/r/swift/comments/gwf9fa/how_do_i_find_the_model_of_the_mac_in_swift/
-    // https://mactracker.ca
-    // https://support.apple.com/en-us/HT201862
-    // https://support.apple.com/en-sa/HT201300
-    // https://stackoverflow.com/questions/32370037/is-there-a-way-of-getting-a-macs-icon-given-its-model-number/32381289#32381289
+    /// https://stackoverflow.com/questions/20070333/obtain-model-identifier-string-on-os-x
+    /// https://www.reddit.com/r/swift/comments/gwf9fa/how_do_i_find_the_model_of_the_mac_in_swift/
+    /// https://mactracker.ca
+    /// https://support.apple.com/en-us/HT201862
+    /// https://support.apple.com/en-sa/HT201300
+    /// https://stackoverflow.com/questions/32370037/is-there-a-way-of-getting-a-macs-icon-given-its-model-number/32381289#32381289
   }
 
   /// Check if the MacBook has a notch.
@@ -119,14 +119,14 @@ public enum Device {
     }
 
     let notchModels = Set([
-      // MacBook Pro: https://support.apple.com/en-us/108052
+      /// MacBook Pro: https://support.apple.com/en-us/108052
       "MacBookPro18,1", "MacBookPro18,2", // MacBook Pro (16-inch, 2021), M1
       "MacBookPro18,3", "MacBookPro18,4", // MacBook Pro (14-inch, 2021), M1
       "Mac14,6", "Mac14,10", // MacBook Pro (16-inch, 2023), M2
       "Mac14,5", "Mac14,9", // MacBook Pro (14-inch, 2023), M2
       "Mac15,7", "Mac15,9", "Mac15,11", // MacBook Pro (16-inch, Nov 2023), M3
       "Mac15,6", "Mac15,8", "Mac15,10", "Mac15,3", // MacBook Pro (14-inch, Nov 2023), M3
-      // MacBook Air: https://support.apple.com/en-us/102869
+      /// MacBook Air: https://support.apple.com/en-us/102869
       "Mac14,2", // MacBook Air (M2, 2022)
       "Mac14,15", // MacBook Air (15-inch, M2, 2023)
       "Mac15,12", // MacBook Air (13-inch, M3, 2024)
@@ -203,8 +203,8 @@ public enum Device {
 
     return uuid
 
-    // https://forums.developer.apple.com/forums/thread/117978
-    // https://gist.github.com/ericdke/ed2d8bd3d127c25bcc6b
+    /// https://forums.developer.apple.com/forums/thread/117978
+    /// https://gist.github.com/ericdke/ed2d8bd3d127c25bcc6b
     #elseif canImport(UIKit)
     return UIDevice.current.identifierForVendor?.uuidString
     #else
@@ -214,5 +214,5 @@ public enum Device {
   }
 }
 
-// References:
-// - https://github.com/AndreaMiotto/ActionOver/blob/master/Sources/ActionOver/View%2BIfDeviceType.swift#L16-L26
+/// References:
+/// - https://github.com/AndreaMiotto/ActionOver/blob/master/Sources/ActionOver/View%2BIfDeviceType.swift#L16-L26

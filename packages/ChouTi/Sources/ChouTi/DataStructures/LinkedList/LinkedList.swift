@@ -577,8 +577,8 @@ extension LinkedList: Sequence {
 //   }
 // }
 
-// https://en.wikipedia.org/wiki/Linked_list
-// https://en.wikipedia.org/wiki/Doubly_linked_list
+/// https://en.wikipedia.org/wiki/Linked_list
+/// https://en.wikipedia.org/wiki/Doubly_linked_list
 
-// https://github.com/honghaoz/DataStructure-Algorithm/blob/master/Swift/LeetCode/Shared/ListNode.swift
-// https://github.com/kodecocodes/swift-algorithm-club/blob/master/Linked%20List/README.markdown
+/// https://github.com/honghaoz/DataStructure-Algorithm/blob/master/Swift/LeetCode/Shared/ListNode.swift
+/// https://github.com/kodecocodes/swift-algorithm-club/blob/master/Linked%20List/README.markdown

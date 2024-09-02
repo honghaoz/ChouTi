@@ -82,29 +82,29 @@ public extension String {
   }
 }
 
-// Reference: https://kandelvijaya.com/2016/10/25/precisiontiminginios/
+/// Reference: https://kandelvijaya.com/2016/10/25/precisiontiminginios/
 
 // -------------------------
 
 /// Get a monotonically increasing number (CPU ticks)
 /// https://stackoverflow.com/questions/45551087/when-does-cacurrentmediatime-mach-system-time-wrap-around-on-ios
 
-// https://developer.apple.com/documentation/kernel/1462446-mach_absolute_time
-// mach_absolute_time()
-// clock_gettime_nsec_np(CLOCK_UPTIME_RAW)
+/// https://developer.apple.com/documentation/kernel/1462446-mach_absolute_time
+/// mach_absolute_time()
+/// clock_gettime_nsec_np(CLOCK_UPTIME_RAW)
 
-// https://developer.apple.com/documentation/kernel/1646199-mach_continuous_time
-// mach_continuous_time()
-// clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW)
+/// https://developer.apple.com/documentation/kernel/1646199-mach_continuous_time
+/// mach_continuous_time()
+/// clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW)
 
-// https://developer.apple.com/documentation/kernel/1462443-mach_approximate_time
-// mach_approximate_time()
+/// https://developer.apple.com/documentation/kernel/1462443-mach_approximate_time
+/// mach_approximate_time()
 
-// https://developer.apple.com/documentation/kernel/1646198-mach_continuous_approximate_time
-// mach_continuous_approximate_time()
+/// https://developer.apple.com/documentation/kernel/1646198-mach_continuous_approximate_time
+/// mach_continuous_approximate_time()
 
-// https://forums.swift.org/t/recommended-way-to-measure-time-in-swift/33326/17
-// DispatchTime.now().uptimeNanoseconds
+/// https://forums.swift.org/t/recommended-way-to-measure-time-in-swift/33326/17
+/// DispatchTime.now().uptimeNanoseconds
 
 // for i in 1...10000 {
 //   _ = mach_absolute_time()

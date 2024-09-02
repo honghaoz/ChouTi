@@ -49,7 +49,8 @@ public extension DispatchQueue {
   }
 }
 
-// From: https://stackoverflow.com/a/39809760/3164091
-// https://forums.swift.org/t/gcd-getting-current-dispatch-queue-name-with-swift-3/3039/3
+/// References:
+/// https://stackoverflow.com/a/39809760/3164091
+/// https://forums.swift.org/t/gcd-getting-current-dispatch-queue-name-with-swift-3/3039/3
 
 #endif

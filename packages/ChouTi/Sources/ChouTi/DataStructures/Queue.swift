@@ -209,8 +209,8 @@ extension Queue: Sequence {
     }
   }
 
-  // References:
-  // https://www.swiftbysundell.com/articles/swift-sequences-the-art-of-being-lazy/
+  /// References:
+  /// https://www.swiftbysundell.com/articles/swift-sequences-the-art-of-being-lazy/
 }
 
 public extension Queue where Element == Int {

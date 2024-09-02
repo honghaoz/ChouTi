@@ -30,11 +30,7 @@
 
 import Foundation
 
-/**
- A @resultBuilder convenient protocol.
-
- See more: https://github.com/apple/swift-evolution/blob/main/proposals/0289-result-builders.md#simple-result-builder-protocol
- */
+/// A @resultBuilder convenient protocol.
 public protocol ResultBuilder {
 
   associatedtype Input
@@ -99,3 +95,5 @@ public extension ResultBuilder {
     .void
   }
 }
+
+// See more: https://github.com/apple/swift-evolution/blob/main/proposals/0289-result-builders.md#simple-result-builder-protocol

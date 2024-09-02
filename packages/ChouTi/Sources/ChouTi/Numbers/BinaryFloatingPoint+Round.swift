@@ -93,5 +93,5 @@ public extension BinaryFloatingPoint {
   }
 }
 
-// References:
-// https://stackoverflow.com/a/38483058/3164091
+/// References:
+/// https://stackoverflow.com/a/38483058/3164091
