@@ -86,8 +86,7 @@ class CGAffineTransform_Extensions: XCTestCase {
   // MARK: - Rotation
 
   func test_factory_rotation() {
-    expect(CGAffineTransform.rotation(angle: .degrees(45), clockwise: true)) == CGAffineTransform(a: 0.7071067811865476, b: 0.7071067811865475, c: -0.7071067811865475, d: 0.7071067811865476, tx: 0, ty: 0)
-    expect(CGAffineTransform.rotation(angle: .degrees(45), clockwise: false)) == CGAffineTransform(a: 0.7071067811865476, b: -0.7071067811865475, c: 0.7071067811865475, d: 0.7071067811865476, tx: 0, ty: 0)
+    expect(CGAffineTransform.rotation(angle: .degrees(45))) == CGAffineTransform(a: 0.7071067811865476, b: 0.7071067811865475, c: -0.7071067811865475, d: 0.7071067811865476, tx: 0, ty: 0)
   }
 
   // MARK: - Shear
@@ -100,8 +99,7 @@ class CGAffineTransform_Extensions: XCTestCase {
   // MARK: - Initializer
 
   func test_init_rotationAngle() {
-    expect(CGAffineTransform(rotationAngle: .degrees(45), clockwise: true)) == CGAffineTransform(a: 0.7071067811865476, b: 0.7071067811865475, c: -0.7071067811865475, d: 0.7071067811865476, tx: 0, ty: 0)
-    expect(CGAffineTransform(rotationAngle: .degrees(45), clockwise: false)) == CGAffineTransform(a: 0.7071067811865476, b: -0.7071067811865475, c: 0.7071067811865475, d: 0.7071067811865476, tx: 0, ty: 0)
+    expect(CGAffineTransform(rotationAngle: .degrees(45))) == CGAffineTransform(a: 0.7071067811865476, b: 0.7071067811865475, c: -0.7071067811865475, d: 0.7071067811865476, tx: 0, ty: 0)
   }
 
   // MARK: - Operations
@@ -130,10 +128,7 @@ class CGAffineTransform_Extensions: XCTestCase {
 
   func test_rotate() {
     expect(
-      CGAffineTransform.rotation(angle: .degrees(45), clockwise: true).rotate(angle: .degrees(45), clockwise: true).isApproximatelyEqual(to: CGAffineTransform.rotation(angle: .degrees(90), clockwise: true), absoluteTolerance: 0.000001)
-    ) == true
-    expect(
-      CGAffineTransform.rotation(angle: .degrees(45), clockwise: false).rotate(angle: .degrees(45), clockwise: false).isApproximatelyEqual(to: CGAffineTransform.rotation(angle: .degrees(90), clockwise: false), absoluteTolerance: 0.000001)
+      CGAffineTransform.rotation(angle: .degrees(45)).rotate(angle: .degrees(45)).isApproximatelyEqual(to: CGAffineTransform.rotation(angle: .degrees(90)), absoluteTolerance: 0.000001)
     ) == true
   }
 

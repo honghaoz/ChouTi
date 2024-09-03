@@ -152,17 +152,15 @@ public extension CGAffineTransform {
   ///
   /// Example:
   /// ```swift
-  /// CGAffineTransform.rotation(angle: .degrees(45), clockwise: true)
+  /// CGAffineTransform.rotation(angle: .degrees(45))
   /// ```
   ///
-  /// - Parameters:
-  ///   - angle: The rotation angle.
-  ///   - clockwise: Whether the rotation is a clockwise rotation. Defaults to `true`.
+  /// - Parameter angle: The rotation angle.
   /// - Returns: The rotation transform.
   @inlinable
   @inline(__always)
-  static func rotation(angle: Angle, clockwise: Bool = true) -> CGAffineTransform {
-    CGAffineTransform(rotationAngle: angle, clockwise: clockwise)
+  static func rotation(angle: Angle) -> CGAffineTransform {
+    CGAffineTransform(rotationAngle: angle)
   }
 
   // MARK: - Shear
@@ -213,17 +211,9 @@ public extension CGAffineTransform {
 
   /// Initializes a transform with a rotation angle.
   ///
-  /// - Parameters:
-  ///   - angle: The rotation angle.
-  ///   - clockwise: Whether the rotation is a clockwise rotation. Defaults to `true`.
-  init(rotationAngle angle: Angle, clockwise: Bool = true) {
-    #if os(macOS)
-    // On macOS, a positive value specifies clockwise rotation and a negative value specifies counterclockwise rotation.
-    self.init(rotationAngle: angle.radians * (clockwise ? 1 : -1))
-    #else
-    // On iOS, a positive value specifies counterclockwise rotation and a negative value specifies clockwise rotation.
-    self.init(rotationAngle: angle.radians * (clockwise ? -1 : 1))
-    #endif
+  /// - Parameter angle: The rotation angle, clockwise rotation.
+  init(rotationAngle angle: Angle) {
+    self.init(rotationAngle: angle.radians)
   }
 
   // MARK: - Operations
@@ -309,23 +299,15 @@ public extension CGAffineTransform {
   ///
   /// Example:
   /// ```swift
-  /// transform.rotate(.degrees(45), clockwise: true)
+  /// transform.rotate(.degrees(45))
   /// ```
   ///
-  /// - Parameters:
-  ///   - angle: The rotation angle.
-  ///   - clockwise: Whether the rotation is a clockwise rotation. Defaults to `true`.
+  /// - Parameter angle: The rotation angle.
   /// - Returns: The rotated transform.
   @inlinable
   @inline(__always)
-  func rotate(angle: Angle, clockwise: Bool = true) -> CGAffineTransform {
-    #if os(macOS)
-    // On macOS, a positive value specifies clockwise rotation and a negative value specifies counterclockwise rotation.
-    rotated(by: angle.radians * (clockwise ? 1 : -1))
-    #else
-    // On iOS, a positive value specifies counterclockwise rotation and a negative value specifies clockwise rotation.
-    rotated(by: angle.radians * (clockwise ? -1 : 1))
-    #endif
+  func rotate(angle: Angle) -> CGAffineTransform {
+    rotated(by: angle.radians)
   }
 
   /// Shears the transform.

@@ -154,7 +154,6 @@ class CATransform3D_Extensions: XCTestCase {
     expect(CATransform3D.rotation(angle: .degrees(30), axis: .z)) == CATransform3D.rotation(.degrees(30), 0, 0, 1)
 
     expect(CATransform3D.rotation(angle: .degrees(30), axis: .z).affineTransform) == CGAffineTransform.rotation(angle: .degrees(30))
-    expect(CATransform3D.rotation(angle: .degrees(-30), axis: .z).affineTransform) == CGAffineTransform.rotation(angle: .degrees(30), clockwise: false)
   }
 
   // MARK: - Affine Transform
@@ -214,7 +213,6 @@ class CATransform3D_Extensions: XCTestCase {
     expect(CATransform3D.identity.rotate(.degrees(30), 0, 0, 1)) == CATransform3D.rotation(angle: .degrees(30), x: 0, y: 0, z: 1)
 
     expect(CATransform3D.identity.rotate(angle: .degrees(30), axis: .z).affineTransform) == CGAffineTransform(rotationAngle: .degrees(30))
-    expect(CATransform3D.identity.rotate(angle: .degrees(-30), axis: .z).affineTransform) == CGAffineTransform(rotationAngle: .degrees(30), clockwise: false)
   }
 
   func test_operation_concat() {
