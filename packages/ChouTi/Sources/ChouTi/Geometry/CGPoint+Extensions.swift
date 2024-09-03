@@ -190,6 +190,8 @@ public extension CGPoint {
   }
 }
 
+// MARK: - isApproximatelyEqual
+
 public extension CGPoint {
 
   /// Check if the point is approximately equal to another point.
@@ -198,8 +200,6 @@ public extension CGPoint {
   ///   - other: The other point.
   ///   - absoluteTolerance: The absolute tolerance.
   /// - Returns: `true` if the point is approximately equal to the other point.
-  @inlinable
-  @inline(__always)
   func isApproximatelyEqual(to other: Self, absoluteTolerance: CGFloat) -> Bool {
     x.isApproximatelyEqual(to: other.x, absoluteTolerance: absoluteTolerance) &&
       y.isApproximatelyEqual(to: other.y, absoluteTolerance: absoluteTolerance)

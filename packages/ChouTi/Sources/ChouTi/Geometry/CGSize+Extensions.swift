@@ -379,6 +379,8 @@ public extension CGSize {
   }
 }
 
+// MARK: - isApproximatelyEqual
+
 public extension CGSize {
 
   /// Check if the size is approximately equal to the given size.

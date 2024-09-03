@@ -713,6 +713,8 @@ public extension CGRect {
   }
 }
 
+// MARK: - isApproximatelyEqual
+
 public extension CGRect {
 
   /// Returns `true` if `self` is approximately equal to another rectangle.
@@ -721,8 +723,6 @@ public extension CGRect {
   ///   - other: The other rectangle.
   ///   - absoluteTolerance: The absolute tolerance.
   /// - Returns: `true` if `self` is approximately equal to another rectangle, otherwise `false`.
-  @inlinable
-  @inline(__always)
   func isApproximatelyEqual(to other: Self, absoluteTolerance: CGFloat) -> Bool {
     origin.isApproximatelyEqual(to: other.origin, absoluteTolerance: absoluteTolerance) &&
       size.isApproximatelyEqual(to: other.size, absoluteTolerance: absoluteTolerance)
