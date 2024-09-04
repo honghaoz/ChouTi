@@ -408,3 +408,5 @@ public extension [CATransform3D] {
  3D Animations
  http://www.sunsetlakesoftware.com/2008/10/22/3-d-rotation-without-trackball
  */
+
+/// https://articulatedrobotics.xyz/tutorials/coordinate-transforms/rotations-3d/
