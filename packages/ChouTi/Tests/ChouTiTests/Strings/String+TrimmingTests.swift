@@ -34,6 +34,8 @@ import ChouTi
 
 class String_TrimmingTests: XCTestCase {
 
+  // MARK: - Removing Characters
+
   func testRemovingCharacters() {
     // basic functionality
     expect("Hello$%^& World!!123".removingCharacters(in: "$%^&!123")) == "Hello World"
@@ -71,11 +73,32 @@ class String_TrimmingTests: XCTestCase {
     // special characters
     expect("a@b#c$d%e^f&g*h".removingCharacters(in: "@#$%^&*")) == "abcdefgh"
 
+    // substring
+    do {
+      let string = "Hello, World!"
+      expect(string[string.startIndex ... string.index(string.startIndex, offsetBy: 4)].removingCharacters(in: "e")) == "Hllo"
+    }
+
     // performance
     // measure {
     //   let longString = String(repeating: "abcdefghijklmnopqrstuvwxyz", count: 1000)
     //   _ = longString.removingCharacters(in: "aeiou")
     // }
+  }
+
+  func testRemovingCharacters2() {
+    expect("Hello World".removingCharacters(in: "$%^&!123")) == "Hello World"
+    expect("Hello$%^& World!!123".removingCharacters(in: "$%^&!123")) == "Hello World"
+    expect("1234567890".removingCharacters(in: "$%^&!123")) == "4567890"
+    expect("".removingCharacters(in: "$%^&!123")) == ""
+    expect("🙂🙃😉".removingCharacters(in: "🙃")) == "🙂😉"
+    expect("🙂🙃😉🙃".removingCharacters(in: "🙃")) == "🙂😉"
+    expect("éclat".removingCharacters(in: "é")) == "clat"
+    expect("cléat".removingCharacters(in: "é")) == "clat"
+    expect("cléaté".removingCharacters(in: "é")) == "clat"
+    expect("éclat".removingCharacters(in: "e")) == "éclat"
+    expect("é你écla好t".removingCharacters(in: "é")) == "你cla好t"
+    expect("é你écla好t".removingCharacters(in: "e")) == "é你écla好t"
   }
 
   func testRemovingCharactersWithCharacterSet() {
@@ -107,5 +130,165 @@ class String_TrimmingTests: XCTestCase {
 
     // emoji
     expect("Hello 👋 World 🌍!".removingCharacters(in: .symbols)) == "Hello  World !"
+
+    // substring
+    do {
+      let string = "Hello 👋 World 🌍!"
+      expect(string[string.startIndex ... string.index(string.startIndex, offsetBy: 9)].removingCharacters(in: .symbols)) == "Hello  Wo"
+    }
+  }
+
+  // MARK: - Trimming Characters
+
+  func test_trimmingLeadingCharacter() {
+    // basic functionality
+    expect("aaabacdef".trimmingLeadingCharacter("a")) == "bacdef"
+
+    // emoji
+    expect("🍎🍎🍊🍋Fruits".trimmingLeadingCharacter("🍎")) == "🍊🍋Fruits"
+
+    // empty string
+    expect("".trimmingLeadingCharacter("a")) == ""
+
+    // no characters to trim
+    expect("Hello".trimmingLeadingCharacter("a")) == "Hello"
+  }
+
+  func test_trimmingLeadingCharacters() {
+    // empty string
+    expect("".trimmingLeadingCharacters(in: .whitespaces)) == ""
+    expect("".trimmingLeadingCharacters(in: "")) == ""
+
+    // string with no characters to trim
+    expect("Hello".trimmingLeadingCharacters(in: .whitespaces)) == "Hello"
+    expect("Hello".trimmingLeadingCharacters(in: "")) == "Hello"
+
+    // string with all characters to trim
+    expect("   ".trimmingLeadingCharacters(in: .whitespaces)) == ""
+    expect("   ".trimmingLeadingCharacters(in: " ")) == ""
+
+    // string with leading characters to trim
+    expect("   Hello".trimmingLeadingCharacters(in: .whitespaces)) == "Hello"
+    expect("   Hello".trimmingLeadingCharacters(in: " ")) == "Hello"
+
+    // string with leading and trailing characters to trim
+    expect("   Hello   ".trimmingLeadingCharacters(in: .whitespaces)) == "Hello   "
+    expect("   Hello   ".trimmingLeadingCharacters(in: " ")) == "Hello   "
+
+    // custom character set
+    let customSet = CharacterSet(charactersIn: "123")
+    expect("123abc123".trimmingLeadingCharacters(in: customSet)) == "abc123"
+    expect("123abc123".trimmingLeadingCharacters(in: "123")) == "abc123"
+
+    expect("aaabacdef".trimmingLeadingCharacters(in: CharacterSet(charactersIn: "ab"))) == "cdef"
+    expect("aaabacdef".trimmingLeadingCharacters(in: "ab")) == "cdef"
+
+    // empty character set
+    expect("Hello".trimmingLeadingCharacters(in: CharacterSet())) == "Hello"
+    expect("Hello".trimmingLeadingCharacters(in: "")) == "Hello"
+
+    // unicode characters
+    expect("🍎🍊🍋Fruits".trimmingLeadingCharacters(in: CharacterSet(charactersIn: "🍎🍊"))) == "🍋Fruits"
+    expect("🍎🍊🍋Fruits".trimmingLeadingCharacters(in: "🍎🍊")) == "🍋Fruits"
+
+    // substring
+    let substring = "   Hello World   ".dropLast(3)
+    expect(substring.trimmingLeadingCharacters(in: .whitespaces)) == "Hello World"
+    expect(substring.trimmingLeadingCharacters(in: " ")) == "Hello World"
+
+    // very long string
+    let longString = String(repeating: " ", count: 10000) + "Hello"
+    expect(longString.trimmingLeadingCharacters(in: .whitespaces)) == "Hello"
+    expect(longString.trimmingLeadingCharacters(in: " ")) == "Hello"
+  }
+
+  func test_trimmingTrailingCharacter() {
+    // basic functionality
+    expect("abcdefaaa".trimmingTrailingCharacter("a")) == "abcdef"
+
+    // emoji
+    expect("Fruits🍋🍊🍎🍎".trimmingTrailingCharacter("🍎")) == "Fruits🍋🍊"
+
+    // empty string
+    expect("".trimmingTrailingCharacter("a")) == ""
+
+    // no characters to trim
+    expect("Hello".trimmingTrailingCharacter("a")) == "Hello"
+  }
+
+  func test_trimmingTrailingCharacters() {
+    // empty string
+    expect("".trimmingTrailingCharacters(in: .whitespaces)) == ""
+    expect("".trimmingTrailingCharacters(in: "")) == ""
+
+    // string with no characters to trim
+    expect("Hello".trimmingTrailingCharacters(in: .whitespaces)) == "Hello"
+    expect("Hello".trimmingTrailingCharacters(in: "")) == "Hello"
+
+    // string with all characters to trim
+    expect("   ".trimmingTrailingCharacters(in: .whitespaces)) == ""
+    expect("   ".trimmingTrailingCharacters(in: " ")) == ""
+
+    // string with trailing characters to trim
+    expect("Hello   ".trimmingTrailingCharacters(in: .whitespaces)) == "Hello"
+    expect("Hello   ".trimmingTrailingCharacters(in: " ")) == "Hello"
+
+    // string with leading and trailing characters to trim
+    expect("   Hello   ".trimmingTrailingCharacters(in: .whitespaces)) == "   Hello"
+    expect("   Hello   ".trimmingTrailingCharacters(in: " ")) == "   Hello"
+
+    // custom character set
+    let customSet = CharacterSet(charactersIn: "123")
+    expect("123abc123".trimmingTrailingCharacters(in: customSet)) == "123abc"
+    expect("123abc123".trimmingTrailingCharacters(in: "123")) == "123abc"
+
+    expect("abcdefaaa".trimmingTrailingCharacters(in: CharacterSet(charactersIn: "ab"))) == "abcdef"
+    expect("abcdefaaa".trimmingTrailingCharacters(in: "ab")) == "abcdef"
+
+    // empty character set
+    expect("Hello".trimmingTrailingCharacters(in: CharacterSet())) == "Hello"
+    expect("Hello".trimmingTrailingCharacters(in: "")) == "Hello"
+
+    // unicode characters
+    expect("Fruits🍋🍊🍎".trimmingTrailingCharacters(in: CharacterSet(charactersIn: "🍎🍊"))) == "Fruits🍋"
+    expect("Fruits🍋🍊🍎".trimmingTrailingCharacters(in: "🍎🍊")) == "Fruits🍋"
+
+    // substring
+    let substring = "   Hello World   ".dropFirst(3)
+    expect(substring.trimmingTrailingCharacters(in: .whitespaces)) == "Hello World"
+    expect(substring.trimmingTrailingCharacters(in: " ")) == "Hello World"
+
+    // very long string
+    let longString = "Hello" + String(repeating: " ", count: 10000)
+    expect(longString.trimmingTrailingCharacters(in: .whitespaces)) == "Hello"
+    expect(longString.trimmingTrailingCharacters(in: " ")) == "Hello"
+  }
+
+  func testLeadingTrimmed() {
+    expect("aaabcdef".trimmingLeadingCharacter("a")) == "bcdef"
+    expect("  aaabcdef".trimmingLeadingCharacter(" ")) == "aaabcdef"
+    expect("  aaabcdef   ".trimmingLeadingCharacter(" ")) == "aaabcdef   "
+
+    expect("aaaThink different.".trimmingLeadingCharacters(in: "a")) == "Think different."
+    expect("aaaThink different.".trimmingLeadingCharacters(in: "aa")) == "Think different."
+    expect("000.20".trimmingLeadingCharacters(in: "0.")) == "20"
+    expect("+012.20".trimmingLeadingCharacters(in: "0+")) == "12.20"
+    expect("+0012.23".trimmingLeadingCharacters(in: "0+")) == "12.23"
+  }
+
+  func testTrailingTrimmed() {
+    expect("Think different.\n\n".trimmingTrailingCharacter("\n")) == "Think different."
+    expect("aaabcdef".trimmingTrailingCharacter("f")) == "aaabcde"
+    expect("  aaabcdef  ".trimmingTrailingCharacter(" ")) == "  aaabcdef"
+    expect("  aaabcdeff".trimmingTrailingCharacter("f")) == "  aaabcde"
+    expect("  aaabcdeff\n".trimmingTrailingCharacter("\n")) == "  aaabcdeff"
+
+    expect("120.00".trimmingTrailingCharacter("0").trimmingTrailingCharacter(".")) == "120"
+
+    expect("Think different.\n \n ".trimmingTrailingCharacters(in: " \n")) == "Think different."
+    expect("Think different.\n \n ".trimmingTrailingCharacters(in: "   \n ")) == "Think different."
+    expect("120.00".trimmingTrailingCharacters(in: "0.")) == "12"
+    expect("12.20".trimmingTrailingCharacters(in: "0.")) == "12.2"
+    expect("12.23".trimmingTrailingCharacters(in: "0.")) == "12.23"
   }
 }
