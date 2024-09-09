@@ -141,13 +141,15 @@ WORKSPACE_PACKAGE_RESOLVED="$WORKSPACE_PATH/xcshareddata/swiftpm/Package.resolve
 
 cd "$WORKSPACE_DIR" || exit 1
 
-echo "Update Package.resolved to the latest version"
+echo "Update Package.resolved..."
 swift package update
 
-echo "Copy Package.resolved to $WORKSPACE_PACKAGE_RESOLVED"
-# remove the file if it exists
-rm -f "$WORKSPACE_PACKAGE_RESOLVED"
-cp "$WORKSPACE_DIR/Package.resolved" "$WORKSPACE_PACKAGE_RESOLVED"
+if [ -f "$WORKSPACE_PACKAGE_RESOLVED" ]; then
+  echo "Copy Package.resolved to $WORKSPACE_PACKAGE_RESOLVED"
+  # remove the file if it exists
+  rm -f "$WORKSPACE_PACKAGE_RESOLVED"
+  cp "$WORKSPACE_DIR/Package.resolved" "$WORKSPACE_PACKAGE_RESOLVED"
+fi
 
 echo "🚀 Build workspace: ${CYAN}$WORKSPACE${RESET}, scheme: ${CYAN}$SCHEME${RESET}, configuration: ${CYAN}$CONFIGURATION${RESET}, os: ${CYAN}$OS${RESET}"
 

@@ -106,15 +106,15 @@ class DispatchGroup_ExtensionsTests: XCTestCase {
       group.leave()
     }
 
-    let timeoutExpectation = self.expectation(description: "task should timeout")
+    let timeoutExpectation = self.expectation(description: "should timeout")
     timeoutExpectation.assertForOverFulfill = true
 
-    let executeExpectation = self.expectation(description: "timed out task should not execute")
+    let executeExpectation = self.expectation(description: "should not execute")
     executeExpectation.isInverted = true
 
     group.async(
       queue: .main,
-      timeoutInterval: 0.1,
+      timeoutInterval: 0.05,
       timeout: {
         expect(Thread.isMainThread) == true
         timeoutExpectation.fulfill()
