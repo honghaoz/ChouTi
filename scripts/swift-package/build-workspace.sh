@@ -137,8 +137,17 @@ ERROR_CODE=0
 
 WORKSPACE_DIR=$(dirname "$WORKSPACE_PATH")
 WORKSPACE=$(basename "$WORKSPACE_PATH")
+WORKSPACE_PACKAGE_RESOLVED="$WORKSPACE_PATH/xcshareddata/swiftpm/Package.resolved"
 
 cd "$WORKSPACE_DIR" || exit 1
+
+echo "Update Package.resolved to the latest version"
+swift package update
+
+echo "Copy Package.resolved to $WORKSPACE_PACKAGE_RESOLVED"
+# remove the file if it exists
+rm -f "$WORKSPACE_PACKAGE_RESOLVED"
+cp "$WORKSPACE_DIR/Package.resolved" "$WORKSPACE_PACKAGE_RESOLVED"
 
 echo "🚀 Build workspace: ${CYAN}$WORKSPACE${RESET}, scheme: ${CYAN}$SCHEME${RESET}, configuration: ${CYAN}$CONFIGURATION${RESET}, os: ${CYAN}$OS${RESET}"
 
