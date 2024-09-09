@@ -52,6 +52,28 @@ public func memoryAddress(_ object: UnsafeRawPointer) -> Int {
   Int(bitPattern: object)
 }
 
+/// Get the pointer's memory address as `String`.
+///
+/// This is useful to print `struct` memory address.
+///
+/// - Parameter object: A pointer.
+/// - Returns: Memory address.
+@inlinable
+@inline(__always)
+public func memoryAddressString(_ object: UnsafeRawPointer) -> String {
+  String(format: "%p", memoryAddress(object))
+}
+
+/// Get the object's memory address as `String`.
+///
+/// - Parameter object: An object.
+/// - Returns: Memory address.
+@inlinable
+@inline(__always)
+public func memoryAddressString(_ object: AnyObject) -> String {
+  String(format: "%p", memoryAddress(rawPointer(object)))
+}
+
 public extension NSObject {
 
   /// Get the object's unique identifier.

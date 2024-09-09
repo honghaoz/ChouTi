@@ -71,4 +71,22 @@ class ObjectIdentifierTests: XCTestCase {
     expect(object.rawPointer()) == Unmanaged.passUnretained(object).toOpaque()
     expect(object.rawPointer()) != self.rawPointer()
   }
+
+  func test_memoryAddressString() {
+    #if canImport(AppKit)
+    let path = NSBezierPath()
+    expect(String(describing: path).hasPrefix("Path <\(memoryAddressString(path))>")) == true
+    expect(String(describing: path).hasPrefix("Path <\(memoryAddressString(path.rawPointer()))>")) == true
+    expect(String(describing: path).hasPrefix("Path <0x\(String(Int(bitPattern: Unmanaged.passUnretained(path).toOpaque()), radix: 16))>")) == true
+    expect(String(describing: path).hasPrefix("Path <0x\(String(memoryAddress(ChouTi.rawPointer(path)), radix: 16))>")) == true
+    #endif
+
+    #if canImport(UIKit)
+    let path = UIBezierPath()
+    expect(String(describing: path).hasPrefix("<UIBezierPath: \(memoryAddressString(path));")) == true
+    expect(String(describing: path).hasPrefix("<UIBezierPath: \(memoryAddressString(path.rawPointer()));")) == true
+    expect(String(describing: path).hasPrefix("<UIBezierPath: 0x\(String(Int(bitPattern: Unmanaged.passUnretained(path).toOpaque()), radix: 16));")) == true
+    expect(String(describing: path).hasPrefix("<UIBezierPath: 0x\(String(memoryAddress(ChouTi.rawPointer(path)), radix: 16));")) == true
+    #endif
+  }
 }
