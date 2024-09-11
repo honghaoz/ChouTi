@@ -134,10 +134,17 @@ public enum Device {
     ])
 
     #if DEBUG
-    let lastUpdatedAt = Date(timeIntervalSince1970: 1710432000) // 2024-03-15
-    let now = Date()
-    if now.hasBeen(.months(6), since: lastUpdatedAt) {
-      ChouTi.assertFailure("Please update the notch models.")
+    // make Date for 2024-09-10
+    let calendar = Calendar.current
+    var components = DateComponents()
+    components.year = 2024
+    components.month = 9
+    components.day = 10
+    if let lastUpdatedAt = calendar.date(from: components).assert("failed to create date") {
+      let now = Date()
+      if now.hasBeen(.months(6), since: lastUpdatedAt) {
+        ChouTi.assertFailure("Please update the Mac notch models.")
+      }
     }
     #endif
 
