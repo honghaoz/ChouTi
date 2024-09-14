@@ -54,6 +54,7 @@ class ObjectIdentifierTests: XCTestCase {
     var struct1Copy = struct1
     var struct2 = FooStrut()
 
+    expect(memoryAddress(&struct1)) == memoryAddress(&struct1)
     expect(memoryAddress(&struct1)) != memoryAddress(&struct1Copy)
     expect(memoryAddress(&struct1)) != memoryAddress(&struct2)
 

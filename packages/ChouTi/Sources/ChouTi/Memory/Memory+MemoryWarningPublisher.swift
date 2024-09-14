@@ -116,7 +116,7 @@ private final class MemoryPressureMonitor {
           warningHandler?()
         case .critical:
           #if DEBUG
-          print("⚠️🔥 Critical memory warning")
+          print("🚨 Critical low memory warning")
           #endif
           warningHandler?()
         default:

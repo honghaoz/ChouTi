@@ -31,6 +31,12 @@
 import Foundation
 
 /// Get the object's raw pointer.
+///
+/// Example:
+/// ```swift
+/// let pointer = rawPointer(object)
+/// ```
+///
 /// - Parameter object: An object.
 /// - Returns Raw pointer.
 @inlinable
@@ -42,29 +48,48 @@ public func rawPointer(_ object: AnyObject) -> UnsafeMutableRawPointer {
 
 /// Get a pointer's memory address as `Int`.
 ///
-/// This is useful to print `struct` memory address.
+/// This is useful to get `struct` memory address.
+///
+/// Example:
+/// ```swift
+/// var foo = FooStrut()
+/// memoryAddress(&foo) // 6171903744
+/// ```
 ///
 /// - Parameter object: A pointer.
 /// - Returns: Memory address.
 @inlinable
 @inline(__always)
-public func memoryAddress(_ object: UnsafeRawPointer) -> Int {
-  Int(bitPattern: object)
+public func memoryAddress(_ pointer: UnsafeRawPointer) -> Int {
+  Int(bitPattern: pointer)
 }
 
 /// Get the pointer's memory address as `String`.
 ///
-/// This is useful to print `struct` memory address.
+/// This is useful to get `struct` memory address.
+///
+/// Example:
+/// ```swift
+/// var foo = FooStrut()
+/// memoryAddressString(&foo) // "0x16fdfc700"
+/// ```
 ///
 /// - Parameter object: A pointer.
 /// - Returns: Memory address.
 @inlinable
 @inline(__always)
-public func memoryAddressString(_ object: UnsafeRawPointer) -> String {
-  String(format: "%p", memoryAddress(object))
+public func memoryAddressString(_ pointer: UnsafeRawPointer) -> String {
+  String(format: "%p", memoryAddress(pointer))
 }
 
 /// Get the object's memory address as `String`.
+///
+/// This is useful to get `struct` memory address.
+///
+/// Example:
+/// ```swift
+/// memoryAddressString(object) // "0x16fdfc700"
+/// ```
 ///
 /// - Parameter object: An object.
 /// - Returns: Memory address.
@@ -77,15 +102,15 @@ public func memoryAddressString(_ object: AnyObject) -> String {
 public extension NSObject {
 
   /// Get the object's unique identifier.
-  /// - Returns:
+  /// - Returns: The identifier.
   @inlinable
   @inline(__always)
   func objectIdentifier() -> ObjectIdentifier {
     ObjectIdentifier(self)
   }
 
-  /// Get the object's memory address.
-  /// - Returns: Memory address.
+  /// Get the object's pointer.
+  /// - Returns: The pointer.
   @inlinable
   @inline(__always)
   func rawPointer() -> UnsafeMutableRawPointer {
@@ -95,4 +120,4 @@ public extension NSObject {
 
 /// Performance note:
 /// - Converting memory address to `String` is slow.
-/// - `ObjectIdentifier(object)` is same speed as `Unmanaged.passUnretained(object).toOpaque()`
+/// - `ObjectIdentifier(object)` has the same speed as `Unmanaged.passUnretained(object).toOpaque()`
