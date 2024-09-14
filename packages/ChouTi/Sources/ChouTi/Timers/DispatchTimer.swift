@@ -366,7 +366,7 @@ public final class DispatchTimer {
     private let host: DispatchTimer
 
     fileprivate init(host: DispatchTimer) {
-      ChouTi.assert(Thread.isRunningXCTest, "test namespace should only be used in test target.")
+      ChouTi.assert(Thread.isRunningXCTest, "Test namespace should only be used in test target.")
       self.host = host
     }
 

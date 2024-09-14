@@ -102,17 +102,17 @@ public final class LinkedList<T>: LinkedListType, CustomStringConvertible {
   /// - Returns: The node at the given index.
   public func node(at index: Int) -> Node {
     guard index >= 0 else {
-      fatalError("index must be greater or equal to 0")
+      fatalError("index must be greater or equal to 0") // swiftlint:disable:this fatal_error
     }
     guard !isEmpty else {
-      fatalError("List is empty")
+      fatalError("List is empty") // swiftlint:disable:this fatal_error
     }
 
     // swiftlint:disable:next force_unwrapping
     var node = head!
     for _ in 0 ..< index {
       guard let next = node.next else {
-        fatalError("index is out of bounds.")
+        fatalError("index is out of bounds.") // swiftlint:disable:this fatal_error
       }
       node = next
     }

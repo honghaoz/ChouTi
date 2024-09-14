@@ -315,8 +315,7 @@ public final class IndexedLinkedList<T>: LinkedListType, CustomStringConvertible
   @discardableResult
   public func remove(node: LinkedListNode<T>) -> T {
     guard let index = index(of: node) else {
-      // swiftlint:disable:next fatal_error
-      fatalError("Node not found in the list.")
+      fatalError("Node not found in the list.") // swiftlint:disable:this fatal_error
     }
 
     let isTail = node === tail

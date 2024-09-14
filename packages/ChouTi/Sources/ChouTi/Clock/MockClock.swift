@@ -103,7 +103,7 @@ public class MockClock: Clock {
     private let host: MockClock
 
     fileprivate init(host: MockClock) {
-      ChouTi.assert(Thread.isRunningXCTest, "test namespace should only be used in test target.")
+      ChouTi.assert(Thread.isRunningXCTest, "Test namespace should only be used in test target.")
       self.host = host
     }
 

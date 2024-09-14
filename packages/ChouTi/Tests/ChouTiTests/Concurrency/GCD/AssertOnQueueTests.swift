@@ -38,6 +38,7 @@ class AssertOnQueueTests: XCTestCase {
     let queue = DispatchQueue.make(label: "test")
     queue.sync {
       assertOnQueue(queue)
+      assertOnQueue(queue, "should be on queue")
     }
   }
 
