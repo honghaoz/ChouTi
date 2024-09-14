@@ -90,66 +90,6 @@ public func atan(_ value: Double) -> Angle {
   Angle(radians: atan(value))
 }
 
-/// Returns the hyperbolic sine of the angle.
-///
-/// - Parameter angle: The angle.
-/// - Returns: The hyperbolic sine of the angle.
-@inlinable
-@inline(__always)
-public func sinh(_ angle: Angle) -> Double {
-  sinh(angle.radians)
-}
-
-/// Returns the hyperbolic cosine of the angle.
-///
-/// - Parameter angle: The angle.
-/// - Returns: The hyperbolic cosine of the angle.
-@inlinable
-@inline(__always)
-public func cosh(_ angle: Angle) -> Double {
-  cosh(angle.radians)
-}
-
-/// Returns the hyperbolic tangent of the angle.
-///
-/// - Parameter angle: The angle.
-/// - Returns: The hyperbolic tangent of the angle.
-@inlinable
-@inline(__always)
-public func tanh(_ angle: Angle) -> Double {
-  tanh(angle.radians)
-}
-
-/// Returns the angle whose hyperbolic sine is the specified value.
-///
-/// - Parameter value: The value.
-/// - Returns: The angle.
-@inlinable
-@inline(__always)
-public func asinh(_ value: Double) -> Angle {
-  Angle(radians: asinh(value))
-}
-
-/// Returns the angle whose hyperbolic cosine is the specified value.
-///
-/// - Parameter value: The value.
-/// - Returns: The angle.
-@inlinable
-@inline(__always)
-public func acosh(_ value: Double) -> Angle {
-  Angle(radians: acosh(value))
-}
-
-/// Returns the angle whose hyperbolic tangent is the specified value.
-///
-/// - Parameter value: The value.
-/// - Returns: The angle.
-@inlinable
-@inline(__always)
-public func atanh(_ value: Double) -> Angle {
-  Angle(radians: atanh(value))
-}
-
 // https://www.swift.org/blog/numerics/
 // https://en.wikipedia.org/wiki/Sine_and_cosine
 // https://en.wikipedia.org/wiki/Hyperbolic_function
