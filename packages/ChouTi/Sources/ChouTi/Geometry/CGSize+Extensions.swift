@@ -379,16 +379,16 @@ public extension CGSize {
   }
 }
 
-// MARK: - isApproximatelyEqual
+// MARK: - ApproximatelyEquatable
 
-public extension CGSize {
+extension CGSize: ApproximatelyEquatable {
 
   /// Check if the size is approximately equal to the given size.
   ///
   /// - Parameters:
   ///   - other: The size to compare to.
   ///   - absoluteTolerance: The absolute tolerance to use for the comparison.
-  func isApproximatelyEqual(to other: Self, absoluteTolerance: CGFloat) -> Bool {
+  public func isApproximatelyEqual(to other: Self, absoluteTolerance: Double) -> Bool {
     width.isApproximatelyEqual(to: other.width, absoluteTolerance: absoluteTolerance) &&
       height.isApproximatelyEqual(to: other.height, absoluteTolerance: absoluteTolerance)
   }

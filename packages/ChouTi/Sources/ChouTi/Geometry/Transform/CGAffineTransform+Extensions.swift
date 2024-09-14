@@ -379,9 +379,9 @@ extension CGAffineTransform: Hashable {
   }
 }
 
-// MARK: - isApproximatelyEqual
+// MARK: - ApproximatelyEquatable
 
-public extension CGAffineTransform {
+extension CGAffineTransform: ApproximatelyEquatable {
 
   /// Check if the transform is approximately equal to another transform.
   ///
@@ -389,7 +389,7 @@ public extension CGAffineTransform {
   ///   - other: The other transform.
   ///   - absoluteTolerance: The absolute tolerance.
   /// - Returns: `true` if the transform is approximately equal to the other transform.
-  func isApproximatelyEqual(to other: Self, absoluteTolerance: CGFloat) -> Bool {
+  public func isApproximatelyEqual(to other: Self, absoluteTolerance: Double) -> Bool {
     a.isApproximatelyEqual(to: other.a, absoluteTolerance: absoluteTolerance) &&
       b.isApproximatelyEqual(to: other.b, absoluteTolerance: absoluteTolerance) &&
       c.isApproximatelyEqual(to: other.c, absoluteTolerance: absoluteTolerance) &&
