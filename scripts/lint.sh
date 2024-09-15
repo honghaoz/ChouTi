@@ -128,7 +128,7 @@ if [[ "$LINT_ALL" == "true" ]]; then
   echo "➡️  Executing swiftlint ($SWIFTLINT_VERSION)..."
 
   measure_start
-  lint_output=$("$SWIFTLINT_BIN" lint --cache-path "$SWIFTLINT_CACHE_DIR" "$REPO_ROOT" 2>&1)
+  lint_output=$("$SWIFTLINT_BIN" lint --cache-path "$SWIFTLINT_CACHE_DIR" "$REPO_ROOT" 2>&1 || ERROR_CODE=$?)
   echo "$lint_output" | "$SWIFTLINT_BEAUTIFY"
   measure_end "swiftlint"
 

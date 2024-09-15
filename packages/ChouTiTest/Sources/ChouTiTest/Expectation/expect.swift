@@ -43,7 +43,7 @@ public func expect<T>(_ expression: @autoclosure () throws -> T, _ description: 
     let value = try expression()
     return Expression(value: { value }, thrownError: nil, description: description, file: file, line: line)
   } catch {
-    return Expression(value: { fatalError("unexpected") }, thrownError: error, description: description, file: file, line: line)
+    return Expression(value: { fatalError("unexpected") }, thrownError: error, description: description, file: file, line: line) // swiftlint:disable:this fatal_error
   }
 }
 
@@ -60,7 +60,7 @@ public func expect<T>(_ expression: @autoclosure () throws -> T?, _ description:
     let value = try expression()
     return OptionalExpression(value: { value }, thrownError: nil, description: description, file: file, line: line)
   } catch {
-    return OptionalExpression(value: { fatalError("unexpected") }, thrownError: error, description: description, file: file, line: line)
+    return OptionalExpression(value: { fatalError("unexpected") }, thrownError: error, description: description, file: file, line: line) // swiftlint:disable:this fatal_error
   }
 }
 
