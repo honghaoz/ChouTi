@@ -245,6 +245,13 @@ class CATransform3D_Extensions: XCTestCase {
   // MARK: - Concatenation
 
   func test_concatenated() {
+    // empty
+    expect([CATransform3D]().concatenated()) == CATransform3DIdentity
+
+    // single
+    expect([CATransform3D.identity].concatenated()) == CATransform3DIdentity
+
+    // non-empty
     expect(
       [
         CATransform3D.identity,

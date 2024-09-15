@@ -398,8 +398,13 @@ public extension [CATransform3D] {
   ///
   /// - Returns: The concatenated transform.
   func concatenated() -> CATransform3D {
-    reduce(into: CATransform3DIdentity) { result, next in
-      result = result.concat(next)
+    switch count {
+    case 0:
+      return CATransform3DIdentity
+    case 1:
+      return self[0]
+    default:
+      return reduce(CATransform3DIdentity, CATransform3DConcat)
     }
   }
 }

@@ -412,7 +412,15 @@ public extension [CGAffineTransform] {
   ///
   /// - Returns: The concatenated transform.
   func concatenated() -> CGAffineTransform {
-    reduce(into: CGAffineTransform.identity) { result, next in
+    guard !isEmpty else {
+      return .identity
+    }
+
+    guard count > 1 else {
+      return self[0]
+    }
+
+    return reduce(into: CGAffineTransform.identity) { result, next in
       result = result.concatenating(next)
     }
   }

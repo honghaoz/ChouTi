@@ -162,13 +162,22 @@ class CGAffineTransform_Extensions: XCTestCase {
   // MARK: - Concatenation
 
   func test_concatenated() {
-    let transforms: [CGAffineTransform] = [
-      .translation(x: 10, y: 20),
-      .translation(x: 30, y: 40),
-      .translation(x: 50, y: 60),
-      .scale(x: 10, y: 10),
-    ]
-    let concatenated = transforms.concatenated()
-    expect(concatenated) == CGAffineTransform(a: 10.0, b: 0.0, c: 0.0, d: 10.0, tx: 900.0, ty: 1200.0)
+    // empty
+    expect([CGAffineTransform]().concatenated()) == CGAffineTransform.identity
+
+    // single
+    expect([CGAffineTransform.translation(x: 10, y: 20)].concatenated()) == CGAffineTransform.translation(x: 10, y: 20)
+
+    // non-empty
+    do {
+      let transforms: [CGAffineTransform] = [
+        .translation(x: 10, y: 20),
+        .translation(x: 30, y: 40),
+        .translation(x: 50, y: 60),
+        .scale(x: 10, y: 10),
+      ]
+      let concatenated = transforms.concatenated()
+      expect(concatenated) == CGAffineTransform(a: 10.0, b: 0.0, c: 0.0, d: 10.0, tx: 900.0, ty: 1200.0)
+    }
   }
 }
