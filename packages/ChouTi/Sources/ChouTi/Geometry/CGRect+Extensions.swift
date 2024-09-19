@@ -153,7 +153,7 @@ public extension CGRect {
   @inlinable
   @inline(__always)
   var right: CGFloat {
-    get { x + width }
+    get { maxX }
     set { origin.x = newValue - width }
   }
 
