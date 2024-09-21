@@ -244,6 +244,9 @@ class CGRect_ExtensionsTests: XCTestCase {
     expect(frame.expanded(by: 10)) == CGRect(x: 90, y: 190, width: 320, height: 420)
     expect(frame.expanded(left: 10, right: 20, top: 30, bottom: 40)) == CGRect(x: 90, y: 170, width: 330, height: 470)
     expect(frame.expanded()) == frame
+
+    expect(frame.inset(by: 150)) == CGRect(250.0, 350.0, 0.0, 100.0)
+    expect(frame.inset(by: 160)) == CGRect(.infinity, .infinity, 0, 0)
   }
 
   // MARK: - Translate
