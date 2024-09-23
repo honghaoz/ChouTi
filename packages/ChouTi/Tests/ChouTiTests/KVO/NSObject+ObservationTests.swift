@@ -1,8 +1,8 @@
 //
-//  DeallocationNotifiableTests.swift
+//  NSObject+ObservationTests.swift
 //  ChouTi
 //
-//  Created by Honghao Zhang on 4/3/23.
+//  Created by Honghao Zhang on 9/23/24.
 //  Copyright © 2020 Honghao Zhang.
 //
 //  MIT License
@@ -34,49 +34,44 @@ import ChouTiTest
 
 import ChouTi
 
-class DeallocationNotifiableTests: XCTestCase {
+class NSObjectObservationTests: XCTestCase {
 
-  func test_addDeallocateBlock() {
-    var object: TestObject? = TestObject()
-    var called: Bool = false
-    object?.onDeallocate {
+  func test_observeString() {
+    let object = TestObject()
+    var called = false
+    let observer: KVOObserverType = object.observe("name") { (object, old: String, new: String) in
+      expect(old) == "initial"
+      expect(new) == "changed"
       called = true
     }
-    object = nil
+    _ = observer
 
+    object.name = "changed"
     expect(called) == true
   }
 
-  func test_add_multiple_deallocateBlock() {
-    var object: TestObject? = TestObject()
-
-    var called1: Bool = false
-    var called2: Bool = false
-    object?.onDeallocate {
-      called1 = true
-    }
-    object?.onDeallocate {
-      called2 = true
-    }
-
-    object = nil
-
-    expect(called1) == true
-    expect(called2) == true
-  }
-
-  func test_remove_deallocateBlock() {
-    var object: TestObject? = TestObject()
-    var called: Bool = false
-    let token = object?.onDeallocate {
+  func test_observeEnum() {
+    let object = TestObject()
+    var called = false
+    let observer: KVOObserverType = object.observe("status") { (object, old: TestObject.Status, new: TestObject.Status) in
+      expect(old) == .initial
+      expect(new) == .changed
       called = true
     }
+    _ = observer
 
-    token?.cancel()
-
-    object = nil
-    expect(called) == false
+    object.status = .changed
+    expect(called) == true
   }
 }
 
-private class TestObject: DeallocationNotifiable {}
+private class TestObject: NSObject {
+
+  @objc enum Status: Int, RawRepresentable {
+    case initial
+    case changed
+  }
+
+  @objc dynamic var name: String = "initial"
+  @objc dynamic var status: Status = .initial
+}

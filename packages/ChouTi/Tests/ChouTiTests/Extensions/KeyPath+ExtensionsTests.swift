@@ -34,7 +34,7 @@ import QuartzCore
 
 class KeyPath_ExtensionsTests: XCTestCase {
 
-  class TestObject: NSObject {
+  private class TestObject: NSObject {
 
     dynamic var name: Name = Name(first: "", last: "")
     @objc dynamic var name2: Name = Name(first: "", last: "")
