@@ -48,7 +48,7 @@ public extension String {
     guard let data = Data(base64Encoded: self) else {
       return nil
     }
-    return data.utf8String()
+    return data.string(encoding: .utf8)
   }
 }
 
