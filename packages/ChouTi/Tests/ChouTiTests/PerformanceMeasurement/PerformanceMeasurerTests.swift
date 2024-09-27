@@ -437,7 +437,7 @@ final class PerformanceMeasurerTests: XCTestCase {
     let data = pipe.fileHandleForReading.readDataToEndOfFile()
     pipe.fileHandleForReading.closeFile()
 
-    return String(decoding: data, as: UTF8.self)
+    return String(decoding: data, as: UTF8.self) // swiftlint:disable:this optional_data_string_conversion
   }
 
   // Helper function to capture console output in async context
@@ -453,6 +453,6 @@ final class PerformanceMeasurerTests: XCTestCase {
     let data = pipe.fileHandleForReading.readDataToEndOfFile()
     pipe.fileHandleForReading.closeFile()
 
-    return String(decoding: data, as: UTF8.self)
+    return String(decoding: data, as: UTF8.self) // swiftlint:disable:this optional_data_string_conversion
   }
 }

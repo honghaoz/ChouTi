@@ -46,10 +46,14 @@ public extension Data {
 
   /// Convert the data to a string with UTF-8 encoding.
   ///
+  /// - Warning: ⚠️ This method could return malformed string if the data is not a valid UTF-8 sequence.
+  /// Please use `string(encoding: .utf8)` instead.
+  /// See more details at https://github.com/realm/SwiftLint/issues/5263#issuecomment-2115182747
+  ///
   /// - Returns: A UTF-8 string representation of the Data.
   @inlinable
   @inline(__always)
   func utf8String() -> String {
-    String(decoding: self, as: UTF8.self)
+    String(decoding: self, as: UTF8.self) // swiftlint:disable:this optional_data_string_conversion
   }
 }

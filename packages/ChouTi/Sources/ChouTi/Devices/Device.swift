@@ -99,7 +99,7 @@ public enum Device {
       return nil
     }
 
-    return String(decoding: modelData, as: UTF8.self).trimmingCharacters(in: .controlCharacters)
+    return String(data: modelData, encoding: .utf8)?.trimmingCharacters(in: .controlCharacters)
 
     /// https://stackoverflow.com/questions/20070333/obtain-model-identifier-string-on-os-x
     /// https://www.reddit.com/r/swift/comments/gwf9fa/how_do_i_find_the_model_of_the_mac_in_swift/

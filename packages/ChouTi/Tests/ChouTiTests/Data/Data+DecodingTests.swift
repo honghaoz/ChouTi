@@ -90,5 +90,19 @@ class Data_DecodingTests: XCTestCase {
       let string = data.utf8String()
       expect(string) == "\u{fffd}\u{fffd}`O}Y\u{c}\u{fffd}\u{16}NLu"
     }
+
+    do {
+      // While it is true that any String can be utf-8-encoded, it is not true that any byte sequence is a valid utf-8 sequence.
+      // Consider for instance the 3-byte sequence [0xe2, 0x28, 0xa1]:
+      // https://github.com/realm/SwiftLint/issues/5263#issuecomment-2115182747
+      let data = Data([0xE2, 0x28, 0xA1])
+      let string = data.utf8String()
+      expect(string) == "\u{fffd}(\u{fffd}"
+
+      let data2 = string.data(using: .utf8)
+      expect(data) != data2 // expected to not equal as `utf8String()` can be incorrect
+
+      expect(data.string(encoding: .utf8)) == nil
+    }
   }
 }
