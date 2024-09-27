@@ -22,20 +22,42 @@ env:
 
 jobs:
   build:
-    name: Build & Test
+    name: Build
+    runs-on: ${{ vars.MACOS }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Bootstrap
+        uses: ./.github/actions/bootstrap
+      - name: Build root package
+        run: make build
+
+  test:
+    name: Test
     strategy:
       fail-fast: false
+      matrix:
+        platform: [iOS, tvOS, visionOS]
     timeout-minutes: 30
     runs-on: ${{ vars.MACOS }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
       - name: Bootstrap
-        run: make bootstrap
-      # ChouTi
-      - name: Test package "ChouTi"
+        uses: ./.github/actions/bootstrap
+      - name: Test package "ChouTi" on ${{ matrix.platform }}
         if: success() || failure()
-        run: make test -C packages/ChouTi
+        run: make test-${{ matrix.platform }} -C packages/ChouTi
+
+  test-codecov:
+    name: Test (macOS)
+    runs-on: ${{ vars.MACOS }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Bootstrap
+        uses: ./.github/actions/bootstrap
+      # ChouTi
       - name: Test package "ChouTi" with Codecov
         if: success() || failure()
         run: make test-codecov -C packages/ChouTi
@@ -49,7 +71,7 @@ jobs:
           name: ChouTi
           fail_ci_if_error: true
       # ChouTiTest
-      - name: Test package "ChouTiTest"
+      - name: Test package "ChouTiTest" with Codecov
         if: success() || failure()
         run: make test-codecov -C packages/ChouTiTest
       - name: Upload package "ChouTiTest" code coverage
@@ -61,6 +83,3 @@ jobs:
           flags: ChouTiTest
           name: ChouTiTest
           fail_ci_if_error: true
-      - name: Build root package
-        if: success() || failure()
-        run: make build

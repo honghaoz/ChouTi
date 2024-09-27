@@ -15,9 +15,29 @@ build-release: # Build with release configuration.
 	@$(REPO_ROOT)/scripts/swift-package/build-workspace.sh --workspace-path "Project.xcworkspace" --scheme "ChouTi" --configuration "Release"
 
 .PHONY: test
-test: # Run tests.
+test: # Run tests on all platforms.
 	@echo test: $(MAKEFILE_DIR_NAME)
 	@$(REPO_ROOT)/scripts/swift-package/test-workspace.sh --workspace-path "Project.xcworkspace" --scheme "ChouTi"
+
+.PHONY: test-iOS
+test-iOS: # Run tests on iOS.
+	@echo test iOS: $(MAKEFILE_DIR_NAME)
+	@$(REPO_ROOT)/scripts/swift-package/test-workspace.sh --workspace-path "Project.xcworkspace" --scheme "ChouTi" --os "iOS"
+
+.PHONY: test-macOS
+test-macOS: # Run tests on macOS.
+	@echo test macOS: $(MAKEFILE_DIR_NAME)
+	@$(REPO_ROOT)/scripts/swift-package/test-workspace.sh --workspace-path "Project.xcworkspace" --scheme "ChouTi" --os "macOS"
+
+.PHONY: test-tvOS
+test-tvOS: # Run tests on tvOS.
+	@echo test tvOS: $(MAKEFILE_DIR_NAME)
+	@$(REPO_ROOT)/scripts/swift-package/test-workspace.sh --workspace-path "Project.xcworkspace" --scheme "ChouTi" --os "tvOS"
+
+.PHONY: test-visionOS
+test-visionOS: # Run tests on visionOS.
+	@echo test visionOS: $(MAKEFILE_DIR_NAME)
+	@$(REPO_ROOT)/scripts/swift-package/test-workspace.sh --workspace-path "Project.xcworkspace" --scheme "ChouTi" --os "visionOS"
 
 .PHONY: test-codecov
 test-codecov: # Run tests with code coverage.
