@@ -28,6 +28,9 @@
 //  IN THE SOFTWARE.
 //
 
+#if canImport(QuartzCore)
+import QuartzCore
+
 import ChouTi
 import ChouTiTest
 
@@ -262,3 +265,5 @@ class CATransform3D_Extensions: XCTestCase {
     ) == CATransform3D.translation(x: 10, y: 20, z: 30).scale(x: 10, y: 10, z: 10)
   }
 }
+
+#endif

@@ -28,9 +28,12 @@
 //  IN THE SOFTWARE.
 //
 
+#if canImport(QuartzCore)
+import QuartzCore
+#endif
+
 import ChouTi
 import ChouTiTest
-import QuartzCore
 
 class KeyPath_ExtensionsTests: XCTestCase {
 
@@ -52,6 +55,8 @@ class KeyPath_ExtensionsTests: XCTestCase {
 
   func test_keyPathStringValue() {
     expect((\NSObject.description as KeyPath).stringValue) == "description"
+
+    #if canImport(QuartzCore)
     expect((\CABasicAnimation.fromValue as KeyPath).stringValue) == "fromValue"
     expect((\CALayer.bounds.size.width).stringValue) == "bounds.size.width"
     expect((\CALayer.bounds.size.height).stringValue) == "bounds.size.height"
@@ -66,6 +71,7 @@ class KeyPath_ExtensionsTests: XCTestCase {
     expect(layer.value(forKeyPath: (\CALayer.bounds.size.height).stringValue) as? CGFloat) == 100
     expect(layer.value(forKeyPath: (\CALayer.bounds.size).stringValue) as? CGSize) == CGSize(width: 100, height: 100)
     expect(layer.value(forKeyPath: (\CALayer.shadowColor).stringValue) as! CGColor) == CGColor(red: 1, green: 0, blue: 0, alpha: 1) // swiftlint:disable:this force_cast
+    #endif
 
     expect((\TestObject.name as KeyPath).stringValue) == "name"
     expect((\TestObject.name.first as KeyPath).stringValue) == "name.first"

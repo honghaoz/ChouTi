@@ -37,6 +37,10 @@ import IOKit
 import UIKit
 #endif
 
+#if canImport(WatchKit)
+import WatchKit
+#endif
+
 public enum Device {
 
   public enum DeviceType {
@@ -44,6 +48,7 @@ public enum Device {
     case iPad
     case mac
     case tv
+    case watch
     // case vision
   }
 
@@ -60,6 +65,8 @@ public enum Device {
     return .tv
     #elseif os(visionOS)
     return .iPhone // TODO: support vision
+    #elseif os(watchOS)
+    return .watch
     #else
     ChouTi.assertFailure("Unsupported device type.")
     return .iPhone
@@ -172,7 +179,7 @@ public enum Device {
         return 0
       }
     }
-    #if os(tvOS)
+    #if os(tvOS) || os(watchOS)
     return getAvailableSpace()
     #else
     do {
@@ -212,8 +219,10 @@ public enum Device {
 
     /// https://forums.developer.apple.com/forums/thread/117978
     /// https://gist.github.com/ericdke/ed2d8bd3d127c25bcc6b
-    #elseif canImport(UIKit)
+    #elseif canImport(UIKit) && !os(watchOS)
     return UIDevice.current.identifierForVendor?.uuidString
+    #elseif os(watchOS)
+    WKInterfaceDevice.current().identifierForVendor?.uuidString
     #else
     ChouTi.assertFailure("Unsupported platform")
     return nil

@@ -182,7 +182,7 @@ public extension Logger {
 
           let fileHandle = try FileHandle(forWritingTo: url)
           let data = Data((string + "\n").utf8)
-          if #available(OSX 10.15.4, iOS 13.4, watchOS 6.0, tvOS 13.4, *) {
+          if #available(OSX 10.15.4, iOS 13.4, tvOS 13.4, watchOS 6.2, *) {
             try fileHandle.seekToEnd()
             try fileHandle.write(contentsOf: data)
           } else {
@@ -196,7 +196,7 @@ public extension Logger {
           // }
 
           self.assert()?.logFileSize = try {
-            if #available(OSX 10.15.4, iOS 13.4, tvOS 13.4, *) {
+            if #available(OSX 10.15.4, iOS 13.4, tvOS 13.4, watchOS 6.2, *) {
               return try fileHandle.offset()
             } else {
               return fileHandle.offsetInFile

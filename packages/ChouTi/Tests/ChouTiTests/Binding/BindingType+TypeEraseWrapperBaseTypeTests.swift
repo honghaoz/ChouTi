@@ -32,6 +32,7 @@ import ChouTiTest
 
 import ChouTi
 
+@available(watchOS 9.0.0, *)
 class BindingType_TypeEraseWrapperBaseTypeTests: XCTestCase {
 
   func testCasting() {

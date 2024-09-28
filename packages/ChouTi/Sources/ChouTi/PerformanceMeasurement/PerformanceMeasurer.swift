@@ -29,13 +29,12 @@
 //
 
 import Foundation
-import QuartzCore
 
 /// Performance measurer.
 public final class PerformanceMeasurer {
 
-  private var startTime: CFTimeInterval?
-  private var elapsedTime: CFTimeInterval?
+  private var startTime: UInt64?
+  private var elapsedTime: TimeInterval?
 
   /// Initialize a performance measurer.
   /// - Parameters:
@@ -44,19 +43,19 @@ public final class PerformanceMeasurer {
 
   /// Start the performance measurement.
   public func start() {
-    startTime = CACurrentMediaTime()
+    startTime = mach_absolute_time()
   }
 
   /// End the performance measurement.
   /// - Returns: The elapsed time. Returns `0` if `start()` is not called.
   @discardableResult
-  public func end() -> CFTimeInterval {
+  public func end() -> TimeInterval {
     guard let startTime else {
       logger.warning("Unbalanced end() call. Call start() first.")
       return 0
     }
 
-    let elapsedTime = CACurrentMediaTime() - startTime
+    let elapsedTime = machTimeInterval(from: startTime, to: mach_absolute_time())
     self.elapsedTime = elapsedTime
 
     self.startTime = nil
@@ -91,7 +90,7 @@ public final class PerformanceMeasurer {
 public extension PerformanceMeasurer {
 
   /// The start time of the performance measurement.
-  private static var startTime: CFTimeInterval?
+  private static var startTime: UInt64?
 
   /// Start the performance measurement.
   ///
@@ -105,7 +104,7 @@ public extension PerformanceMeasurer {
   /// print("elapsed time: \(elapsedTime)")
   /// ```
   static func start() {
-    startTime = CACurrentMediaTime()
+    startTime = mach_absolute_time()
   }
 
   /// End the performance measurement.
@@ -114,12 +113,12 @@ public extension PerformanceMeasurer {
   ///
   /// - Returns: The elapsed time.
   @discardableResult
-  static func end() -> CFTimeInterval {
+  static func end() -> TimeInterval {
     guard let startTime else {
       logger.warning("Unbalanced end() call. Call start() first.")
       return 0
     }
-    let timeElapsed = CACurrentMediaTime() - startTime
+    let timeElapsed = machTimeInterval(from: startTime, to: mach_absolute_time())
     self.startTime = nil
     return timeElapsed
   }
@@ -147,9 +146,9 @@ public extension PerformanceMeasurer {
   /// - Returns: The elapsed duration.
   @discardableResult
   static func measure(_ block: () -> Void) -> TimeInterval {
-    let startTime = CACurrentMediaTime()
+    let startTime = mach_absolute_time()
     block()
-    return CACurrentMediaTime() - startTime
+    return machTimeInterval(from: startTime, to: mach_absolute_time())
   }
 
   /// Measure the execution time of the block.
@@ -168,9 +167,9 @@ public extension PerformanceMeasurer {
   /// - Returns: The tuple of the value with the elapsed duration.
   @discardableResult
   static func measure<Result>(_ block: () throws -> Result) rethrows -> (Result, TimeInterval) {
-    let startTime = CACurrentMediaTime()
+    let startTime = mach_absolute_time()
     let result = try block()
-    let timeElapsed = CACurrentMediaTime() - startTime
+    let timeElapsed = machTimeInterval(from: startTime, to: mach_absolute_time())
     return (result, timeElapsed)
   }
 
@@ -190,9 +189,9 @@ public extension PerformanceMeasurer {
   /// - Returns: The tuple of the value with the elapsed duration.
   @discardableResult
   static func measure<Result>(_ block: () async throws -> Result) async rethrows -> (Result, TimeInterval) {
-    let startTime = CACurrentMediaTime()
+    let startTime = mach_absolute_time()
     let result = try await block()
-    let timeElapsed = CACurrentMediaTime() - startTime
+    let timeElapsed = machTimeInterval(from: startTime, to: mach_absolute_time())
     return (result, timeElapsed)
   }
 }
@@ -255,15 +254,15 @@ public extension PerformanceMeasurer {
                       tagPad: Character? = nil,
                       useScientificNumber: Bool = false,
                       repeatCount: Int,
-                      _ block: BlockThrowsVoid) rethrows -> CFTimeInterval
+                      _ block: BlockThrowsVoid) rethrows -> TimeInterval
   {
-    let startTime = CACurrentMediaTime()
+    let startTime = mach_absolute_time()
 
     for _ in 0 ..< repeatCount {
       try block()
     }
 
-    let timeElapsed = CACurrentMediaTime() - startTime
+    let timeElapsed = machTimeInterval(from: startTime, to: mach_absolute_time())
 
     if var tag = tag {
       if let tagLength {
@@ -297,15 +296,15 @@ public extension PerformanceMeasurer {
                       tagPad: Character? = nil,
                       useScientificNumber: Bool = false,
                       repeatCount: Int,
-                      _ block: BlockAsyncThrowsVoid) async rethrows -> CFTimeInterval
+                      _ block: BlockAsyncThrowsVoid) async rethrows -> TimeInterval
   {
-    let startTime = CACurrentMediaTime()
+    let startTime = mach_absolute_time()
 
     for _ in 0 ..< repeatCount {
       try await block()
     }
 
-    let timeElapsed = CACurrentMediaTime() - startTime
+    let timeElapsed = machTimeInterval(from: startTime, to: mach_absolute_time())
 
     if var tag = tag {
       if let tagLength {

@@ -235,15 +235,19 @@ class ExpectFailureMessageTests: FailureCapturingTestCase {
   }
 
   func test_optionalExpressionThrows() {
+    func fooFunc() throws -> Int? {
+      throw NSError(domain: "test", code: 1, userInfo: nil)
+    }
+
     do {
-      let expectedMessage = #"failed - expect not to throw error: "expected ')'""#
-      expect(try "".wholeMatch(of: Regex("("))) == nil
+      let expectedMessage = #"failed - expect not to throw error: "Error Domain=test Code=1 "(null)"""#
+      expect(try fooFunc()) == nil
       assertFailure(expectedMessage: expectedMessage)
     }
 
     do {
-      let expectedMessage = #"failed - expect not to throw error: "expected ')'""#
-      expect(try "".wholeMatch(of: Regex("("))) != nil
+      let expectedMessage = #"failed - expect not to throw error: "Error Domain=test Code=1 "(null)"""#
+      expect(try fooFunc()) != nil
       assertFailure(expectedMessage: expectedMessage)
     }
   }

@@ -34,6 +34,11 @@ test-tvOS: # Run tests on tvOS.
 	@echo test tvOS: $(MAKEFILE_DIR_NAME)
 	@$(REPO_ROOT)/scripts/swift-package/test-workspace.sh --workspace-path "Project.xcworkspace" --scheme "ChouTi" --os "tvOS"
 
+.PHONY: test-watchOS
+test-watchOS: # Run tests on watchOS.
+	@echo test watchOS: $(MAKEFILE_DIR_NAME)
+	@$(REPO_ROOT)/scripts/swift-package/test-workspace.sh --workspace-path "Project.xcworkspace" --scheme "ChouTi" --os "watchOS"
+
 .PHONY: test-visionOS
 test-visionOS: # Run tests on visionOS.
 	@echo test visionOS: $(MAKEFILE_DIR_NAME)

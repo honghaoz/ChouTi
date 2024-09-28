@@ -28,7 +28,7 @@
 //  IN THE SOFTWARE.
 //
 
-import Foundation
+#if canImport(QuartzCore)
 import QuartzCore
 
 public extension CATransform3D {
@@ -408,6 +408,8 @@ public extension [CATransform3D] {
     }
   }
 }
+
+#endif
 
 /**
  3D Animations
