@@ -30,8 +30,9 @@
 
 import Foundation
 
-import ChouTi
 import ChouTiTest
+
+import ChouTi
 
 class SystemTests: XCTestCase {
 

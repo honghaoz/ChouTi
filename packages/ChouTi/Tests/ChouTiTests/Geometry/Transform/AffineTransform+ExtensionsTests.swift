@@ -30,8 +30,9 @@
 
 #if os(macOS)
 
-import ChouTi
 import ChouTiTest
+
+import ChouTi
 
 class AffineTransform_ExtensionsTests: XCTestCase {
 

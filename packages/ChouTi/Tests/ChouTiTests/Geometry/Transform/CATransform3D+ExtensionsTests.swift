@@ -31,8 +31,9 @@
 #if canImport(QuartzCore)
 import QuartzCore
 
-import ChouTi
 import ChouTiTest
+
+import ChouTi
 
 class CATransform3D_Extensions: XCTestCase {
 

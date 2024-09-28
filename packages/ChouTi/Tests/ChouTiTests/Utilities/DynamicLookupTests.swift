@@ -29,6 +29,7 @@
 //
 
 import ChouTiTest
+
 import ChouTi
 
 private class Person {

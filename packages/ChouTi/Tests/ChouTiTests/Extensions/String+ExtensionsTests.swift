@@ -29,7 +29,10 @@
 //
 
 import Foundation
+
 import ChouTiTest
+
+import ChouTi
 
 class String_ExtensionsTests: XCTestCase {
 

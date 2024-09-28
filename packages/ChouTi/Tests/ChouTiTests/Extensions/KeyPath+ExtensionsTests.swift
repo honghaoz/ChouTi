@@ -32,8 +32,9 @@
 import QuartzCore
 #endif
 
-import ChouTi
 import ChouTiTest
+
+import ChouTi
 
 class KeyPath_ExtensionsTests: XCTestCase {
 

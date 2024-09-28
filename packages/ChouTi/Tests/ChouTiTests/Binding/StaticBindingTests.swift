@@ -28,9 +28,11 @@
 //  IN THE SOFTWARE.
 //
 
-import ChouTiTest
-import ChouTi
 import Combine
+
+import ChouTiTest
+
+import ChouTi
 
 class StaticBindingTests: XCTestCase {
 

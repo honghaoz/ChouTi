@@ -29,6 +29,7 @@
 //
 
 import ChouTiTest
+
 import ChouTi
 
 class FloatingPoint_ApproximateEqualityTests: XCTestCase {

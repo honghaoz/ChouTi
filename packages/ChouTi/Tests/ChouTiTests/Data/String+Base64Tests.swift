@@ -28,8 +28,9 @@
 //  IN THE SOFTWARE.
 //
 
-import ChouTi
 import ChouTiTest
+
+import ChouTi
 
 class String_Base64Tests: XCTestCase {
 

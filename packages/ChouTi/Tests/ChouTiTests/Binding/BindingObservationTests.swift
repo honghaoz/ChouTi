@@ -29,6 +29,7 @@
 //
 
 import ChouTiTest
+
 @testable import ChouTi
 
 class BindingObservationTests: XCTestCase {

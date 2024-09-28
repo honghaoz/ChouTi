@@ -28,14 +28,14 @@
 //  IN THE SOFTWARE.
 //
 
-import ChouTiTest
-
 #if canImport(AppKit)
 import AppKit
 #endif
 #if canImport(UIKit)
 import UIKit
 #endif
+
+import ChouTiTest
 
 import ChouTi
 

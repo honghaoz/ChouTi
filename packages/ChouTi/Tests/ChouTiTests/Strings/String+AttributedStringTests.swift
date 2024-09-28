@@ -41,6 +41,7 @@ private typealias Font = UIFont
 #endif
 
 import ChouTiTest
+
 import ChouTi
 
 class String_AttributedStringTests: XCTestCase {

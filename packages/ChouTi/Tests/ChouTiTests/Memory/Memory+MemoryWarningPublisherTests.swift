@@ -30,9 +30,10 @@
 
 #if os(macOS)
 
+import Combine
+
 import ChouTiTest
 
-import Combine
 import ChouTi
 
 class Memory_MemoryWarningPublisherTests: XCTestCase {
