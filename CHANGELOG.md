@@ -1,5 +1,25 @@
 # CHANGELOG
 
+## [0.0.7](https://github.com/honghaoz/ChouTi/releases/tag/0.0.7) (2024-09-27)
+
+- Framework `ChouTi`:
+  - Added watchOS support.
+  - Added `ResultBuilder`, `ArrayBuilder` and more builders.
+  - Added `Binding` and `Trigger` utilities.
+  - Added `Debounce` and `Throttle` utilities.
+  - Added `DynamicLookup` and `TypeEraseWrapper` utilities.
+  - Added `Clock` and `MockClock` utilities.
+  - Added data structures `LinkedList`, `Queue` and `Tree`.
+  - Added data encoding, decoding and hashing utilities.
+  - Added `Angle`.
+  - Added geometry extensions (`CGPoint`, `CGSize`, `CGRect`, `CGVector`, `CGAffineTransform` and `CATransform3D`).
+  - Added `KVOObservable`.
+  - Added `CancellableToken`
+  - Added `DeallocationNotifiable`
+  - Other various utilities and extensions.
+- Framework `ChouTiTest`:
+  - Fixed an issue that `Any?` type is not supported by `expect`.
+
 ## [0.0.6](https://github.com/honghaoz/ChouTi/releases/tag/0.0.6) (2024-08-29)
 
 - Framework `ChouTi`:
