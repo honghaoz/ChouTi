@@ -4,7 +4,7 @@
 ![swift](https://img.shields.io/badge/swift-5.9-F05138.svg)
 ![platforms](https://img.shields.io/badge/platforms-macOS%2010.5%20%7C%20iOS%2013.0%20%7C%20tvOS%2013.0%20%7C%20visionOS%201.0%20%7C%20watchOS%207.0-007fea.svg)
 
-**ChouTi** is a repository of Swift packages that provides frameworks, utilities and extensions to enhance development on iOS and macOS.
+**ChouTi** is a repository of Swift packages that provides frameworks, utilities and extensions to enhance development on Apple platforms.
 
 ## Installation
 
@@ -40,7 +40,7 @@ targets: [
 
 [![codecov](https://img.shields.io/codecov/c/github/honghaoz/ChouTi/master?token=BWWP0ROG2A&flag=ChouTi&style=flat&label=code%20coverage&color=59B31D)](https://codecov.io/github/honghaoz/ChouTi/tree/master/packages%2FChouTi%2FSources?flags%5B0%5D=ChouTi&displayType=list)
 
-[**ChouTi**](packages/ChouTi) is a Swift framework that provides common utilities and extensions to enhance development on iOS and macOS.
+[**ChouTi**](packages/ChouTi) is a Swift framework that provides common utilities and extensions to enhance development on Apple platforms.
 
 ```swift
 import ChouTi

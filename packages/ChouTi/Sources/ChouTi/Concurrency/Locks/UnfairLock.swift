@@ -45,7 +45,7 @@ import os.lock
 ///  }
 /// ```
 ///
-/// Use `OSAllocatedUnfairLock` for iOS 16.0+ and macOS 13.0+.
+/// Use `OSAllocatedUnfairLock` for macOS 13.0+, iOS/tvOS 16.0+, visionOS 1.0+, and watchOS 9.0+.
 public final class UnfairLock: NSLocking {
 
   @usableFromInline
