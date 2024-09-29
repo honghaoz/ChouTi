@@ -140,6 +140,25 @@ PROJECT=$(basename "$PROJECT_PATH")
 
 cd "$PROJECT_DIR" || exit 1
 
+# == Update Package ==
+# https://stackoverflow.com/a/79035750/3164091
+echo "Update Package..."
+
+# remove derived data
+DERIVED_DATA_PATH=$(xcodebuild -showBuildSettings | grep -m 1 BUILD_DIR | grep -oE "\/.*" | sed 's|/Build/Products||')
+if [ -d "$DERIVED_DATA_PATH" ]; then
+  echo "Remove derived data: $DERIVED_DATA_PATH..."
+  rm -rf "$DERIVED_DATA_PATH"
+fi
+
+# remove Package.resolved
+PACKAGE_RESOLVED="$PROJECT/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
+if [ -f "$PACKAGE_RESOLVED" ]; then
+  echo "Remove Package.resolved: $PACKAGE_RESOLVED..."
+  rm -f "$PACKAGE_RESOLVED"
+fi
+# == Update Package [END] ==
+
 echo "🚀 Build project: ${CYAN}$PROJECT${RESET}, scheme: ${CYAN}$SCHEME${RESET}, configuration: ${CYAN}$CONFIGURATION${RESET}, os: ${CYAN}$OS${RESET}"
 
 echo "${BOLD}Swift Version:${RESET} $(swift --version)"
