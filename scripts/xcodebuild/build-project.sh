@@ -216,7 +216,7 @@ if [[ "$OS" == *"watchOS"* ]]; then
   # DESTINATION="generic/platform=watchOS"
   echo ""
   echo "➡️  Building for ${CYAN}watchOS ($CONFIGURATION)${RESET} on ${CYAN}$DESTINATION${RESET}..."
-  set -o pipefail && xcodebuild clean build -project "$PROJECT" -scheme "$SCHEME" -destination "$DESTINATION" -configuration "$CONFIGURATION" | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
+  set -o pipefail && xcodebuild clean build -project "$PROJECT" -scheme "$SCHEME" -destination "$DESTINATION" -configuration "$CONFIGURATION" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
 fi
 
 if [ $ERROR_CODE -ne 0 ]; then

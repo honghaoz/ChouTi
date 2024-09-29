@@ -63,7 +63,7 @@
 		E59D80A22CA8F64F006A6467 = {
 			isa = PBXGroup;
 			children = (
-				E59D80B32CA8F64F006A6467 /* ChouTiPlayground-watchOS Watch App */,
+				E59D80B32CA8F64F006A6467 /* ChouTiPlayground-watchOS */,
 				E59D80AA2CA8F64F006A6467 /* Products */,
 				E59D80C82CA8F6A1006A6467 /* Frameworks */,
 			);
@@ -78,7 +78,7 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		E59D80B32CA8F64F006A6467 /* ChouTiPlayground-watchOS Watch App */ = {
+		E59D80B32CA8F64F006A6467 /* ChouTiPlayground-watchOS */ = {
 			isa = PBXGroup;
 			children = (
 				E59D80B42CA8F64F006A6467 /* ChouTiPlayground_watchOSApp.swift */,
@@ -86,7 +86,7 @@
 				E59D80B82CA8F650006A6467 /* Assets.xcassets */,
 				E59D80BA2CA8F650006A6467 /* Preview Content */,
 			);
-			path = "ChouTiPlayground-watchOS Watch App";
+			path = "ChouTiPlayground-watchOS";
 			sourceTree = "<group>";
 		};
 		E59D80BA2CA8F650006A6467 /* Preview Content */ = {
@@ -345,7 +345,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"ChouTiPlayground-watchOS Watch App/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"ChouTiPlayground-watchOS/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "ChouTiPlayground-watchOS";
@@ -374,7 +374,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"ChouTiPlayground-watchOS Watch App/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"ChouTiPlayground-watchOS/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "ChouTiPlayground-watchOS";
