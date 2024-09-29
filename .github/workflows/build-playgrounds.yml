@@ -1,5 +1,7 @@
 name: build playgrounds
 on:
+  release:
+    types: [published]
   push:
     tags:
       - '*.*.*' # tags like 0.0.1, 1.2.3, etc.
