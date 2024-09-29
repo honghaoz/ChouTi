@@ -137,13 +137,13 @@ ERROR_CODE=0
 
 WORKSPACE_DIR=$(dirname "$WORKSPACE_PATH")
 WORKSPACE=$(basename "$WORKSPACE_PATH")
-WORKSPACE_PACKAGE_RESOLVED="$WORKSPACE_PATH/xcshareddata/swiftpm/Package.resolved"
 
 cd "$WORKSPACE_DIR" || exit 1
 
 echo "Update Package.resolved..."
 swift package update
 
+WORKSPACE_PACKAGE_RESOLVED="$WORKSPACE/xcshareddata/swiftpm/Package.resolved"
 if [ -f "$WORKSPACE_PACKAGE_RESOLVED" ]; then
   echo "Copy Package.resolved to $WORKSPACE_PACKAGE_RESOLVED"
   # remove the file if it exists
