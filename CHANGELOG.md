@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [0.0.8](https://github.com/honghaoz/ChouTi/releases/tag/0.0.8) (2024-09-28)
+
+- Bumped up swift-tools-version to 5.9.
+- Fixed package platform issues on tvOS and watchOS.
+- Added playgrounds for all platforms.
+- Added CI workflows for building playgrounds with ChouTi releases on all platforms.
+
 ## [0.0.7](https://github.com/honghaoz/ChouTi/releases/tag/0.0.7) (2024-09-27)
 
 - Framework `ChouTi`:
