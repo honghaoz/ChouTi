@@ -174,44 +174,44 @@ fi
 
 # For iOS
 if [[ "$OS" == *"iOS"* ]]; then
-  echo ""
-  echo "➡️  Building for iOS ($CONFIGURATION)..."
   SIMULATOR_NAME=$(xcrun simctl list devices available | grep 'iPhone' | grep -Eo 'iPhone \d+' | sort -t ' ' -k 2 -nr | head -1)
   PLATFORM="iOS Simulator"
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME"
   # DESTINATION="generic/platform=iOS"
+  echo ""
+  echo "➡️  Building for ${CYAN}iOS ($CONFIGURATION)${RESET} on ${CYAN}$DESTINATION${RESET}..."
   set -o pipefail && xcodebuild build -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -configuration "$CONFIGURATION" | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
 fi
 
 # For tvOS
 if [[ "$OS" == *"tvOS"* ]]; then
-  echo ""
-  echo "➡️  Building for tvOS ($CONFIGURATION)..."
   SIMULATOR_NAME=$(xcrun simctl list devices available | grep 'Apple TV' | head -n 1 | awk -F'(' '{print $1}' | xargs)
   PLATFORM="tvOS Simulator"
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME"
+  echo ""
+  echo "➡️  Building for ${CYAN}tvOS ($CONFIGURATION)${RESET} on ${CYAN}$DESTINATION${RESET}..."
   set -o pipefail && xcodebuild build -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -configuration "$CONFIGURATION" | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
 fi
 
 # For visionOS
 if [[ "$OS" == *"visionOS"* ]]; then
-  echo ""
-  echo "➡️  Building for visionOS ($CONFIGURATION)..."
   SIMULATOR_NAME=$(xcrun simctl list devices available | grep "Apple Vision" | head -n 1 | awk -F'(' '{print $1}' | xargs)
   PLATFORM="visionOS Simulator"
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME"
   # DESTINATION="generic/platform=visionOS"
+  echo ""
+  echo "➡️  Building for ${CYAN}visionOS ($CONFIGURATION)${RESET} on ${CYAN}$DESTINATION${RESET}..."
   set -o pipefail && xcodebuild build -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -configuration "$CONFIGURATION" | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
 fi
 
 # For watchOS
 if [[ "$OS" == *"watchOS"* ]]; then
-  echo ""
-  echo "➡️  Building for watchOS ($CONFIGURATION)..."
   SIMULATOR_NAME=$(xcrun simctl list devices available | grep "Apple Watch" | head -n 1 | awk -F'(' '{print $1}' | xargs)
   PLATFORM="watchOS Simulator"
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME"
   # DESTINATION="generic/platform=watchOS"
+  echo ""
+  echo "➡️  Building for ${CYAN}watchOS ($CONFIGURATION)${RESET} on ${CYAN}$DESTINATION${RESET}..."
   set -o pipefail && xcodebuild build -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -configuration "$CONFIGURATION" | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
 fi
 
