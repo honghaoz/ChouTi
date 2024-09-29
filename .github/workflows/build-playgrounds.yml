@@ -1,0 +1,31 @@
+name: build playgrounds
+on:
+  push:
+    tags:
+      - '*.*.*' # tags like 0.0.1, 1.2.3, etc.
+  workflow_dispatch: # manual trigger
+
+env:
+  TERM: xterm-256color
+  DEVELOPER_DIR: /Applications/Xcode_${{ vars.XCODE_VERSION }}.app/Contents/Developer
+
+jobs:
+  build:
+    name: Build
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macOS, iOS, tvOS, visionOS, watchOS]
+    timeout-minutes: 30
+    runs-on: ${{ vars.MACOS }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Bootstrap
+        uses: ./.github/actions/bootstrap
+      - name: Download visionOS simulator
+        if: matrix.platform == 'visionOS'
+        run: xcodebuild -downloadPlatform visionOS
+      - name: Build ChouTiPlayground-${{ matrix.platform }}
+        if: success() || failure()
+        run: make build-playground-${{ matrix.platform }}

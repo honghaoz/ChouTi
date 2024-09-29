@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "chouti",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/honghaoz/ChouTi",
+      "state" : {
+        "revision" : "c13a05f33389877c32bfcab89d327a4bf3199fb9",
+        "version" : "0.0.7"
+      }
+    }
+  ],
+  "version" : 2
+}

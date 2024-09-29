@@ -1,0 +1,483 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		E59D80B02CA8F64F006A6467 /* ChouTiPlayground-watchOS Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = E59D80AF2CA8F64F006A6467 /* ChouTiPlayground-watchOS Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		E59D80B52CA8F64F006A6467 /* ChouTiPlayground_watchOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E59D80B42CA8F64F006A6467 /* ChouTiPlayground_watchOSApp.swift */; };
+		E59D80B72CA8F64F006A6467 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E59D80B62CA8F64F006A6467 /* ContentView.swift */; };
+		E59D80B92CA8F650006A6467 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E59D80B82CA8F650006A6467 /* Assets.xcassets */; };
+		E59D80BC2CA8F650006A6467 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E59D80BB2CA8F650006A6467 /* Preview Assets.xcassets */; };
+		E59D80CD2CA8FBC6006A6467 /* ChouTi in Frameworks */ = {isa = PBXBuildFile; productRef = E59D80CC2CA8FBC6006A6467 /* ChouTi */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		E59D80B12CA8F64F006A6467 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E59D80A32CA8F64F006A6467 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E59D80AE2CA8F64F006A6467;
+			remoteInfo = "ChouTiPlayground-watchOS Watch App";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		E59D80C22CA8F650006A6467 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				E59D80B02CA8F64F006A6467 /* ChouTiPlayground-watchOS Watch App.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		E59D80A92CA8F64F006A6467 /* ChouTiPlayground-watchOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ChouTiPlayground-watchOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		E59D80AF2CA8F64F006A6467 /* ChouTiPlayground-watchOS Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ChouTiPlayground-watchOS Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		E59D80B42CA8F64F006A6467 /* ChouTiPlayground_watchOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChouTiPlayground_watchOSApp.swift; sourceTree = "<group>"; };
+		E59D80B62CA8F64F006A6467 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		E59D80B82CA8F650006A6467 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		E59D80BB2CA8F650006A6467 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E59D80AC2CA8F64F006A6467 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E59D80CD2CA8FBC6006A6467 /* ChouTi in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		E59D80A22CA8F64F006A6467 = {
+			isa = PBXGroup;
+			children = (
+				E59D80B32CA8F64F006A6467 /* ChouTiPlayground-watchOS Watch App */,
+				E59D80AA2CA8F64F006A6467 /* Products */,
+				E59D80C82CA8F6A1006A6467 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		E59D80AA2CA8F64F006A6467 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E59D80A92CA8F64F006A6467 /* ChouTiPlayground-watchOS.app */,
+				E59D80AF2CA8F64F006A6467 /* ChouTiPlayground-watchOS Watch App.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E59D80B32CA8F64F006A6467 /* ChouTiPlayground-watchOS Watch App */ = {
+			isa = PBXGroup;
+			children = (
+				E59D80B42CA8F64F006A6467 /* ChouTiPlayground_watchOSApp.swift */,
+				E59D80B62CA8F64F006A6467 /* ContentView.swift */,
+				E59D80B82CA8F650006A6467 /* Assets.xcassets */,
+				E59D80BA2CA8F650006A6467 /* Preview Content */,
+			);
+			path = "ChouTiPlayground-watchOS Watch App";
+			sourceTree = "<group>";
+		};
+		E59D80BA2CA8F650006A6467 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				E59D80BB2CA8F650006A6467 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		E59D80C82CA8F6A1006A6467 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		E59D80A82CA8F64F006A6467 /* ChouTiPlayground-watchOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E59D80C32CA8F650006A6467 /* Build configuration list for PBXNativeTarget "ChouTiPlayground-watchOS" */;
+			buildPhases = (
+				E59D80A72CA8F64F006A6467 /* Resources */,
+				E59D80C22CA8F650006A6467 /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E59D80B22CA8F64F006A6467 /* PBXTargetDependency */,
+			);
+			name = "ChouTiPlayground-watchOS";
+			productName = "ChouTiPlayground-watchOS";
+			productReference = E59D80A92CA8F64F006A6467 /* ChouTiPlayground-watchOS.app */;
+			productType = "com.apple.product-type.application.watchapp2-container";
+		};
+		E59D80AE2CA8F64F006A6467 /* ChouTiPlayground-watchOS Watch App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E59D80BF2CA8F650006A6467 /* Build configuration list for PBXNativeTarget "ChouTiPlayground-watchOS Watch App" */;
+			buildPhases = (
+				E59D80AB2CA8F64F006A6467 /* Sources */,
+				E59D80AC2CA8F64F006A6467 /* Frameworks */,
+				E59D80AD2CA8F64F006A6467 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "ChouTiPlayground-watchOS Watch App";
+			packageProductDependencies = (
+				E59D80CC2CA8FBC6006A6467 /* ChouTi */,
+			);
+			productName = "ChouTiPlayground-watchOS Watch App";
+			productReference = E59D80AF2CA8F64F006A6467 /* ChouTiPlayground-watchOS Watch App.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E59D80A32CA8F64F006A6467 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1540;
+				LastUpgradeCheck = 1540;
+				TargetAttributes = {
+					E59D80A82CA8F64F006A6467 = {
+						CreatedOnToolsVersion = 15.4;
+					};
+					E59D80AE2CA8F64F006A6467 = {
+						CreatedOnToolsVersion = 15.4;
+					};
+				};
+			};
+			buildConfigurationList = E59D80A62CA8F64F006A6467 /* Build configuration list for PBXProject "ChouTiPlayground-watchOS" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = E59D80A22CA8F64F006A6467;
+			packageReferences = (
+				E59D80CB2CA8FBC6006A6467 /* XCRemoteSwiftPackageReference "ChouTi" */,
+			);
+			productRefGroup = E59D80AA2CA8F64F006A6467 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E59D80A82CA8F64F006A6467 /* ChouTiPlayground-watchOS */,
+				E59D80AE2CA8F64F006A6467 /* ChouTiPlayground-watchOS Watch App */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		E59D80A72CA8F64F006A6467 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E59D80AD2CA8F64F006A6467 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E59D80BC2CA8F650006A6467 /* Preview Assets.xcassets in Resources */,
+				E59D80B92CA8F650006A6467 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E59D80AB2CA8F64F006A6467 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E59D80B72CA8F64F006A6467 /* ContentView.swift in Sources */,
+				E59D80B52CA8F64F006A6467 /* ChouTiPlayground_watchOSApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		E59D80B22CA8F64F006A6467 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E59D80AE2CA8F64F006A6467 /* ChouTiPlayground-watchOS Watch App */;
+			targetProxy = E59D80B12CA8F64F006A6467 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		E59D80BD2CA8F650006A6467 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		E59D80BE2CA8F650006A6467 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		E59D80C02CA8F650006A6467 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"ChouTiPlayground-watchOS Watch App/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "ChouTiPlayground-watchOS";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKWatchOnly = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "io.chouti.ChouTiPlayground-watchOS.watchkitapp";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 7.0;
+			};
+			name = Debug;
+		};
+		E59D80C12CA8F650006A6467 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"ChouTiPlayground-watchOS Watch App/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "ChouTiPlayground-watchOS";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKWatchOnly = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "io.chouti.ChouTiPlayground-watchOS.watchkitapp";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 7.0;
+			};
+			name = Release;
+		};
+		E59D80C42CA8F650006A6467 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_KEY_CFBundleDisplayName = "ChouTiPlayground-watchOS";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "io.chouti.ChouTiPlayground-watchOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		E59D80C52CA8F650006A6467 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_KEY_CFBundleDisplayName = "ChouTiPlayground-watchOS";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "io.chouti.ChouTiPlayground-watchOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		E59D80A62CA8F64F006A6467 /* Build configuration list for PBXProject "ChouTiPlayground-watchOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E59D80BD2CA8F650006A6467 /* Debug */,
+				E59D80BE2CA8F650006A6467 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E59D80BF2CA8F650006A6467 /* Build configuration list for PBXNativeTarget "ChouTiPlayground-watchOS Watch App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E59D80C02CA8F650006A6467 /* Debug */,
+				E59D80C12CA8F650006A6467 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E59D80C32CA8F650006A6467 /* Build configuration list for PBXNativeTarget "ChouTiPlayground-watchOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E59D80C42CA8F650006A6467 /* Debug */,
+				E59D80C52CA8F650006A6467 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		E59D80CB2CA8FBC6006A6467 /* XCRemoteSwiftPackageReference "ChouTi" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/honghaoz/ChouTi";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.0.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E59D80CC2CA8FBC6006A6467 /* ChouTi */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E59D80CB2CA8FBC6006A6467 /* XCRemoteSwiftPackageReference "ChouTi" */;
+			productName = ChouTi;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = E59D80A32CA8F64F006A6467 /* Project object */;
+}
