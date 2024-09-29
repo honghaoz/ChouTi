@@ -19,30 +19,30 @@ test: # Run tests on all platforms.
 	@echo test: $(MAKEFILE_DIR_NAME)
 	@$(REPO_ROOT)/scripts/swift-package/test-workspace.sh --workspace-path "Project.xcworkspace" --scheme "ChouTi"
 
-.PHONY: test-iOS
-test-iOS: # Run tests on iOS.
-	@echo test iOS: $(MAKEFILE_DIR_NAME)
-	@$(REPO_ROOT)/scripts/swift-package/test-workspace.sh --workspace-path "Project.xcworkspace" --scheme "ChouTi" --os "iOS"
-
 .PHONY: test-macOS
 test-macOS: # Run tests on macOS.
 	@echo test macOS: $(MAKEFILE_DIR_NAME)
 	@$(REPO_ROOT)/scripts/swift-package/test-workspace.sh --workspace-path "Project.xcworkspace" --scheme "ChouTi" --os "macOS"
+
+.PHONY: test-iOS
+test-iOS: # Run tests on iOS.
+	@echo test iOS: $(MAKEFILE_DIR_NAME)
+	@$(REPO_ROOT)/scripts/swift-package/test-workspace.sh --workspace-path "Project.xcworkspace" --scheme "ChouTi" --os "iOS"
 
 .PHONY: test-tvOS
 test-tvOS: # Run tests on tvOS.
 	@echo test tvOS: $(MAKEFILE_DIR_NAME)
 	@$(REPO_ROOT)/scripts/swift-package/test-workspace.sh --workspace-path "Project.xcworkspace" --scheme "ChouTi" --os "tvOS"
 
-.PHONY: test-watchOS
-test-watchOS: # Run tests on watchOS.
-	@echo test watchOS: $(MAKEFILE_DIR_NAME)
-	@$(REPO_ROOT)/scripts/swift-package/test-workspace.sh --workspace-path "Project.xcworkspace" --scheme "ChouTi" --os "watchOS"
-
 .PHONY: test-visionOS
 test-visionOS: # Run tests on visionOS.
 	@echo test visionOS: $(MAKEFILE_DIR_NAME)
 	@$(REPO_ROOT)/scripts/swift-package/test-workspace.sh --workspace-path "Project.xcworkspace" --scheme "ChouTi" --os "visionOS"
+
+.PHONY: test-watchOS
+test-watchOS: # Run tests on watchOS.
+	@echo test watchOS: $(MAKEFILE_DIR_NAME)
+	@$(REPO_ROOT)/scripts/swift-package/test-workspace.sh --workspace-path "Project.xcworkspace" --scheme "ChouTi" --os "watchOS"
 
 .PHONY: test-codecov
 test-codecov: # Run tests with code coverage.

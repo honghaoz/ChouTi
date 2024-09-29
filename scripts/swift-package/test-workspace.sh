@@ -11,16 +11,16 @@ RESET=$(safe_tput sgr0)
 print_help() {
   echo "${BOLD}OVERVIEW:${RESET} Build Swift package via a workspace for all platforms."
   echo ""
-  echo "${BOLD}Usage:${RESET} $0 --workspace-path <workspace_path> --scheme <scheme_name> --os <iOS macOS tvOS visionOS watchOS>"
+  echo "${BOLD}Usage:${RESET} $0 --workspace-path <workspace_path> --scheme <scheme_name> --os <macOS iOS tvOS visionOS watchOS>"
   echo ""
   echo "${BOLD}OPTIONS:${RESET}"
   echo "  --workspace-path <workspace_path>       The path to the workspace. Required."
   echo "  --scheme <scheme_name>                  The scheme to build. Required."
-  echo "  --os <iOS macOS tvOS visionOS watchOS>  The list of OS to build for. Optional. Default is 'iOS macOS tvOS visionOS watchOS'."
+  echo "  --os <iOS macOS tvOS visionOS watchOS>  The list of OS to build for. Optional. Default is 'macOS iOS tvOS visionOS watchOS'."
   echo "  --help, -h                              Show this help message."
   echo ""
   echo "${BOLD}EXAMPLES:${RESET}"
-  echo "  $0 --workspace path/to/Project.xcworkspace --scheme ChouTi --os iOS macOS tvOS visionOS watchOS"
+  echo "  $0 --workspace path/to/Project.xcworkspace --scheme ChouTi --os macOS iOS tvOS visionOS watchOS"
 }
 
 WORKSPACE_PATH=""
@@ -58,8 +58,8 @@ while [[ "$#" -gt 0 ]]; do
     shift # past value
     # consume all remaining arguments
     while [[ "$1" != "--"* ]] && [[ "$#" -gt 0 ]]; do
-      # arguments should be in [iOS macOS tvOS visionOS watchOS]
-      if [[ "$1" != "iOS" ]] && [[ "$1" != "macOS" ]] && [[ "$1" != "tvOS" ]] && [[ "$1" != "visionOS" ]] && [[ "$1" != "watchOS" ]]; then
+      # arguments should be in [macOS iOS tvOS visionOS watchOS]
+      if [[ "$1" != "macOS" ]] && [[ "$1" != "iOS" ]] && [[ "$1" != "tvOS" ]] && [[ "$1" != "visionOS" ]] && [[ "$1" != "watchOS" ]]; then
         echo "🛑 Invalid OS: $1" >&2
         exit 1
       fi
@@ -102,7 +102,7 @@ fi
 
 # ensure the OS is provided
 if [ -z "$OS" ]; then
-  OS="iOS macOS tvOS visionOS watchOS"
+  OS="macOS iOS tvOS visionOS watchOS"
 fi
 
 # ensure workspace path exists
