@@ -1227,8 +1227,25 @@ class CGRect_ExtensionsTests: XCTestCase {
   // MARK: - Misc
 
   func testSquareRect() {
-    let rect = CGRect(x: 10, y: 10, width: 200, height: 100)
-    expect(rect.squareRect()) == CGRect(x: 50, y: 00, width: 100, height: 100)
+    // horizontal
+    do {
+      let rect = CGRect(x: 10, y: 20, width: 200, height: 100)
+      expect(rect.squareRect()) == CGRect(x: 60, y: 20, width: 100, height: 100)
+    }
+
+    // vertical
+    do {
+      let rect = CGRect(x: 10, y: 20, width: 100, height: 200)
+      expect(rect.squareRect()) == CGRect(x: 10, y: 70, width: 100, height: 100)
+    }
+
+    // square
+    do {
+      do {
+        let rect = CGRect(x: 10, y: 20, width: 100, height: 100)
+        expect(rect.squareRect()) == CGRect(x: 10, y: 20, width: 100, height: 100)
+      }
+    }
   }
 
   func testAspectRatio() {

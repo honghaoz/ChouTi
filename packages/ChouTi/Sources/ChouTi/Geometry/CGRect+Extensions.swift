@@ -669,10 +669,10 @@ public extension CGRect {
 
 public extension CGRect {
 
-  /// Returns the center aligned square rect within the rectangle.
+  /// Returns the square rect centered within the rectangle.
   func squareRect() -> CGRect {
-    let squareSize = min(width, height)
-    return CGRect((width - squareSize) / 2, (height - squareSize) / 2, squareSize, squareSize)
+    let size = min(width, height)
+    return CGRect((width - size) / 2, (height - size) / 2, size, size).translate(origin)
   }
 
   /// Returns the aspect ratio (width / height).
