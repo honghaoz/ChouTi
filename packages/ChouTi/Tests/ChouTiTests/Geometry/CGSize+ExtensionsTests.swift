@@ -140,8 +140,40 @@ class CGSize_ExtensionsTests: XCTestCase {
   }
 
   func testArea() {
-    let size1 = CGSize(12, 23)
-    expect(size1.area) == 276
+    // both positive
+    expect(CGSize(12, 23).area) == 276
+
+    // both negative
+    expect(CGSize(-10, -20).area) == -200
+
+    // one positive, one negative
+    expect(CGSize(10, -20).area) == -200
+    expect(CGSize(-10, 20).area) == -200
+
+    // zero
+    expect(CGSize(0, 0).area) == 0
+    expect(CGSize(0, 10).area) == 0
+    expect(CGSize(10, 0).area) == 0
+    expect(CGSize(0, -10).area) == 0
+    expect(CGSize(-10, 0).area) == 0
+
+    // nan
+    expect(CGSize(CGFloat.nan, 0).area.isNaN) == true
+    expect(CGSize(0, CGFloat.nan).area.isNaN) == true
+    expect(CGSize(CGFloat.nan, 10).area.isNaN) == true
+    expect(CGSize(10, CGFloat.nan).area.isNaN) == true
+    expect(CGSize(CGFloat.nan, -10).area.isNaN) == true
+    expect(CGSize(-10, CGFloat.nan).area.isNaN) == true
+    expect(CGSize(CGFloat.nan, CGFloat.nan).area.isNaN) == true
+
+    // infinity
+    expect(CGSize(CGFloat.infinity, 10).area) == CGFloat.infinity
+    expect(CGSize(10, CGFloat.infinity).area) == CGFloat.infinity
+    expect(CGSize(CGFloat.infinity, 0).area.isNaN) == true
+    expect(CGSize(0, CGFloat.infinity).area.isNaN) == true
+    expect(CGSize(CGFloat.infinity, -10).area) == -CGFloat.infinity
+    expect(CGSize(-10, CGFloat.infinity).area) == -CGFloat.infinity
+    expect(CGSize(CGFloat.infinity, CGFloat.infinity).area) == CGFloat.infinity
   }
 
   func testAspectRatio() {

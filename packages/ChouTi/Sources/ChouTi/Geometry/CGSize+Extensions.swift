@@ -249,7 +249,11 @@ public extension CGSize {
   @inlinable
   @inline(__always)
   var area: CGFloat {
-    width * height
+    if width.sign == height.sign {
+      return width * height * (width < 0 ? -1 : 1)
+    } else {
+      return width * height
+    }
   }
 
   // MARK: - Shapes

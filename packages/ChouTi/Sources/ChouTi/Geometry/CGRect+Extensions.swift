@@ -670,7 +670,20 @@ public extension CGRect {
 public extension CGRect {
 
   /// Returns the square rect centered within the rectangle.
+  ///
+  /// - Note: If the rectangle is null or infinite, it returns the original rectangle.
+  /// - Note: If the rectangle has zero area, it returns a zero rect.
+  ///
+  /// - Returns: A square `CGRect` centered within the rectangle.
   func squareRect() -> CGRect {
+    if isNull || isInfinite {
+      return self
+    }
+
+    guard size.area > 0 else {
+      return .zero
+    }
+
     let size = min(width, height)
     return CGRect((width - size) / 2, (height - size) / 2, size, size).translate(origin)
   }

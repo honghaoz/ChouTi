@@ -1246,6 +1246,49 @@ class CGRect_ExtensionsTests: XCTestCase {
         expect(rect.squareRect()) == CGRect(x: 10, y: 20, width: 100, height: 100)
       }
     }
+
+    // negative
+    do {
+      let rect = CGRect(x: 10, y: 20, width: -200, height: -100)
+      expect(rect.squareRect()) == .zero
+    }
+
+    // zero
+    do {
+      let rect = CGRect.zero
+      expect(rect.squareRect()) == CGRect.zero
+    }
+
+    // null
+    do {
+      let rect = CGRect.null
+      expect(rect.squareRect()) == CGRect.null
+    }
+
+    // infinite
+    do {
+      let rect = CGRect.infinite
+      expect(rect.squareRect()) == CGRect.infinite
+    }
+
+    // nan
+    do {
+      let rect = CGRect(x: CGFloat.nan, y: CGFloat.nan, width: CGFloat.nan, height: CGFloat.nan)
+      expect(rect.squareRect()) == .zero
+    }
+    do {
+      let rect = CGRect(x: CGFloat.nan, y: CGFloat.nan, width: 10, height: 20)
+      let square = rect.squareRect()
+      expect(square.x.isNaN) == true
+      expect(square.y.isNaN) == true
+      expect(square.width) == 10
+      expect(square.height) == 10
+    }
+
+    do {
+      let rect = CGRect(x: CGFloat.nan, y: CGFloat.nan, width: .nan, height: 20)
+      expect(rect.squareRect()) == .zero
+    }
   }
 
   func testAspectRatio() {
