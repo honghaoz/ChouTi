@@ -148,13 +148,8 @@ if [ -f "$CONTENTS_FILE" ]; then
   #      location = "group:..">
   #   </FileRef>
   PACKAGE_DIR=$(sed -n 's/.*location = "group:\([^"]*\)".*/\1/p' "$CONTENTS_FILE" | head -n 1)
-  if [ -n "$PACKAGE_DIR" ]; then
-    PACKAGE_DIR=$(realpath "$WORKSPACE_DIR/$PACKAGE_DIR")
-    echo "Package: $PACKAGE_DIR/Package.swift"
-  else
-    echo "Error: Could not find package path in contents.xcworkspacedata"
-    exit 1
-  fi
+  PACKAGE_DIR=$(realpath "$WORKSPACE_DIR/$PACKAGE_DIR")
+  echo "Package: $PACKAGE_DIR/Package.swift"
 else
   echo "Error: contents.xcworkspacedata not found"
   exit 1
