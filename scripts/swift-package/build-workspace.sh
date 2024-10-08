@@ -135,20 +135,50 @@ fi
 REPO_ROOT=$(git rev-parse --show-toplevel)
 ERROR_CODE=0
 
+WORKSPACE_PATH=$(realpath "$WORKSPACE_PATH")
 WORKSPACE_DIR=$(dirname "$WORKSPACE_PATH")
 WORKSPACE=$(basename "$WORKSPACE_PATH")
 
-cd "$WORKSPACE_DIR" || exit 1
+# find Package.swift location
+PACKAGE_DIR=""
+CONTENTS_FILE="$WORKSPACE_PATH/contents.xcworkspacedata"
+if [ -f "$CONTENTS_FILE" ]; then
+  # extract the path of the package
+  #  <FileRef
+  #      location = "group:..">
+  #   </FileRef>
+  PACKAGE_DIR=$(sed -n 's/.*location = "group:\([^"]*\)".*/\1/p' "$CONTENTS_FILE" | head -n 1)
+  if [ -n "$PACKAGE_DIR" ]; then
+    PACKAGE_DIR=$(realpath "$WORKSPACE_DIR/$PACKAGE_DIR")
+    echo "Package: $PACKAGE_DIR/Package.swift"
+  else
+    echo "Error: Could not find package path in contents.xcworkspacedata"
+    exit 1
+  fi
+else
+  echo "Error: contents.xcworkspacedata not found"
+  exit 1
+fi
+
+cd "$PACKAGE_DIR" || exit 1
+
+# make sure Package.swift exists
+if [ ! -f "Package.swift" ]; then
+  echo "Error: Package.swift not found"
+  exit 1
+fi
 
 echo "Update Package.resolved..."
 swift package update
 
-WORKSPACE_PACKAGE_RESOLVED="$WORKSPACE/xcshareddata/swiftpm/Package.resolved"
+cd "$WORKSPACE_DIR" || exit 1
+
+WORKSPACE_PACKAGE_RESOLVED="$WORKSPACE_PATH/xcshareddata/swiftpm/Package.resolved"
 if [ -f "$WORKSPACE_PACKAGE_RESOLVED" ]; then
-  echo "Copy Package.resolved to $WORKSPACE_PACKAGE_RESOLVED"
+  echo "Copy $PACKAGE_DIR/Package.resolved to $WORKSPACE_PACKAGE_RESOLVED"
   # remove the file if it exists
   rm -f "$WORKSPACE_PACKAGE_RESOLVED"
-  cp "$WORKSPACE_DIR/Package.resolved" "$WORKSPACE_PACKAGE_RESOLVED"
+  cp "$PACKAGE_DIR/Package.resolved" "$WORKSPACE_PACKAGE_RESOLVED"
 fi
 
 echo "🚀 Build workspace: ${CYAN}$WORKSPACE${RESET}, scheme: ${CYAN}$SCHEME${RESET}, configuration: ${CYAN}$CONFIGURATION${RESET}, os: ${CYAN}$OS${RESET}"
