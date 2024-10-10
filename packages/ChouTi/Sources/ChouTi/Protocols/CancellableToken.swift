@@ -49,6 +49,8 @@ public extension CancellableToken {
   }
 
   /// Stores this cancellable token in the array.
+  ///
+  /// - Parameter array: The array in which to store this `CancellableToken`.
   @inlinable
   @inline(__always)
   func store(in array: inout [CancellableToken]) {
@@ -80,6 +82,7 @@ public extension CancellableToken {
 public extension CancellableToken where Self: Hashable {
 
   /// Stores this cancellable instance in the specified set.
+  ///
   /// - Parameter set: The set in which to store this `CancellableToken`.
   @inlinable
   @inline(__always)
@@ -132,7 +135,9 @@ public final class CancellableTokenGroup: CancellableToken, CustomStringConverti
 /// A `CancellableToken` implementation that can hold a value.
 public final class ValueCancellableToken<T>: CancellableToken, CustomStringConvertible {
 
+  /// The value the token holds.
   public let value: T
+
   private let cancelBlock: (ValueCancellableToken<T>) -> Void
 
   /// Initializes a `ValueCancellableToken`.
