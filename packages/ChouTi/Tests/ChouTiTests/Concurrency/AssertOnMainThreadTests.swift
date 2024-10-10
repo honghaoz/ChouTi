@@ -51,9 +51,19 @@ class AssertOnMainThreadTests: XCTestCase {
 
     queue.async {
       Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
-        expect(message.contains("Should be on main thread. Current thread: <NSThread:")) == true
+        expect(message) == "Should be on main thread. Message: \"\""
+        expect(metadata["thread"]) == "\(Thread.current)"
+        expect(metadata["queue"]) == "test-queue"
       }
       assertOnMainThread()
+      Assert.resetTestAssertionFailureHandler()
+
+      Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
+        expect(message) == "Should be on main thread. Message: \"Test message\""
+        expect(metadata["thread"]) == "\(Thread.current)"
+        expect(metadata["queue"]) == "test-queue"
+      }
+      assertOnMainThread("Test message")
       Assert.resetTestAssertionFailureHandler()
 
       expectation.fulfill()
@@ -64,9 +74,19 @@ class AssertOnMainThreadTests: XCTestCase {
 
   func test_assertNotOnMainThread() {
     Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
-      expect(message.contains("Should NOT be on main thread. Current thread: <"), message) == true
+      expect(message) == "Should NOT be on main thread. Message: \"\""
+      expect(metadata["thread"]) == "\(Thread.current)"
+      expect(metadata["queue"]) == "com.apple.main-thread"
     }
     assertNotOnMainThread()
+    Assert.resetTestAssertionFailureHandler()
+
+    Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
+      expect(message) == "Should NOT be on main thread. Message: \"Test message\""
+      expect(metadata["thread"]) == "\(Thread.current)"
+      expect(metadata["queue"]) == "com.apple.main-thread"
+    }
+    assertNotOnMainThread("Test message")
     Assert.resetTestAssertionFailureHandler()
 
     let expectation = expectation(description: "on background thread")

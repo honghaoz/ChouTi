@@ -174,7 +174,7 @@ class OptionalBoxTests: XCTestCase {
 //                box2 = OptionalBox<Int>.none
 //              }
 //
-//              it("should be not equal") {
+//              it("should not be equal") {
 //                expect(box) != box2
 //              }
 //            }
@@ -184,7 +184,7 @@ class OptionalBoxTests: XCTestCase {
 //                box2 = OptionalBox<Int>.some(200)
 //              }
 //
-//              it("should be not equal") {
+//              it("should not be equal") {
 //                expect(box) != box2
 //              }
 //            }
@@ -220,7 +220,7 @@ class OptionalBoxTests: XCTestCase {
 //                box2 = .notSet
 //              }
 //
-//              it("should be not equal") {
+//              it("should not be equal") {
 //                expect(box) != box2
 //              }
 //            }
@@ -240,7 +240,7 @@ class OptionalBoxTests: XCTestCase {
 //                box2 = OptionalBox<Int>.some(200)
 //              }
 //
-//              it("should be not equal") {
+//              it("should not be equal") {
 //                expect(box) != box2
 //              }
 //            }
@@ -286,7 +286,7 @@ class OptionalBoxTests: XCTestCase {
 //                box2 = .notSet
 //              }
 //
-//              it("should be not equal") {
+//              it("should not be equal") {
 //                expect(box) != box2
 //              }
 //            }
@@ -296,7 +296,7 @@ class OptionalBoxTests: XCTestCase {
 //                box2 = OptionalBox<Int>.none
 //              }
 //
-//              it("should be not equal") {
+//              it("should not be equal") {
 //                expect(box) != box2
 //              }
 //            }
@@ -317,7 +317,7 @@ class OptionalBoxTests: XCTestCase {
 //                  box2 = OptionalBox<Int>.some(102)
 //                }
 //
-//                it("should be not equal") {
+//                it("should not be equal") {
 //                  expect(box) != box2
 //                }
 //              }

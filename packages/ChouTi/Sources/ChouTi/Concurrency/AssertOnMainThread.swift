@@ -30,28 +30,56 @@
 
 import Foundation
 
+/// Assert current thread is main thread.
+/// - Parameters:
+///   - message: The message to show when assertion fails.
 @inlinable
 @inline(__always)
-public func assertOnMainThread(_ message: @autoclosure () -> String = String(),
+public func assertOnMainThread(_ message: @autoclosure () -> String? = nil,
                                file: StaticString = #fileID,
                                line: UInt = #line,
                                column: UInt = #column,
                                function: StaticString = #function)
 {
   #if DEBUG
-  ChouTi.assert(Thread.isMainThread, "Should be on main thread. Current thread: \(Thread.current). Current queue label: \"\(DispatchQueue.currentQueueLabel)\". Message: \"\(message())\".", file: file, line: line, column: column, function: function)
+  ChouTi.assert(
+    Thread.isMainThread,
+    "Should be on main thread. Message: \"\(message() ?? "")\"",
+    metadata: [
+      "thread": "\(Thread.current)",
+      "queue": "\(DispatchQueue.currentQueueLabel)",
+    ],
+    file: file,
+    line: line,
+    column: column,
+    function: function
+  )
   #endif
 }
 
+/// Assert current thread is **NOT** main thread.
+/// - Parameters:
+///   - message: The message to show when assertion fails.
 @inlinable
 @inline(__always)
-public func assertNotOnMainThread(_ message: @autoclosure () -> String = String(),
+public func assertNotOnMainThread(_ message: @autoclosure () -> String? = nil,
                                   file: StaticString = #fileID,
                                   line: UInt = #line,
                                   column: UInt = #column,
                                   function: StaticString = #function)
 {
   #if DEBUG
-  ChouTi.assert(!Thread.isMainThread, "Should NOT be on main thread. Current thread: \(Thread.current). Current queue label: \"\(DispatchQueue.currentQueueLabel)\". Message: \"\(message())\".", file: file, line: line, column: column, function: function)
+  ChouTi.assert(
+    !Thread.isMainThread,
+    "Should NOT be on main thread. Message: \"\(message() ?? "")\"",
+    metadata: [
+      "thread": "\(Thread.current)",
+      "queue": "\(DispatchQueue.currentQueueLabel)",
+    ],
+    file: file,
+    line: line,
+    column: column,
+    function: function
+  )
   #endif
 }

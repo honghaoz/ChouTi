@@ -35,45 +35,104 @@ import ChouTi
 class AssertOnQueueTests: XCTestCase {
 
   func test_assertOnQueue() {
-    let queue = DispatchQueue.make(label: "test")
+    let queue = DispatchQueue.make(label: "queue")
+    let queue2 = DispatchQueue.make(label: "queue2")
     queue.sync {
       assertOnQueue(queue)
       assertOnQueue(queue, "should be on queue")
+
+      // no message
+      Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
+        expect(message) == "Should be on queue: queue2. Message: \"\""
+        expect(metadata["queue"]) == "queue"
+        expect(metadata["thread"]) == "\(Thread.current)"
+      }
+      assertOnQueue(queue2)
+      Assert.resetTestAssertionFailureHandler()
+
+      // with message
+      Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
+        expect(message) == "Should be on queue: queue2. Message: \"Test message\""
+        expect(metadata["queue"]) == "queue"
+        expect(metadata["thread"]) == "\(Thread.current)"
+      }
+      assertOnQueue(queue2, "Test message")
+      Assert.resetTestAssertionFailureHandler()
     }
   }
 
   func test_assertNotOnQueue() {
-    let queue = DispatchQueue.make(label: "test")
+    let queue = DispatchQueue.make(label: "queue")
+    let queue2 = DispatchQueue.make(label: "queue2")
     queue.sync {
-      assertNotOnQueue(.main)
-    }
+      assertNotOnQueue(queue2)
+      assertNotOnQueue(queue2, "should not be on queue")
 
-    Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
-      expect(message) == #"Should be NOT on queue: com.apple.main-thread. Current queue label: "com.apple.main-thread". Message: Hey"#
+      // no message
+      Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
+        expect(message) == "Should NOT be on queue: queue. Message: \"\""
+        expect(metadata["queue"]) == "queue"
+        expect(metadata["thread"]) == "\(Thread.current)"
+      }
+      assertNotOnQueue(queue)
+      Assert.resetTestAssertionFailureHandler()
+
+      // with message
+      Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
+        expect(message) == "Should NOT be on queue: queue. Message: \"Test message\""
+        expect(metadata["queue"]) == "queue"
+        expect(metadata["thread"]) == "\(Thread.current)"
+      }
+      assertNotOnQueue(queue, "Test message")
+      Assert.resetTestAssertionFailureHandler()
     }
-    assertNotOnQueue(.main, "Hey")
-    Assert.resetTestAssertionFailureHandler()
   }
 
   func test_assertOnCooperativeQueue() {
     Task {
       assertOnCooperativeQueue()
     }
+
+    // no message
     Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
-      expect(message.contains("Should be on cooperative queue. Current thread:")) == true
+      expect(message) == "Should be on cooperative queue. Message: \"\""
+      expect(metadata["queue"]) == "com.apple.main-thread"
+      expect(metadata["thread"]) == "\(Thread.current)"
     }
     assertOnCooperativeQueue()
+    Assert.resetTestAssertionFailureHandler()
+
+    // with message
+    Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
+      expect(message) == "Should be on cooperative queue. Message: \"Test message\""
+      expect(metadata["queue"]) == "com.apple.main-thread"
+      expect(metadata["thread"]) == "\(Thread.current)"
+    }
+    assertOnCooperativeQueue("Test message")
     Assert.resetTestAssertionFailureHandler()
   }
 
   func test_assertNotOnCooperativeQueue() {
     let expectation = expectation(description: "")
     Task {
+      // no message
       Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
-        expect(message.contains("Should NOT be on cooperative queue. Current thread: ")) == true
+        expect(message) == "Should NOT be on cooperative queue. Message: \"\""
+        expect(metadata["queue"]) == "\(DispatchQueue.currentQueueLabel)"
+        expect(metadata["thread"]) == "\(Thread.current)"
       }
       assertNotOnCooperativeQueue()
       Assert.resetTestAssertionFailureHandler()
+
+      // with message
+      Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
+        expect(message) == "Should NOT be on cooperative queue. Message: \"Test message\""
+        expect(metadata["queue"]) == "\(DispatchQueue.currentQueueLabel)"
+        expect(metadata["thread"]) == "\(Thread.current)"
+      }
+      assertNotOnCooperativeQueue("Test message")
+      Assert.resetTestAssertionFailureHandler()
+
       expectation.fulfill()
     }
 
