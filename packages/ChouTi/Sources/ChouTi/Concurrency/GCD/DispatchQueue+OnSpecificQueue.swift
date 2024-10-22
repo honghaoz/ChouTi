@@ -150,9 +150,7 @@ public extension DispatchQueue {
     let currentQueueLabel = DispatchQueue.getSpecific(key: queueNameKey)
     if currentQueueLabel == nil {
       #if DEBUG
-      if DispatchQueue.currentQueueLabel.hasSuffix(Constants.cooperativeQueueSuffix) ||
-        DispatchQueue.currentQueueLabel == Constants.urlSessionDelegateQueueLabel
-      {
+      if DispatchQueue.currentQueueLabel.hasSuffix(Constants.cooperativeQueueSuffix) || DispatchQueue.currentQueueLabel.hasPrefix("com.apple.") {
         // ignore common known queues
         return false
       } else {
@@ -204,7 +202,8 @@ public extension DispatchQueue {
     // com.apple.root.user-initiated-qos.cooperative
     static let cooperativeQueueSuffix = ".cooperative"
 
-    static let urlSessionDelegateQueueLabel = "com.apple.NSURLSession-delegate"
+    // static let urlSessionDelegateQueueLabel = "com.apple.NSURLSession-delegate"
+    // static let userNotificationQueueLabel = "com.apple.usernotifications.UNUserNotificationServiceConnection.call-out"
   }
 }
 
