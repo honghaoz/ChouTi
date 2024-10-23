@@ -287,6 +287,10 @@ public final class Logger: Hashable, CustomStringConvertible {
     )
   }
 
+  public func exportLogFile(fileName: String) -> URL? {
+    destinations.first(type: ExportableLogDestinationType.self)?.exportLogFile(fileName: fileName)
+  }
+
   // MARK: - Hashable
 
   public func hash(into hasher: inout Hasher) {

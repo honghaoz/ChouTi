@@ -256,8 +256,16 @@ final class LoggerTests: XCTestCase {
       fail("lines.count == \(lines.count)")
     }
 
+    // export log file
+    let exportedFileURL = try logger.exportLogFile(fileName: "test-exported.log").unwrap()
+
+    // verify exported file has the same content
+    let exportedFileContent = try String(contentsOf: exportedFileURL)
+    expect(exportedFileContent) == logFileContent
+
     // remove log file
     try FileManager.default.removeItem(at: logFileURL)
+    try FileManager.default.removeItem(at: exportedFileURL)
 
     // remove log folder if log folder is empty
     if FileManager.default.fileExists(atPath: logFolderURL.path) {
@@ -308,8 +316,16 @@ final class LoggerTests: XCTestCase {
       fail("lines.count == \(lines.count)")
     }
 
+    // export log file
+    let exportedFileURL = try logger.exportLogFile(fileName: "test-exported.log").unwrap()
+
+    // verify exported file has the same content
+    let exportedFileContent = try String(contentsOf: exportedFileURL)
+    expect(exportedFileContent) == logFileContent
+
     // remove log file
     try FileManager.default.removeItem(at: logFileURL)
+    try FileManager.default.removeItem(at: exportedFileURL)
 
     // remove log folder if log folder is empty
     if FileManager.default.fileExists(atPath: logFolderURL.path) {

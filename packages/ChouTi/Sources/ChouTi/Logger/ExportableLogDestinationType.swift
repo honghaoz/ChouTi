@@ -1,8 +1,8 @@
 //
-//  LogDestinationType.swift
+//  ExportableLogDestinationType.swift
 //  ChouTi
 //
-//  Created by Honghao Zhang on 11/13/21.
+//  Created by Honghao Zhang on 10/22/24.
 //  Copyright © 2020 Honghao Zhang.
 //
 //  MIT License
@@ -30,43 +30,12 @@
 
 import Foundation
 
-/// A log write destination.
-public protocol LogDestinationType: TextOutputStream {
+/// A log destination that can export log messages to a file.
+public protocol ExportableLogDestinationType: LogDestinationType {
 
-  /// Write a log message to the destination.
-  /// - Parameter string: The log message to write.
-  func write(_ string: String)
-}
-
-// MARK: - LogDestination
-
-// Why this type?
-// Having a concrete type `LogDestination` so that you can simply use `.standardOut` in Logger initializer.
-
-public extension LogDestinationType {
-
-  /// Convert to a `LogDestination`.
-  /// - Returns: A `LogDestination`.
-  func asLogDestination() -> LogDestination {
-    LogDestination(wrapped: self)
-  }
-}
-
-/// A concrete log destination.
-public struct LogDestination: LogDestinationType {
-
-  @usableFromInline
-  let wrapped: LogDestinationType
-
-  /// Create a log destination.
-  /// - Parameter wrapped: The wrapped log destination.
-  public init(wrapped: LogDestinationType) {
-    self.wrapped = wrapped
-  }
-
-  @inlinable
-  @inline(__always)
-  public func write(_ string: String) {
-    wrapped.write(string)
-  }
+  /// Export received log messages to a file.
+  ///
+  /// - Parameter fileName: The exported file name.
+  /// - Returns: The log file URL.
+  func exportLogFile(fileName: String) -> URL?
 }

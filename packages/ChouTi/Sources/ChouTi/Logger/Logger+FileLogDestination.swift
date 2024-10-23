@@ -68,7 +68,7 @@ public extension Logger {
    .file("\(Bundle.bundleIdentifier, default: "Unknown").app.log"),
    ```
    */
-  final class FileLogDestination: LogDestinationType {
+  final class FileLogDestination: LogDestinationType, ExportableLogDestinationType {
 
     /// The folder to store log files.
     private let logFolder: URL
@@ -243,6 +243,14 @@ public extension Logger {
       data.removeSubrange(0 ..< position)
 
       try data.write(to: logFile, options: .atomic)
+    }
+
+    public func exportLogFile(fileName: String) -> URL? {
+      let tempFolder = URL(fileURLWithPath: NSTemporaryDirectory())
+      let copyFile = tempFolder.appendingPathComponent(fileName)
+      try? FileManager.default.copyItem(at: logFile, to: copyFile)
+      print("📃 [Logger][\(typeName(self))] exported log file to: \(copyFile.path)")
+      return copyFile
     }
 
     // MARK: - Constants
