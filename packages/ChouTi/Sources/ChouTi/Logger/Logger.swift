@@ -107,6 +107,30 @@ public final class Logger: Hashable, CustomStringConvertible {
   public init(tag: String? = nil,
               logLevel: LogLevel = .debug,
               displayOptions: DisplayOptions = .all,
+              destinations: [LogDestinationType],
+              queue: DispatchQueue? = nil,
+              isEnabled: Bool = true)
+  {
+    self.tag = tag
+    self.logLevel = logLevel
+    self.displayOptions = displayOptions
+    self.queue = queue
+    self.destinations = destinations
+    self.isEnabled = isEnabled
+  }
+
+  /// Create a logger.
+  ///
+  /// - Parameters:
+  ///   - tag: Logger tag.
+  ///   - logLevel: Log level.
+  ///   - displayOptions: The display options for logs.
+  ///   - destinations: The destinations for logs.
+  ///   - queue: The queue logger work on. If nil, use the current queue.
+  ///   - isEnabled: If logger is enabled.
+  public init(tag: String? = nil,
+              logLevel: LogLevel = .debug,
+              displayOptions: DisplayOptions = .all,
               destinations: [LogDestination] = [.standardOut],
               queue: DispatchQueue? = nil,
               isEnabled: Bool = true)
@@ -288,7 +312,20 @@ public final class Logger: Hashable, CustomStringConvertible {
   }
 
   public func exportLogFile(fileName: String) -> URL? {
-    destinations.first(type: ExportableLogDestinationType.self)?.exportLogFile(fileName: fileName)
+    func findFirstExportableDestination() -> ExportableLogDestinationType? {
+      for destination in destinations {
+        if let exportable = destination as? ExportableLogDestinationType {
+          return exportable
+        }
+        if let logDestination = destination as? LogDestination, let exportableWrapped = logDestination.wrapped as? ExportableLogDestinationType {
+          return exportableWrapped
+        }
+      }
+      return nil
+    }
+
+    let exportableDestination = findFirstExportableDestination()
+    return exportableDestination?.exportLogFile(fileName: fileName)
   }
 
   // MARK: - Hashable

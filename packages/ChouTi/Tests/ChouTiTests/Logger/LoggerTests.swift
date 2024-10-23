@@ -43,6 +43,7 @@ final class LoggerTests: XCTestCase {
     expect(try (logger.destinations.first.unwrap() as? LogDestination)?.wrapped is ChouTi.Logger.StandardOutLogDestination) == true
     expect(logger.isEnabled) == true
     expect(logger.queue) == nil
+    expect(logger.exportLogFile(fileName: "na")) == nil
   }
 
   func test_enable() {
@@ -54,9 +55,8 @@ final class LoggerTests: XCTestCase {
   }
 
   func test_logs() throws {
-    let logger = Logger(tag: "tag")
     let destination = TestLogDestination()
-    logger.destinations = [destination]
+    let logger = Logger(tag: "tag", destinations: [destination])
 
     do {
       destination.logs.removeAll()
@@ -289,11 +289,10 @@ final class LoggerTests: XCTestCase {
       try FileManager.default.removeItem(atPath: logFilePath)
     }
 
-    let logger = Logger()
-
-    let fileDestination = LogDestination.file(folder: logFolderURL, fileName: "test.log").wrapped as! Logger.FileLogDestination // swiftlint:disable:this force_cast
+    let logDestination = LogDestination.file(folder: logFolderURL, fileName: "test.log")
+    let fileDestination = logDestination.wrapped as! Logger.FileLogDestination // swiftlint:disable:this force_cast
     fileDestination.test.queue = DispatchQueue.makeMain()
-    logger.destinations = [fileDestination]
+    let logger = Logger(destinations: [logDestination])
 
     logger.debug("debug")
     logger.info("info")

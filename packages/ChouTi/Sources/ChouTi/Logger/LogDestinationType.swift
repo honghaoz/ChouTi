@@ -52,11 +52,11 @@ public extension LogDestinationType {
   }
 }
 
-/// A concrete log destination.
+/// A log destination type wrapper.
 public struct LogDestination: LogDestinationType {
 
-  @usableFromInline
-  let wrapped: LogDestinationType
+  /// The wrapped log destination.
+  public let wrapped: LogDestinationType
 
   /// Create a log destination.
   /// - Parameter wrapped: The wrapped log destination.
