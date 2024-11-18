@@ -161,9 +161,9 @@ fi
 
 echo "🚀 Build project: ${CYAN}$PROJECT${RESET}, scheme: ${CYAN}$SCHEME${RESET}, configuration: ${CYAN}$CONFIGURATION${RESET}, os: ${CYAN}$OS${RESET}"
 
-echo "${BOLD}Swift Version:${RESET} $(swift --version)"
-echo "${BOLD}Xcode Version:${RESET} $(xcodebuild -version)"
-echo "${BOLD}Available Simulators:${RESET}"
+echo "${BOLD}Swift Version:${RESET} ${CYAN}$(swift --version 2>/dev/null | tr '\n' ' ')${RESET}"
+echo "${BOLD}Xcode Version:${RESET} ${CYAN}$(xcodebuild -version 2>&1 | tr '\n' ' ')${RESET}"
+echo "${BOLD}Available devices:${RESET}"
 xcrun simctl list devices available
 
 echo "ℹ️  $PROJECT, Scheme: $SCHEME, available destinations:"
