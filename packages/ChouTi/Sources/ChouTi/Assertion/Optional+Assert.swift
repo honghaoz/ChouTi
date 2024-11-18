@@ -32,12 +32,12 @@ import Foundation
 
 public extension Optional {
 
-  @inlinable
   /// Access optional value with assertion failure if the value is `nil`.
   /// - Parameters:
   ///   - assertionMessage: The message to show when assertion fails.
   ///   - metadata: Metadata for the assertion failure.
   /// - Returns: The unwrapped value.
+  @inlinable
   func assert(_ assertionMessage: @autoclosure () -> String = "Unexpected nil value",
               metadata: @autoclosure () -> OrderedDictionary<String, String> = [:],
               file: StaticString = #fileID,
