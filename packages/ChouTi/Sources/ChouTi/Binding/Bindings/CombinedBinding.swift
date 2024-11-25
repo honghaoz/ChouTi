@@ -42,8 +42,11 @@ final class CombinedBinding<T>: BindingType, InternalBindingType {
   // MARK: - BindingType
 
   private(set) var value: T {
-    didSet {
-      implementation.invoke(with: value)
+    get {
+      getValue()
+    }
+    set {
+      implementation.invoke(with: newValue)
     }
   }
 
@@ -66,13 +69,15 @@ final class CombinedBinding<T>: BindingType, InternalBindingType {
 
   private lazy var implementation = BindingImplementation<T>(binding: self)
 
+  private let getValue: () -> T
+
   private let bindingObservationStorage = BindingObservationStorage()
 
   // swiftformat:disable:next all
   init<U1, U2>(upstreamBinding1: some BindingType<U1>, upstreamBinding2: some BindingType<U2>) where (U1, U2) == T {
     self.upstreamBinding1 = upstreamBinding1
     self.upstreamBinding2 = upstreamBinding2
-    self.value = (upstreamBinding1.value, upstreamBinding2.value)
+    self.getValue = { (upstreamBinding1.value, upstreamBinding2.value) }
 
     // Memory Diagram:
     //

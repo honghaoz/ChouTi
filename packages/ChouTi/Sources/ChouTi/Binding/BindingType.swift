@@ -44,7 +44,7 @@ public protocol BindingType<Value>: AnyObject, Hashable, DeallocationNotifiable,
   /// ⚠️ The binding object must be retained to keep the publisher working. For example, for a mapped binding, you need
   /// to make sure the intermediate mapped bindings are alive to keep the publisher working.
   ///
-  /// The publisher may emit current value when subscribes. Use `dropFirst()` to skip the current value.
+  /// The publisher emits current value when subscribes. Use `dropFirst()` to skip the current value.
   /// ```
   /// binding
   ///   .publisher

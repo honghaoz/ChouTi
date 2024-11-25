@@ -1321,6 +1321,8 @@ class BindingTests: XCTestCase {
     let binding2 = Binding("123")
     var combinedBinding: (some BindingType<(Bool, String)>)? = binding1.combine(with: binding2)
 
+    expect(combinedBinding?.value.0) == true
+    expect(combinedBinding?.value.1) == "123"
     expect(binding1.test_registered_observations.count) == 1
     expect(binding2.test_registered_observations.count) == 1
     expect(combinedBinding?.test_registered_observations.count) == 0

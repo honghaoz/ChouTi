@@ -50,9 +50,13 @@ import Combine
  trigger.fire(with: 2)
  ```
  */
-public final class Trigger<Context>: BindingType {
+public final class Trigger<Context>: Hashable {
 
   public typealias ReactionBlock = (_ context: Context) -> Void
+
+  /// A publisher that emits when the trigger fires.
+  public private(set) lazy var publisher: AnyPublisher<Context, Never> = subject.eraseToAnyPublisher()
+  private lazy var subject = PassthroughSubject<Context, Never>()
 
   /// The trigger's reaction block. The block is called when `fire(with:)` is called.
   private var reactionBlock: ReactionBlock?
@@ -65,45 +69,6 @@ public final class Trigger<Context>: BindingType {
   /// Initialize a trigger.
   public init() {}
 
-  // MARK: - BindingType
-
-  private struct ContextBox {
-    let context: Context?
-  }
-
-  /// The backing binding.
-  private let binding = Binding<ContextBox>(ContextBox(context: nil))
-
-  /// Does not support accessing value.
-  public var value: Context {
-    fatalError("Trigger doesn't support accessing value") // swiftlint:disable:this fatal_error
-  }
-
-  /// A publisher that emits when the trigger fires. The publisher won't emit immediately.
-  public var publisher: AnyPublisher<Context, Never> {
-    binding.publisher.dropFirst().compactMap(\.context).eraseToAnyPublisher()
-  }
-
-  /// Observes the binding for value changes.
-  ///
-  /// - Parameter block: A closure that will be called when the binding's value changes. The closure provides a cancel handler to stop observing.
-  /// - Returns: An observation as a token that can be used to stop observing.
-  public func observe(_ block: @escaping (_ value: Context, _ cancel: @escaping BlockVoid) -> Void) -> BindingObservation {
-    binding.observe { contextBox, cancel in
-      block(contextBox.context!, cancel) // swiftlint:disable:this force_unwrapping, when binding fires, context is guaranteed to be non-nil
-    }
-  }
-
-  /// Observes the binding for value changes.
-  ///
-  /// - Parameter block: A closure that will be called when the binding's value changes.
-  /// - Returns: An observation as a token that can be used to stop observing.
-  public func observe(_ block: @escaping (_ value: Context) -> Void) -> BindingObservation {
-    binding.observe { contextBox, cancel in
-      block(contextBox.context!) // swiftlint:disable:this force_unwrapping, when binding fires, context is guaranteed to be non-nil
-    }
-  }
-
   // MARK: - Public Methods
 
   /// Fire the trigger with a context.
@@ -111,8 +76,8 @@ public final class Trigger<Context>: BindingType {
   /// The reaction block is called synchronously.
   /// - Parameter context: The context to fire the trigger with.
   public func fire(with context: Context) {
-    binding.value = ContextBox(context: context)
     reactionBlock?(context)
+    subject.send(context)
   }
 
   /// Set a reaction block to the trigger.
