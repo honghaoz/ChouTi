@@ -90,6 +90,11 @@ class AnyUntypedBindingTests: XCTestCase {
     cancellable.cancel()
   }
 
+  func test_duplicateAnyBinding() {
+    let anyBinding1 = anyBinding.eraseToAnyUntypedBinding()
+    expect(anyBinding1) === anyBinding
+  }
+
   func testHashable() {
     // given
     let anyBinding1 = AnyUntypedBinding(binding)

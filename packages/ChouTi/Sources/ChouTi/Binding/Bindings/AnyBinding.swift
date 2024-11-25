@@ -88,9 +88,11 @@ public extension BindingType {
   /// Returns a type-erased binding that wraps the given binding.
   ///
   /// - Returns: A type-erased binding.
-  @inlinable
-  @inline(__always)
   func eraseToAnyBinding() -> AnyBinding<Value> {
-    AnyBinding(self)
+    if let anyBinding = self as? AnyBinding<Value> {
+      return anyBinding
+    } else {
+      return AnyBinding(self)
+    }
   }
 }
