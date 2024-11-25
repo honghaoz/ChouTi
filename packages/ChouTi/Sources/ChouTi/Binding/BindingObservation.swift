@@ -148,7 +148,7 @@ final class PrivateBindingObservation<T>: BindingObservation {
   // MARK: - BindingObservation
 
   func cancel() {
-    upstreamBindingAsInternalBindingType._removeRegisteredObservation(self)
+    upstreamBindingAsInternalBindingType?._removeRegisteredObservation(self)
 
     containingStorage.values.forEach {
       $0.object?.remove(self)

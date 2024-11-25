@@ -73,6 +73,7 @@ class TriggerTests: XCTestCase {
     let cancellable = trigger.publisher.sink { value in
       receivedValue = value
     }
+    _ = cancellable
 
     // no value is emitted immediately
     expect(receivedValue) == nil
@@ -95,20 +96,23 @@ class TriggerTests: XCTestCase {
     expect(reactedNumber) == nil
     expect(binding.test_registered_observations.count) == 0
 
-    trigger.subscribe(to: binding, map: { Int($0) ?? -1 })
+    let token = trigger.subscribe(to: binding, map: { Int($0) ?? -1 })
     expect(reactedNumber) == nil
     expect(binding.test_registered_observations.count) == 1
 
     binding.value = "3"
     expect(reactedNumber) == 3
 
-    trigger.disconnectFromBinding()
+    let token2 = trigger.subscribe(to: binding, map: { Int($0) ?? -1 })
+    expect(ObjectIdentifier(token)) == ObjectIdentifier(token2)
+
+    trigger.unsubscribeAll()
     expect(binding.test_registered_observations.count) == 0
 
     Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
       expect(message) == "Trigger is not connected to a binding"
     }
-    trigger.disconnectFromBinding()
+    trigger.unsubscribeAll()
     Assert.resetTestAssertionFailureHandler()
   }
 
@@ -188,6 +192,36 @@ class TriggerTests: XCTestCase {
 
     binding.value = 3
     expect(isCalled) == true
+  }
+
+  func testSubscribeToUpstreamTrigger() {
+    var upstreamTrigger: Trigger<Int>! = Trigger<Int>()
+    weak var weakUpstreamTrigger: Trigger<Int>? = upstreamTrigger
+
+    let trigger = Trigger<Int>()
+    var reactedNumber: Int?
+    trigger.setReaction { context in
+      reactedNumber = context
+    }
+
+    var token: CancellableToken! = trigger.subscribe(to: upstreamTrigger)
+
+    upstreamTrigger.fire(with: 2)
+    expect(reactedNumber) == 2
+
+    var token2: CancellableToken! = trigger.subscribe(to: upstreamTrigger)
+    expect(ObjectIdentifier(token)) == ObjectIdentifier(token2)
+
+    token = nil
+    token2 = nil
+
+    // the upstream trigger is still retained by the trigger
+    upstreamTrigger = nil
+    expect(weakUpstreamTrigger) != nil
+
+    // the upstream trigger is released when the subscription is removed
+    trigger.unsubscribeAll()
+    expect(weakUpstreamTrigger) == nil
   }
 
   func testHashable() {

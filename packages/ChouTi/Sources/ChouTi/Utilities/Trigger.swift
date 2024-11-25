@@ -61,6 +61,8 @@ public final class Trigger<Context>: Hashable {
   /// The trigger's reaction block. The block is called when `fire(with:)` is called.
   private var reactionBlock: ReactionBlock?
 
+  private var upstreamSubscriptionTokens: [AnyHashable: CancellableToken] = [:]
+
   /// An optional upstream binding. If this is non-nil, the binding will trigger `self` if the binding value changes.
   private var upstreamBinding: (any BindingType)?
 
@@ -104,7 +106,12 @@ public final class Trigger<Context>: Hashable {
     reactionBlock = nil
   }
 
-  // MARK: - Binding Support
+  // MARK: - Subscribing to Bindings
+
+  private struct BindingSubscriptionInfo {
+    let binding: any BindingType
+    let observation: BindingObservation
+  }
 
   /// Subscribes the trigger to a binding. When the binding value changes, it fires the trigger.
   ///
@@ -130,25 +137,28 @@ public final class Trigger<Context>: Hashable {
   /// ```
   ///
   /// - Parameters:
-  ///   - binding: The binding to subscribe to.
+  ///   - binding: The binding to subscribe to. The binding is strongly retained by this trigger.
   ///   - map: A block that transforms the binding's value type to the trigger's context type.
-  /// - Returns: The trigger self.
+  /// - Returns: A cancellable token that you can use to disconnect the trigger from the binding.
   @discardableResult
-  public func subscribe<T>(to binding: some BindingType<T>, map: @escaping (T) -> Context) -> Self {
-    if upstreamBinding != nil {
-      // clear old binding
-      observation.assert()?.cancel()
-      observation = nil
+  public func subscribe<T>(to binding: some BindingType<T>, map: @escaping (T) -> Context) -> CancellableToken {
+    if let existingToken = upstreamSubscriptionTokens[ObjectIdentifier(binding)] {
+      return existingToken
     }
 
-    upstreamBinding = binding
+    let observation = binding.observe { [weak self] value in
+      self?.fire(with: map(value))
+    }
 
-    observation = binding
-      .observe { [weak self] value in
-        self?.fire(with: map(value))
-      }
+    let subscriptionInfo = BindingSubscriptionInfo(binding: binding, observation: observation)
 
-    return self
+    let token = ValueCancellableToken(value: subscriptionInfo, cancel: { [weak self] token in
+      token.value.observation.cancel()
+      self?.upstreamSubscriptionTokens.removeValue(forKey: ObjectIdentifier(token.value.binding))
+    })
+    upstreamSubscriptionTokens[ObjectIdentifier(binding)] = token
+
+    return token
   }
 
   /// Subscribes the trigger to a binding. When the binding value changes, it fires the trigger.
@@ -160,29 +170,54 @@ public final class Trigger<Context>: Hashable {
   ///
   /// - Parameters:
   ///   - binding: The binding to subscribe to.
-  /// - Returns: The trigger self.
+  /// - Returns: A cancellable token that you can use to disconnect the trigger from the binding.
   @inlinable
   @inline(__always)
   @discardableResult
-  public func subscribe(to binding: some BindingType<Context>) -> Self {
+  public func subscribe(to binding: some BindingType<Context>) -> CancellableToken {
     subscribe(to: binding, map: { $0 })
   }
 
-  /// Disconnect the trigger from its upstream binding.
+  // MARK: - Subscribing to Triggers
+
+  private struct UpstreamTriggerSubscriptionInfo {
+    let trigger: Trigger<Context>
+    let observation: AnyCancellable
+  }
+
+  /// Subscribes the trigger to an upstream trigger. When the upstream trigger fires, this trigger fires.
   ///
   /// - Parameters:
-  ///   - assertIfNotExists: If `true`, assert if the upstream binding exists.
-  /// - Returns: The trigger self.
+  ///   - upstreamTrigger: The upstream trigger to subscribe to. The trigger is strongly retained by this trigger.
+  /// - Returns: A cancellable token that you can use to disconnect the trigger from the upstream trigger.
   @discardableResult
-  public func disconnectFromBinding(assertIfNotExists: Bool = true) -> Self {
-    if assertIfNotExists {
-      ChouTi.assert(upstreamBinding != nil, "Trigger is not connected to a binding")
+  public func subscribe(to upstreamTrigger: Trigger<Context>) -> CancellableToken {
+    // if the trigger is already subscribed, return the existing token
+    if let existingToken = upstreamSubscriptionTokens[ObjectIdentifier(upstreamTrigger)] {
+      return existingToken
     }
 
-    observation?.cancel()
-    observation = nil
-    upstreamBinding = nil
-    return self
+    let observation = upstreamTrigger.publisher.sink { [weak self] context in
+      self?.fire(with: context)
+    }
+
+    let subscriptionInfo = UpstreamTriggerSubscriptionInfo(trigger: upstreamTrigger, observation: observation)
+
+    let token = ValueCancellableToken(value: subscriptionInfo, cancel: { [weak self] token in
+      token.value.observation.cancel()
+      self?.upstreamSubscriptionTokens.removeValue(forKey: ObjectIdentifier(token.value.trigger))
+    })
+    upstreamSubscriptionTokens[ObjectIdentifier(upstreamTrigger)] = token
+
+    return token
+  }
+
+  // MARK: - Unsubscribing
+
+  /// Unsubscribes the trigger from all upstreams.
+  public func unsubscribeAll() {
+    upstreamSubscriptionTokens.values.forEach { $0.cancel() }
+    upstreamSubscriptionTokens.removeAll()
   }
 
   // MARK: - Hashable
@@ -239,10 +274,11 @@ public extension Trigger where Context == Void {
   ///
   /// - Parameters:
   ///   - binding: The binding to subscribe to.
+  /// - Returns: A cancellable token that you can use to disconnect the trigger from the binding.
   @inlinable
   @inline(__always)
   @discardableResult
-  func subscribe(to binding: some BindingType) -> Self {
+  func subscribe(to binding: some BindingType) -> CancellableToken {
     subscribe(to: binding, map: { _ in () })
   }
 }
