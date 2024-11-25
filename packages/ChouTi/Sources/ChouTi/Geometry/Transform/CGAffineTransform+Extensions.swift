@@ -367,7 +367,7 @@ public extension CGAffineTransform {
 
 // MARK: - Hashable
 
-extension CGAffineTransform: Hashable {
+extension CoreGraphics.CGAffineTransform: Swift.Hashable {
 
   public func hash(into hasher: inout Hasher) {
     hasher.combine(a)

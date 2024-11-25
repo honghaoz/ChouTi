@@ -744,7 +744,7 @@ extension CGRect: ApproximatelyEquatable {
 
 // MARK: - Hashable
 
-extension CGRect: Hashable {
+extension CoreGraphics.CGRect: Swift.Hashable {
 
   public func hash(into hasher: inout Hasher) {
     hasher.combine(origin.x)

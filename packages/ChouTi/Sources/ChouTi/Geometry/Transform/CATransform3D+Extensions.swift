@@ -354,7 +354,7 @@ public extension CATransform3D {
 
 // MARK: - Hashable
 
-extension CATransform3D: Hashable {
+extension QuartzCore.CATransform3D: Swift.Hashable {
 
   public func hash(into hasher: inout Hasher) {
     hasher.combine(m11)
@@ -378,7 +378,7 @@ extension CATransform3D: Hashable {
 
 // MARK: - Equatable
 
-extension CATransform3D: Equatable {
+extension QuartzCore.CATransform3D: Swift.Equatable {
 
   public static func == (lhs: CATransform3D, rhs: CATransform3D) -> Bool {
     CATransform3DEqualToTransform(lhs, rhs)

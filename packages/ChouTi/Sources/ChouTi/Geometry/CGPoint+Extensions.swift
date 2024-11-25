@@ -208,7 +208,7 @@ extension CGPoint: ApproximatelyEquatable {
 
 // MARK: - Hashable
 
-extension CGPoint: Hashable {
+extension CoreGraphics.CGPoint: Swift.Hashable {
 
   public func hash(into hasher: inout Hasher) {
     hasher.combine(x)

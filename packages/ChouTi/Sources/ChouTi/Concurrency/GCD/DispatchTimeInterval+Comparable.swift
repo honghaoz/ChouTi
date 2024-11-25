@@ -30,7 +30,7 @@
 
 import Foundation
 
-extension DispatchTimeInterval: Comparable {
+extension Foundation.DispatchTimeInterval: Swift.Comparable {
 
   public static func < (lhs: DispatchTimeInterval, rhs: DispatchTimeInterval) -> Bool {
     lhs.nonOptionalTimeInterval < rhs.nonOptionalTimeInterval

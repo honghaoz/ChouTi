@@ -424,7 +424,7 @@ public extension CGSize {
 
 // MARK: - Hashable
 
-extension CGSize: Hashable {
+extension CoreGraphics.CGSize: Swift.Hashable {
 
   public func hash(into hasher: inout Hasher) {
     hasher.combine(width)
