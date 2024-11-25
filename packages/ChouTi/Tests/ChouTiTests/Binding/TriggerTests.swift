@@ -67,6 +67,57 @@ class TriggerTests: XCTestCase {
     Assert.resetTestAssertionFailureHandler()
   }
 
+  func test_triggerAsBinding() {
+    let trigger = Trigger<Int>()
+
+    // simple observe
+    do {
+      var receivedContext: Int?
+      let observation = trigger.observe { context in
+        receivedContext = context
+      }
+      expect(receivedContext) == nil
+
+      trigger.fire(with: 2)
+      expect(receivedContext) == 2
+
+      trigger.fire(with: 3)
+      expect(receivedContext) == 3
+    }
+
+    // observation with cancel
+    do {
+      var receivedContext: Int?
+      let observation = trigger.observe { context, cancel in
+        receivedContext = context
+        cancel()
+      }
+      expect(receivedContext) == nil
+
+      trigger.fire(with: 2)
+      expect(receivedContext) == 2
+
+      trigger.fire(with: 3)
+      expect(receivedContext) == 2
+    }
+
+    // publisher doesn't emit immediately
+    do {
+      var receivedContext: Int?
+      let publisher = trigger.publisher
+      let cancellable = publisher.sink { context in
+        receivedContext = context
+      }
+      expect(receivedContext) == nil
+
+      trigger.fire(with: 2)
+      expect(receivedContext) == 2
+
+      trigger.fire(with: 3)
+      expect(receivedContext) == 3
+    }
+  }
+
   func testSubscribeToBinding() {
     let binding = Binding<String>("2")
     let trigger = Trigger<Int>()
