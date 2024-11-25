@@ -51,6 +51,16 @@ class AnyBindingTests: XCTestCase {
     super.tearDown()
   }
 
+  func test_init() {
+    let anyBinding = AnyBinding(binding)
+    expect(ObjectIdentifier(anyBinding.wrapped)) == ObjectIdentifier(binding)
+    expect(DynamicLookup(anyBinding).keyPath("wrappedAsHashable")) === binding
+
+    let anyBinding2 = AnyBinding(anyBinding)
+    expect(ObjectIdentifier(anyBinding2.wrapped)) == ObjectIdentifier(binding)
+    expect(DynamicLookup(anyBinding2).keyPath("wrappedAsHashable")) === binding
+  }
+
   func testValue() {
     expect(anyBinding.value) == "1"
     binding.value = "2"

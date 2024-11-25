@@ -66,8 +66,19 @@ final class CancellableTokenTests: XCTestCase {
     expect(array.first as? TestToken) === token
   }
 
+  func testStoreInDictionary() {
+    var dictionary = [ObjectIdentifier: TestToken]()
+    let token = TestToken()
+    token.store(in: &dictionary)
+    expect(dictionary.count) == 1
+    expect(dictionary[ObjectIdentifier(token)]) === token
+
+    token.remove(from: &dictionary)
+    expect(dictionary.count) == 0
+  }
+
   func testStoreInOrderedDictionary() {
-    var dictionary = OrderedDictionary<AnyHashable, TestToken>()
+    var dictionary = OrderedDictionary<ObjectIdentifier, TestToken>()
     let token = TestToken()
     token.store(in: &dictionary)
     expect(dictionary.count) == 1
@@ -75,7 +86,7 @@ final class CancellableTokenTests: XCTestCase {
   }
 
   func testRemoveFromOrderedDictionary() {
-    var dictionary = OrderedDictionary<AnyHashable, TestToken>()
+    var dictionary = OrderedDictionary<ObjectIdentifier, TestToken>()
     let token = TestToken()
     token.store(in: &dictionary)
     token.remove(from: &dictionary)

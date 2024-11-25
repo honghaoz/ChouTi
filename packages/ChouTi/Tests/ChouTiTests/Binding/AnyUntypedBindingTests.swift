@@ -51,6 +51,14 @@ class AnyUntypedBindingTests: XCTestCase {
     super.tearDown()
   }
 
+  func test_init() {
+    let anyBinding = AnyUntypedBinding(binding)
+    expect(DynamicLookup(anyBinding).keyPath("baseAsHashable")) === binding
+
+    let anyBinding2 = AnyUntypedBinding(anyBinding)
+    expect(DynamicLookup(anyBinding2).keyPath("baseAsHashable")) === binding
+  }
+
   func testValue() throws {
     expect(anyBinding.value as? String) == "1"
     binding.value = "2"

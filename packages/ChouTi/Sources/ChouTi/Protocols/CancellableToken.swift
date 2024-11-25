@@ -65,8 +65,17 @@ public extension CancellableToken {
   /// - Parameter dictionary: The dictionary in which to store this `CancellableToken`.
   @inlinable
   @inline(__always)
-  func store(in dictionary: inout [AnyHashable: Self]) {
+  func store(in dictionary: inout [ObjectIdentifier: Self]) {
     dictionary[ObjectIdentifier(self)] = self
+  }
+
+  /// Removes this cancellable token from the specified dictionary.
+  ///
+  /// - Parameter dictionary: The dictionary in which to remove this `CancellableToken`.
+  @inlinable
+  @inline(__always)
+  func remove(from dictionary: inout [ObjectIdentifier: Self]) {
+    dictionary.removeValue(forKey: ObjectIdentifier(self))
   }
 
   /// Stores this cancellable token in the specified `OrderedDictionary`.
@@ -74,7 +83,7 @@ public extension CancellableToken {
   /// - Parameter dictionary: The dictionary in which to store this `CancellableToken`.
   @inlinable
   @inline(__always)
-  func store(in dictionary: inout OrderedDictionary<AnyHashable, Self>) {
+  func store(in dictionary: inout OrderedDictionary<ObjectIdentifier, Self>) {
     dictionary[ObjectIdentifier(self)] = self
   }
 
@@ -83,7 +92,7 @@ public extension CancellableToken {
   /// - Parameter dictionary: The dictionary in which to remove this `CancellableToken`.
   @inlinable
   @inline(__always)
-  func remove(from dictionary: inout OrderedDictionary<AnyHashable, Self>) {
+  func remove(from dictionary: inout OrderedDictionary<ObjectIdentifier, Self>) {
     dictionary.removeValue(forKey: ObjectIdentifier(self))
   }
 }
