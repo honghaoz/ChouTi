@@ -199,7 +199,7 @@ fi
 
 # For iOS
 if [[ "$OS" == *"iOS"* ]]; then
-  SIMULATOR_NAME=$(xcrun simctl list devices available | grep 'iPhone' | sed -E 's/[[:space:]]*(.*) \([[:xdigit:]-]+\).*/\1/' | sort -u | head -n 1)
+  SIMULATOR_NAME=$(xcrun simctl list devices available | grep 'iPhone' | grep -Eo 'iPhone \d+' | sort -ru | head -n 1 |sed -E 's/[[:space:]]*(.*) \([[:xdigit:]-]+\).*/\1/')
   SIMULATOR_OS=$(xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -showdestinations | grep "$SIMULATOR_NAME" | sed -E 's/.*OS:([0-9.]+).*/\1/' | sort -t. -k1,1nr -k2,2nr | head -1)
   PLATFORM="iOS Simulator"
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME,OS=$SIMULATOR_OS"
@@ -211,7 +211,7 @@ fi
 
 # For tvOS
 if [[ "$OS" == *"tvOS"* ]]; then
-  SIMULATOR_NAME=$(xcrun simctl list devices available | grep 'Apple TV 4K' | head -n 1 | sed -E 's/[[:space:]]*(.*) \([[:xdigit:]-]+\).*/\1/')
+  SIMULATOR_NAME=$(xcrun simctl list devices available | grep 'Apple TV 4K' | sort -ru | head -n 1 | sed -E 's/[[:space:]]*(.*) \([[:xdigit:]-]+\).*/\1/')
   SIMULATOR_OS=$(xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -showdestinations | grep "$SIMULATOR_NAME" | sed -E 's/.*OS:([0-9.]+).*/\1/' | sort -t. -k1,1nr -k2,2nr | head -1)
   PLATFORM="tvOS Simulator"
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME,OS=$SIMULATOR_OS"
@@ -222,7 +222,7 @@ fi
 
 # For visionOS
 if [[ "$OS" == *"visionOS"* ]]; then
-  SIMULATOR_NAME=$(xcrun simctl list devices available | grep "Apple Vision" | head -n 1 | sed -E 's/[[:space:]]*(.*) \([[:xdigit:]-]+\).*/\1/')
+  SIMULATOR_NAME=$(xcrun simctl list devices available | grep "Apple Vision" | sort -ru | head -n 1 | sed -E 's/[[:space:]]*(.*) \([[:xdigit:]-]+\).*/\1/')
   SIMULATOR_OS=$(xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -showdestinations | grep "$SIMULATOR_NAME" | sed -E 's/.*OS:([0-9.]+).*/\1/' | sort -t. -k1,1nr -k2,2nr | head -1)
   PLATFORM="visionOS Simulator"
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME,OS=$SIMULATOR_OS"
@@ -234,7 +234,7 @@ fi
 
 # For watchOS
 if [[ "$OS" == *"watchOS"* ]]; then
-  SIMULATOR_NAME=$(xcrun simctl list devices available | grep "Apple Watch" | head -n 1 | sed -E 's/[[:space:]]*(.*) \([[:xdigit:]-]+\).*/\1/')
+  SIMULATOR_NAME=$(xcrun simctl list devices available | grep "Apple Watch" | sort -ru | head -n 1 | sed -E 's/[[:space:]]*(.*) \([[:xdigit:]-]+\).*/\1/')
   SIMULATOR_OS=$(xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -showdestinations | grep "$SIMULATOR_NAME" | sed -E 's/.*OS:([0-9.]+).*/\1/' | sort -t. -k1,1nr -k2,2nr | head -1)
   PLATFORM="watchOS Simulator"
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME,OS=$SIMULATOR_OS"
