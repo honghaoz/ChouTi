@@ -57,7 +57,7 @@ class KeyPath_ExtensionsTests: XCTestCase {
   func test_keyPathStringValue() {
     expect((\NSObject.description as KeyPath).stringValue) == "description"
 
-    #if canImport(QuartzCore)
+    #if !os(watchOS)
     expect((\CABasicAnimation.fromValue as KeyPath).stringValue) == "fromValue"
     expect((\CALayer.bounds.size.width).stringValue) == "bounds.size.width"
     expect((\CALayer.bounds.size.height).stringValue) == "bounds.size.height"

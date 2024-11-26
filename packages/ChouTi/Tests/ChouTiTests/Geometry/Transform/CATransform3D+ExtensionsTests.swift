@@ -28,7 +28,7 @@
 //  IN THE SOFTWARE.
 //
 
-#if canImport(QuartzCore)
+#if !os(watchOS)
 import QuartzCore
 
 import ChouTiTest
