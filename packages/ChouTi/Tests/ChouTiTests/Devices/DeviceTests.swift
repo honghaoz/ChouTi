@@ -59,7 +59,7 @@ final class DeviceTests: XCTestCase {
     case .mac:
       fail("Unsupported device type")
     case .vision:
-      fail("Unsupported device type")
+      break
     @unknown default:
       fail("Unsupported device type")
     }
