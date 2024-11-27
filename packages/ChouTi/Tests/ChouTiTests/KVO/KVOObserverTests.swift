@@ -36,8 +36,6 @@ import ChouTi
 
 class KVOObserverTests: XCTestCase {
 
-  private let testQueue = DispatchQueue.make(label: "KVOObserverTests")
-
   private var person: Person!
   private var observer: KVOObserver<Person, String>!
 

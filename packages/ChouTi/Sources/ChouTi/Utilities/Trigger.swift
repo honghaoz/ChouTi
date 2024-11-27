@@ -63,9 +63,6 @@ public final class Trigger<Context>: Hashable {
 
   private var upstreamSubscriptionTokens: [AnyHashable: CancellableToken] = [:]
 
-  /// An optional upstream binding. If this is non-nil, the binding will trigger `self` if the binding value changes.
-  private var upstreamBinding: (any BindingType)?
-
   private var observation: BindingObservation?
 
   /// Initialize a trigger.
