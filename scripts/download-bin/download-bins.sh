@@ -92,11 +92,17 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# Read the versions file and download binaries
-while IFS=" " read -r name version; do
-  # skips empty lines
-  [ -z "$name" ] && continue
-  [ -z "$version" ] && continue
+# read the versions file and download binaries
+while read -r line || [[ -n "$line" ]]; do
+  # skip empty lines
+  [[ -z "$line" ]] && continue
+  
+  # split line into name and version
+  read -r name version <<< "$line"
+  
+  # skip if either name or version is missing
+  [[ -z "$name" || -z "$version" ]] && continue
+  
   download_and_install "$name" "$version"
 done <"$VERSIONS_FILE"
 
