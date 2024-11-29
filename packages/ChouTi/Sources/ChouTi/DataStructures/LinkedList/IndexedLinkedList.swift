@@ -30,8 +30,8 @@
 
 import Foundation
 
-/// A linked list implementation that is fast in query, but may slower in inserting and removing.
-///
+/// A linked list implementation that is fast for queries, but may be slower for inserting and removing.
+/// 
 /// `IndexedLinkedList` is a custom implementation of a linked list that aims to provide fast querying capabilities
 /// while potentially having slower insertions and removals compared to a regular linked list (`LinkedList`).
 ///
