@@ -14,21 +14,55 @@ safe_tput() { [ -n "$TERM" ] && [ "$TERM" != "dumb" ] && tput "$@" || echo ""; }
 CYAN=$(safe_tput setaf 6)
 RESET=$(safe_tput sgr0)
 
+# define variables
 CURRENT_DIR=$(pwd)
 REPO_ROOT=$(git rev-parse --show-toplevel)
 BIN_DIR="$REPO_ROOT/bin"
+
+print_help() {
+  echo "OVERVIEW: Download binaries from .versions file."
+  echo ""
+  echo "Usage: $(basename "$0") [options]"
+  echo ""
+  echo "OPTIONS:"
+  echo "  --bin-dir <path>  The path to the folder where binaries will be downloaded to."
+  echo "                    The folder must contain a .versions file that lists the binaries to download."
+  echo "                    Defaults to $BIN_DIR"
+  echo ""
+  echo "EXAMPLES:"
+  echo "  $(basename "$0")"
+  echo "  $(basename "$0") --bin-dir ~/bin"
+  exit 1
+}
+
+# parse command line arguments
+while [[ "$#" -gt 0 ]]; do
+  case $1 in
+  --bin-dir)
+    BIN_DIR="$2"
+    shift
+    ;;
+  *) print_help ;;
+  esac
+  shift
+done
+
+# check if bin-folder is provided
+if [ -z "$BIN_DIR" ]; then
+  print_help
+fi
+
 VERSIONS_FILE="$BIN_DIR/.versions"
 
-# Make sure the versions file exists
+# make sure the versions file exists
 if [ ! -f "$VERSIONS_FILE" ]; then
   echo "🔴 ERROR: $VERSIONS_FILE not found."
   exit 1
 fi
 
-# Make sure the binaries directory exists
-mkdir -p "$BIN_DIR"
+echo ".versions: $VERSIONS_FILE"
 
-# Function to download and install binaries
+# function to download and install binaries
 download_and_install() {
   local name=$1
   local version=$2
@@ -96,13 +130,13 @@ trap cleanup EXIT
 while read -r line || [[ -n "$line" ]]; do
   # skip empty lines
   [[ -z "$line" ]] && continue
-  
+
   # split line into name and version
   read -r name version <<< "$line"
-  
+
   # skip if either name or version is missing
   [[ -z "$name" || -z "$version" ]] && continue
-  
+
   download_and_install "$name" "$version"
 done <"$VERSIONS_FILE"
 
