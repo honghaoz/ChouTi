@@ -339,10 +339,30 @@ class BindingTests: XCTestCase {
 
   func test_binding_currentValueSubject() {
     let currentValueSubject = CurrentValueSubject<Int, Never>(0)
-
     let binding = currentValueSubject.binding
+
+    var bindingTriggerCount = 0
+    let bindingObservation = binding.observe { _ in
+      bindingTriggerCount += 1
+    }
+
+    var subjectTriggerCount = -1
+    let subjectObservation = currentValueSubject.sink { _ in
+      subjectTriggerCount += 1
+    }
+
+    expect(bindingTriggerCount) == 0
+    expect(subjectTriggerCount) == 0
+
     binding.value += 1
     expect(currentValueSubject.value) == 1
+    expect(bindingTriggerCount) == 1
+    expect(subjectTriggerCount) == 1
+
+    currentValueSubject.value = 2
+    expect(binding.value) == 2
+    expect(bindingTriggerCount) == 2
+    expect(subjectTriggerCount) == 2
   }
 
   func test_binding_expressible() {

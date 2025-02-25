@@ -34,7 +34,7 @@ import Foundation
 /// The shared binding type implementation.
 final class BindingImplementation<T> {
 
-  lazy var publisher: AnyPublisher<T, Never> = subject.eraseToAnyPublisher()
+  private(set) lazy var publisher: AnyPublisher<T, Never> = subject.eraseToAnyPublisher()
 
   // swiftlint:disable:next force_unwrapping
   private lazy var subject = CurrentValueSubject<T, Never>(binding!.value)

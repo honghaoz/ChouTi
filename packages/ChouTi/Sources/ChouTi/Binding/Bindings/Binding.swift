@@ -81,6 +81,45 @@ public final class Binding<T>: MutableBindingType, InternalBindingType {
     self._set = set
   }
 
+  // MARK: - Init (from subject)
+
+  private var subjectToBindingObservation: Cancellable?
+  private var bindingToSubjectObservation: BindingObservation?
+
+  /// Initialize with a `CurrentValueSubject`.
+  ///
+  /// The binding will hold a strong reference to the subject.
+  ///
+  /// - Parameter subject: The subject.
+  public convenience init(subject: CurrentValueSubject<T, Never>) {
+    self.init(subject.value)
+
+    var isSettingFromSubject = false
+    var isSettingFromBinding = false
+
+    // subject to binding
+    subjectToBindingObservation = subject.sink { [weak self] value in
+      guard !isSettingFromBinding else {
+        return
+      }
+
+      isSettingFromSubject = true
+      self?.value = value
+      isSettingFromSubject = false
+    }
+
+    // binding to subject
+    bindingToSubjectObservation = observe { value in
+      guard !isSettingFromSubject else {
+        return
+      }
+
+      isSettingFromBinding = true
+      subject.value = value
+      isSettingFromBinding = false
+    }
+  }
+
   // MARK: - Property Wrapper
 
   public var wrappedValue: T {
@@ -300,25 +339,6 @@ public extension Binding where T == Void {
   /// Send a value.
   func send() {
     value = ()
-  }
-}
-
-// MARK: - Extends CurrentValueSubject
-
-public extension Binding {
-
-  /// Initialize a binding from a `CurrentValueSubject`.
-  ///
-  /// The binding will hold a strong reference to the subject.
-  ///
-  /// - Parameter subject: The subject.
-  @inlinable
-  @inline(__always)
-  convenience init(subject: CurrentValueSubject<T, Never>) {
-    self.init(
-      get: { subject.value },
-      set: { subject.value = $0 }
-    )
   }
 }
 
