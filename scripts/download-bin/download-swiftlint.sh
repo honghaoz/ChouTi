@@ -51,7 +51,27 @@ if [ -z "$download_folder" ]; then
 fi
 
 # Define download URL and temporary directory
-url="https://github.com/realm/SwiftLint/releases/download/$version/SwiftLintBinary-macos.artifactbundle.zip"
+
+# url before 0.58.0
+url_macos="https://github.com/realm/SwiftLint/releases/download/$version/SwiftLintBinary-macos.artifactbundle.zip"
+# url since 0.58.0
+# https://github.com/realm/SwiftLint/releases/tag/0.58.0
+url_generic="https://github.com/realm/SwiftLint/releases/download/$version/SwiftLintBinary.artifactbundle.zip"
+
+# Test URL reachability and select the working URL
+echo "Testing SwiftLint download URLs..."
+if curl --output /dev/null --silent --head --fail "$url_generic"; then
+    url="$url_generic"
+elif curl --output /dev/null --silent --head --fail "$url_macos"; then
+    url="$url_macos"
+else
+    echo "🛑 ERROR: Neither download URL is accessible"
+    echo "Tried:"
+    echo "  - $url_generic"
+    echo "  - $url_macos"
+    exit 1
+fi
+
 temp_dir=$(mktemp -d)
 trap 'rm -rf $temp_dir' EXIT
 
@@ -63,6 +83,7 @@ download_with_progress "$url" "$temp_dir/swiftlint.zip"
 # exit if download failed
 if [ $? -ne 0 ]; then
   echo "🛑 ERROR: Failed to download swiftlint ($version)"
+  echo "Download URL: $url"
   exit 1
 fi
 set -e
