@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [0.0.9](https://github.com/honghaoz/ChouTi/releases/tag/0.0.9) (2025-02-26)
+
+- Fixed CGRect utilities.
+- Added log file exporting capabilities.
+- Updated `Trigger` to support publisher and binding.
+- Updated `Binding` to support bidirectional data sync with `CurrentValueSubject`.
+- Fixed watchOS build issues.
+- Minor bug fixes.
+
 ## [0.0.8](https://github.com/honghaoz/ChouTi/releases/tag/0.0.8) (2024-09-28)
 
 - Bumped up swift-tools-version to 5.9.
