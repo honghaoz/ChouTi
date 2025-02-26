@@ -178,7 +178,7 @@ fi
 
 # For iOS
 if [[ "$OS" == *"iOS"* ]]; then
-  SIMULATOR_NAME=$(xcrun simctl list devices available | grep 'iPhone' | grep -Eo 'iPhone \d+' | sort -t ' ' -k 2 -nr | head -1)
+  SIMULATOR_NAME=$(xcrun simctl list devices available | grep 'iPhone' | grep -Eo 'iPhone \d+' | sort -t ' ' -k 2 -nr | head -1 | sed 's/[[:space:]]*([[:xdigit:]-]\{36\}).*$//' | xargs)
   PLATFORM="iOS Simulator"
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME"
   # DESTINATION="generic/platform=iOS"
@@ -189,7 +189,7 @@ fi
 
 # For tvOS
 if [[ "$OS" == *"tvOS"* ]]; then
-  SIMULATOR_NAME=$(xcrun simctl list devices available | grep 'Apple TV' | head -n 1 | awk -F'(' '{print $1}' | xargs)
+  SIMULATOR_NAME=$(xcrun simctl list devices available | grep 'Apple TV' | head -n 1 | sed 's/[[:space:]]*([[:xdigit:]-]\{36\}).*$//' | xargs)
   PLATFORM="tvOS Simulator"
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME"
   echo ""
@@ -199,7 +199,7 @@ fi
 
 # For visionOS
 if [[ "$OS" == *"visionOS"* ]]; then
-  SIMULATOR_NAME=$(xcrun simctl list devices available | grep "Apple Vision" | head -n 1 | awk -F'(' '{print $1}' | xargs)
+  SIMULATOR_NAME=$(xcrun simctl list devices available | grep "Apple Vision" | head -n 1 | sed 's/[[:space:]]*([[:xdigit:]-]\{36\}).*$//' | xargs)
   PLATFORM="visionOS Simulator"
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME"
   # DESTINATION="generic/platform=visionOS"
@@ -210,7 +210,7 @@ fi
 
 # For watchOS
 if [[ "$OS" == *"watchOS"* ]]; then
-  SIMULATOR_NAME=$(xcrun simctl list devices available | grep "Apple Watch" | head -n 1 | awk -F'(' '{print $1}' | xargs)
+  SIMULATOR_NAME=$(xcrun simctl list devices available | grep "Apple Watch" | head -n 1 | sed 's/[[:space:]]*([[:xdigit:]-]\{36\}).*$//' | xargs)
   PLATFORM="watchOS Simulator"
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME"
   # DESTINATION="generic/platform=watchOS"
