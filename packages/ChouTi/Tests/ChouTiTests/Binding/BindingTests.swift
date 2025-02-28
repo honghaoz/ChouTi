@@ -345,11 +345,13 @@ class BindingTests: XCTestCase {
     let bindingObservation = binding.observe { _ in
       bindingTriggerCount += 1
     }
+    _ = bindingObservation
 
     var subjectTriggerCount = -1
     let subjectObservation = currentValueSubject.sink { _ in
       subjectTriggerCount += 1
     }
+    _ = subjectObservation
 
     expect(bindingTriggerCount) == 0
     expect(subjectTriggerCount) == 0
