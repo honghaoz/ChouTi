@@ -342,18 +342,6 @@ public extension Binding where T == Void {
   }
 }
 
-public extension CurrentValueSubject where Failure == Never {
-
-  /// Make a binding from a `CurrentValueSubject`.
-  ///
-  /// The returned binding will hold a strong reference to the subject.
-  @inlinable
-  @inline(__always)
-  var binding: Binding<Output> {
-    Binding<Output>(subject: self)
-  }
-}
-
 // MARK: - Expressible
 
 // Bool

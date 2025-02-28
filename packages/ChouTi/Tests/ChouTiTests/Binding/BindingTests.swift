@@ -339,7 +339,7 @@ class BindingTests: XCTestCase {
 
   func test_binding_currentValueSubject() {
     let currentValueSubject = CurrentValueSubject<Int, Never>(0)
-    let binding = currentValueSubject.binding
+    let binding = Binding(subject: currentValueSubject)
 
     var bindingTriggerCount = 0
     let bindingObservation = binding.observe { _ in
