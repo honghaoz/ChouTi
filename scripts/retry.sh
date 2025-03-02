@@ -56,18 +56,18 @@ command_to_execute="$@"
 for ((i=1; i<=max_attempts; i++)); do
   # print retry message if it's not the first attempt
   if [ $i -gt 1 ]; then
-    echo "Attempt $i of $max_attempts"
+    echo "Attempt $i of $max_attempts..."
   fi
 
   if $command_to_execute; then
     exit 0
   else
-    echo "Attempt $i failed"
+    echo "‼️  Attempt $i failed."
     if [ $i -eq $max_attempts ]; then
-      echo "All attempts failed"
+      echo "❌ All attempts failed."
       exit 1
     fi
-    echo "Retrying in $delay seconds..."
+    echo "🔁  Retrying in $delay seconds..."
     sleep $delay
   fi
 done

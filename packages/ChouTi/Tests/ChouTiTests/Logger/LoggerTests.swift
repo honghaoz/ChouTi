@@ -243,10 +243,10 @@ final class LoggerTests: XCTestCase {
       // 2024-06-03 21:30:43.235000-0700 ℹ️ [com.apple.main-thread][LoggerTests.swift:198:16][test_fileDestination()] ➜ info
       // 2024-06-03 21:30:43.254000-0700 ⚠️ [com.apple.main-thread][LoggerTests.swift:199:19][test_fileDestination()] ➜ warning
       // 2024-06-03 21:30:43.275000-0700 🛑 [com.apple.main-thread][LoggerTests.swift:200:17][test_fileDestination()] ➜ error
-      expect(lines[0].contains("➜ debug"), lines[0]) == true
-      expect(lines[1].contains("➜ info"), lines[1]) == true
-      expect(lines[2].contains("➜ warning"), lines[2]) == true
-      expect(lines[3].contains("➜ error"), lines[3]) == true
+      expect(lines[0].hasSuffix("➜ debug"), lines[0]) == true
+      expect(lines[1].hasSuffix("➜ info"), lines[1]) == true
+      expect(lines[2].hasSuffix("➜ warning"), lines[2]) == true
+      expect(lines[3].hasSuffix("➜ error"), lines[3]) == true
       // expect(try lines[0].wholeMatch(of: Regex("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{6}-\\d{4} 🧻 \\[com.apple.main-thread\\]\\[LoggerTests.swift:\\d+:\\d+\\]\\[test_fileDestination\\(\\)] ➜ debug"))) != nil
       // expect(try lines[1].wholeMatch(of: Regex("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{6}-\\d{4} ℹ️ \\[com.apple.main-thread\\]\\[LoggerTests.swift:\\d+:\\d+\\]\\[test_fileDestination\\(\\)] ➜ info"))) != nil
       // expect(try lines[2].wholeMatch(of: Regex("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{6}-\\d{4} ⚠️ \\[com.apple.main-thread\\]\\[LoggerTests.swift:\\d+:\\d+\\]\\[test_fileDestination\\(\\)] ➜ warning"))) != nil
@@ -306,10 +306,10 @@ final class LoggerTests: XCTestCase {
       // 2024-06-03 21:30:43.235000-0700 ℹ️ [com.apple.main-thread][LoggerTests.swift:198:16][test_fileDestination_customFolder()] ➜ info
       // 2024-06-03 21:30:43.254000-0700 ⚠️ [com.apple.main-thread][LoggerTests.swift:199:19][test_fileDestination_customFolder()] ➜ warning
       // 2024-06-03 21:30:43.275000-0700 🛑 [com.apple.main-thread][LoggerTests.swift:200:17][test_fileDestination_customFolder()] ➜ error
-      expect(lines[0].contains("➜ debug"), lines[0]) == true
-      expect(lines[1].contains("➜ info"), lines[1]) == true
-      expect(lines[2].contains("➜ warning"), lines[2]) == true
-      expect(lines[3].contains("➜ error"), lines[3]) == true
+      expect(lines[0].hasSuffix("➜ debug"), lines[0]) == true
+      expect(lines[1].hasSuffix("➜ info"), lines[1]) == true
+      expect(lines[2].hasSuffix("➜ warning"), lines[2]) == true
+      expect(lines[3].hasSuffix("➜ error"), lines[3]) == true
       expect(lines[4]) == ""
     } else {
       fail("lines.count == \(lines.count)")
@@ -381,7 +381,7 @@ final class LoggerTests: XCTestCase {
     let lines = logFileContent.components(separatedBy: "\n")
 
     if lines.count == 2 {
-      expect(lines[0].contains("➜ debug2"), lines[0]) == true
+      expect(lines[0].hasSuffix("➜ debug2"), lines[0]) == true
       expect(lines[1]) == ""
     } else {
       fail("lines.count == \(lines.count)")

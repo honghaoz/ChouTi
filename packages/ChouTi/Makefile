@@ -73,7 +73,7 @@ test-watchOS: # Run tests on watchOS.
 test-codecov: # Run tests with code coverage.
 	@echo test with code coverage: $(MAKEFILE_DIR_NAME)
 	@$(REPO_ROOT)/scripts/retry.sh --max-attempts 3 --delay 3 \
-		swift test -Xswiftc -DTEST --enable-code-coverage | $(REPO_ROOT)/bin/xcbeautify
+		swift test -Xswiftc -DTEST --enable-code-coverage
 	xcrun llvm-cov export -format="lcov" .build/debug/ChouTiPackageTests.xctest/Contents/MacOS/ChouTiPackageTests -instr-profile .build/debug/codecov/default.profdata > .build/debug/codecov/coverage.lcov
 	$(REPO_ROOT)/scripts/filter-lcov.sh .build/debug/codecov/coverage.lcov --keep-pattern '.+packages/ChouTi/Sources/.+'
 

@@ -219,7 +219,7 @@ public extension Logger {
 
       // not exactly sure why ".mappedIfSafe", but seems like a reasonable option.
       // https://stackoverflow.com/questions/36809449/which-nsdatareadingoptions-should-be-used-when-reading-a-local-file
-      guard var data = try? Data(contentsOf: logFile, options: .mappedIfSafe), !data.isEmpty else {
+      guard let data = try? Data(contentsOf: logFile, options: .mappedIfSafe), !data.isEmpty else {
         ChouTi.assertFailure("Trimming the current log file failed")
         return
       }
@@ -240,9 +240,9 @@ public extension Logger {
       #endif
 
       logFileSize -= UInt64(position)
-      data.removeSubrange(0 ..< position)
+      let trimmedData = data.subdata(in: position ..< data.count)
 
-      try data.write(to: logFile, options: .atomic)
+      try trimmedData.write(to: logFile, options: .atomic)
     }
 
     public func exportLogFile(fileName: String) -> URL? {
