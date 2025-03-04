@@ -181,10 +181,13 @@ echo "🚀 Build workspace: ${CYAN}$WORKSPACE${RESET}, scheme: ${CYAN}$SCHEME${R
 echo "${BOLD}Swift Version:${RESET} ${CYAN}$(swift --version 2>/dev/null | tr '\n' ' ')${RESET}"
 echo "${BOLD}Xcode Version:${RESET} ${CYAN}$(xcodebuild -version 2>&1 | tr '\n' ' ')${RESET}"
 echo "${BOLD}Available devices:${RESET}"
-xcrun simctl list devices available
+DEVICES=$(xcrun simctl list devices available)
+echo "$DEVICES"
 
-echo "ℹ️  $WORKSPACE, Scheme: $SCHEME, available destinations:"
-xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -showdestinations
+echo ""
+echo "ℹ️  ${CYAN}$WORKSPACE${RESET}, Scheme: ${CYAN}$SCHEME${RESET}, available destinations:"
+DESTINATIONS=$(xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -showdestinations)
+echo "$DESTINATIONS"
 
 # For macOS
 if [[ "$OS" == *"macOS"* ]]; then
@@ -199,8 +202,8 @@ fi
 
 # For iOS
 if [[ "$OS" == *"iOS"* ]]; then
-  SIMULATOR_NAME=$(xcrun simctl list devices available | grep 'iPhone' | grep -Eo 'iPhone \d+' | sort -ru | head -n 1 |sed -E 's/[[:space:]]*(.*) \([[:xdigit:]-]+\).*/\1/')
-  SIMULATOR_OS=$(xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -showdestinations | grep "name:$SIMULATOR_NAME" | sed -E 's/.*OS:([0-9.]+).*/\1/' | sort -t. -k1,1nr -k2,2nr | head -1)
+  SIMULATOR_NAME=$(echo "$DEVICES" | grep 'iPhone' | grep -Eo 'iPhone \d+' | sort -ru | head -n 1 |sed -E 's/[[:space:]]*(.*) \([[:xdigit:]-]+\).*/\1/')
+  SIMULATOR_OS=$(echo "$DESTINATIONS" | grep "name:$SIMULATOR_NAME" | sed -E 's/.*OS:([0-9.]+).*/\1/' | sort -t. -k1,1nr -k2,2nr | head -1)
   if [ -z "$SIMULATOR_NAME" ] || [ -z "$SIMULATOR_OS" ]; then
     echo "🛑 No available iOS simulator found. SIMULATOR_NAME: '$SIMULATOR_NAME', SIMULATOR_OS: '$SIMULATOR_OS'"
     exit 1
@@ -215,8 +218,8 @@ fi
 
 # For tvOS
 if [[ "$OS" == *"tvOS"* ]]; then
-  SIMULATOR_NAME=$(xcrun simctl list devices available | grep 'Apple TV 4K' | sort -ru | head -n 1 | sed -E 's/[[:space:]]*(.*) \([[:xdigit:]-]+\).*/\1/')
-  SIMULATOR_OS=$(xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -showdestinations | grep "name:$SIMULATOR_NAME" | sed -E 's/.*OS:([0-9.]+).*/\1/' | sort -t. -k1,1nr -k2,2nr | head -1)
+  SIMULATOR_NAME=$(echo "$DEVICES" | grep 'Apple TV 4K' | sort -ru | head -n 1 | sed -E 's/[[:space:]]*(.*) \([[:xdigit:]-]+\).*/\1/')
+  SIMULATOR_OS=$(echo "$DESTINATIONS" | grep "name:$SIMULATOR_NAME" | sed -E 's/.*OS:([0-9.]+).*/\1/' | sort -t. -k1,1nr -k2,2nr | head -1)
   if [ -z "$SIMULATOR_NAME" ] || [ -z "$SIMULATOR_OS" ]; then
     echo "🛑 No available tvOS simulator found. SIMULATOR_NAME: '$SIMULATOR_NAME', SIMULATOR_OS: '$SIMULATOR_OS'"
     exit 1
@@ -231,8 +234,8 @@ fi
 # For visionOS
 if [[ "$OS" == *"visionOS"* ]]; then
   DESIGNED_FOR_IPAD="variant:Designed"
-  SIMULATOR_NAME=$(xcrun simctl list devices available | grep "Apple Vision" | grep -v "$DESIGNED_FOR_IPAD" | sort -ru | head -n 1 | sed -E 's/[[:space:]]*(.*) \([[:xdigit:]-]+\).*/\1/')
-  SIMULATOR_OS=$(xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -showdestinations | grep "name:$SIMULATOR_NAME" | grep -v "$DESIGNED_FOR_IPAD" | sed -E 's/.*OS:([0-9.]+).*/\1/' | sort -t. -k1,1nr -k2,2nr | head -1)
+  SIMULATOR_NAME=$(echo "$DEVICES" | grep "Apple Vision" | grep -v "$DESIGNED_FOR_IPAD" | sort -ru | head -n 1 | sed -E 's/[[:space:]]*(.*) \([[:xdigit:]-]+\).*/\1/')
+  SIMULATOR_OS=$(echo "$DESTINATIONS" | grep "name:$SIMULATOR_NAME" | grep -v "$DESIGNED_FOR_IPAD" | sed -E 's/.*OS:([0-9.]+).*/\1/' | sort -t. -k1,1nr -k2,2nr | head -1)
   if [ -z "$SIMULATOR_NAME" ] || [ -z "$SIMULATOR_OS" ]; then
     echo "🛑 No available visionOS simulator found. SIMULATOR_NAME: '$SIMULATOR_NAME', SIMULATOR_OS: '$SIMULATOR_OS'"
     exit 1
@@ -247,8 +250,8 @@ fi
 
 # For watchOS
 if [[ "$OS" == *"watchOS"* ]]; then
-  SIMULATOR_NAME=$(xcrun simctl list devices available | grep "Apple Watch" | sort -ru | head -n 1 | sed -E 's/[[:space:]]*(.*) \([[:xdigit:]-]+\).*/\1/')
-  SIMULATOR_OS=$(xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -showdestinations | grep "name:$SIMULATOR_NAME" | sed -E 's/.*OS:([0-9.]+).*/\1/' | sort -t. -k1,1nr -k2,2nr | head -1)
+  SIMULATOR_NAME=$(echo "$DEVICES" | grep "Apple Watch" | sort -ru | head -n 1 | sed -E 's/[[:space:]]*(.*) \([[:xdigit:]-]+\).*/\1/')
+  SIMULATOR_OS=$(echo "$DESTINATIONS" | grep "name:$SIMULATOR_NAME" | sed -E 's/.*OS:([0-9.]+).*/\1/' | sort -t. -k1,1nr -k2,2nr | head -1)
   if [ -z "$SIMULATOR_NAME" ] || [ -z "$SIMULATOR_OS" ]; then
     echo "🛑 No available watchOS simulator found. SIMULATOR_NAME: '$SIMULATOR_NAME', SIMULATOR_OS: '$SIMULATOR_OS'"
     exit 1

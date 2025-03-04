@@ -164,9 +164,11 @@ echo "🚀 Build project: ${CYAN}$PROJECT${RESET}, scheme: ${CYAN}$SCHEME${RESET
 echo "${BOLD}Swift Version:${RESET} ${CYAN}$(swift --version 2>/dev/null | tr '\n' ' ')${RESET}"
 echo "${BOLD}Xcode Version:${RESET} ${CYAN}$(xcodebuild -version 2>&1 | tr '\n' ' ')${RESET}"
 echo "${BOLD}Available devices:${RESET}"
-xcrun simctl list devices available
+DEVICES=$(xcrun simctl list devices available)
+echo "$DEVICES"
 
-echo "ℹ️  $PROJECT, Scheme: $SCHEME, available destinations:"
+echo ""
+echo "ℹ️  ${CYAN}$PROJECT${RESET}, Scheme: ${CYAN}$SCHEME${RESET}, available destinations:"
 xcodebuild -project "$PROJECT" -scheme "$SCHEME" -showdestinations
 
 # For macOS
@@ -178,7 +180,7 @@ fi
 
 # For iOS
 if [[ "$OS" == *"iOS"* ]]; then
-  SIMULATOR_NAME=$(xcrun simctl list devices available | grep 'iPhone' | grep -Eo 'iPhone \d+' | sort -t ' ' -k 2 -nr | head -1 | sed 's/[[:space:]]*([[:xdigit:]-]\{36\}).*$//' | xargs)
+  SIMULATOR_NAME=$(echo "$DEVICES" | grep 'iPhone' | grep -Eo 'iPhone \d+' | sort -t ' ' -k 2 -nr | head -1 | sed 's/[[:space:]]*([[:xdigit:]-]\{36\}).*$//' | xargs)
   PLATFORM="iOS Simulator"
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME"
   # DESTINATION="generic/platform=iOS"
@@ -189,7 +191,7 @@ fi
 
 # For tvOS
 if [[ "$OS" == *"tvOS"* ]]; then
-  SIMULATOR_NAME=$(xcrun simctl list devices available | grep 'Apple TV' | head -n 1 | sed 's/[[:space:]]*([[:xdigit:]-]\{36\}).*$//' | xargs)
+  SIMULATOR_NAME=$(echo "$DEVICES" | grep 'Apple TV' | head -n 1 | sed 's/[[:space:]]*([[:xdigit:]-]\{36\}).*$//' | xargs)
   PLATFORM="tvOS Simulator"
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME"
   echo ""
@@ -199,7 +201,7 @@ fi
 
 # For visionOS
 if [[ "$OS" == *"visionOS"* ]]; then
-  SIMULATOR_NAME=$(xcrun simctl list devices available | grep "Apple Vision" | head -n 1 | sed 's/[[:space:]]*([[:xdigit:]-]\{36\}).*$//' | xargs)
+  SIMULATOR_NAME=$(echo "$DEVICES" | grep "Apple Vision" | head -n 1 | sed 's/[[:space:]]*([[:xdigit:]-]\{36\}).*$//' | xargs)
   PLATFORM="visionOS Simulator"
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME"
   # DESTINATION="generic/platform=visionOS"
@@ -210,7 +212,7 @@ fi
 
 # For watchOS
 if [[ "$OS" == *"watchOS"* ]]; then
-  SIMULATOR_NAME=$(xcrun simctl list devices available | grep "Apple Watch" | head -n 1 | sed 's/[[:space:]]*([[:xdigit:]-]\{36\}).*$//' | xargs)
+  SIMULATOR_NAME=$(echo "$DEVICES" | grep "Apple Watch" | head -n 1 | sed 's/[[:space:]]*([[:xdigit:]-]\{36\}).*$//' | xargs)
   PLATFORM="watchOS Simulator"
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME"
   # DESTINATION="generic/platform=watchOS"
