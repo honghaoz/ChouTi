@@ -133,6 +133,8 @@ public enum Device {
       "Mac14,5", "Mac14,9", // MacBook Pro (14-inch, 2023), M2
       "Mac15,7", "Mac15,9", "Mac15,11", // MacBook Pro (16-inch, Nov 2023), M3
       "Mac15,6", "Mac15,8", "Mac15,10", "Mac15,3", // MacBook Pro (14-inch, Nov 2023), M3
+      "Mac16,7", "Mac16,5", // MacBook Pro (16-inch, 2024), M4
+      "Mac16,6", "Mac16,8", "Mac16,1", // MacBook Pro (14-inch, 2024), M4
       /// MacBook Air: https://support.apple.com/en-us/102869
       "Mac14,2", // MacBook Air (M2, 2022)
       "Mac14,15", // MacBook Air (15-inch, M2, 2023)
@@ -141,12 +143,12 @@ public enum Device {
     ])
 
     #if DEBUG
-    // make Date for 2024-09-10
+    // last checked date: 2025-03-09
     let calendar = Calendar.current
     var components = DateComponents()
-    components.year = 2024
-    components.month = 9
-    components.day = 10
+    components.year = 2025
+    components.month = 3
+    components.day = 9
     if let lastUpdatedAt = calendar.date(from: components).assert("failed to create date") {
       let now = Date()
       if now.hasBeen(.months(6), since: lastUpdatedAt) {
