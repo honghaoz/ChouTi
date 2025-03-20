@@ -23,6 +23,9 @@ if test -z "$(git ls-files --exclude-standard --others)" && git diff-files --qui
   pushd "$REPO_ROOT" >/dev/null 2>&1 || exit 0
   make format
   check_error
+  echo "${CYAN}[$FILE_NAME]${RESET} 🧹 Running code linter..."
+  make lint
+  check_error
   popd >/dev/null 2>&1 || exit 0
 
   if ! ( test -z "$(git ls-files --exclude-standard --others)" && git diff-files --quiet ); then
@@ -30,7 +33,10 @@ if test -z "$(git ls-files --exclude-standard --others)" && git diff-files --qui
     exit 1
   fi
 else
-  echo "${CYAN}[$FILE_NAME]${RESET} ⚠️  Unstaged changes detected, please stage them before committing."
-  echo "${CYAN}[$FILE_NAME]${RESET} 💡 If you want to commit without formatting, use ${GREEN}git commit --no-verify${RESET}."
+  echo "Unstaged changes:"
+  git status --short
+  echo ""
+  echo "${CYAN}[$FILE_NAME]${RESET} ⚠️  Unstaged changes detected, please stage them (${GREEN}git add .${RESET}) before committing."
+  echo "${CYAN}[$FILE_NAME]${RESET} 💡 If you want to commit without formatting and linting, use ${GREEN}git commit --no-verify${RESET}."
   exit 1
 fi
