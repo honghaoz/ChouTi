@@ -1,8 +1,8 @@
 //
-//  fail.swift
+//  FailTests.swift
 //  ChouTi
 //
-//  Created by Honghao Zhang on 10/22/23.
+//  Created by Honghao Zhang on 5/19/24.
 //  Copyright © 2020 Honghao Zhang.
 //
 //  MIT License
@@ -29,12 +29,15 @@
 //
 
 import XCTest
+import ChouTiTest
 
-/// Generate a test failure message.
-/// - Parameters:
-///   - message: A failure message.
-///   - file: The file where the failure occurs. The default is the filename of the test case where you call this function.
-///   - line: The line number where the failure occurs. The default is the line number where you call this function.
-public func fail(_ message: String = "", file: StaticString = #filePath, line: UInt = #line) {
-  XCTFail(message, file: file, line: line)
+class FailTests: FailureCapturingTestCase {
+
+  func test() {
+    let expectedMessage = "Test failure message"
+
+    fail(expectedMessage)
+
+    assertFailureContains(expectedMessage: expectedMessage)
+  }
 }

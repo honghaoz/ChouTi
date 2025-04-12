@@ -1,8 +1,8 @@
 //
-//  failTests.swift
+//  UnwrapTests.swift
 //  ChouTi
 //
-//  Created by Honghao Zhang on 5/19/24.
+//  Created by Honghao Zhang on 5/24/24.
 //  Copyright © 2020 Honghao Zhang.
 //
 //  MIT License
@@ -28,16 +28,19 @@
 //  IN THE SOFTWARE.
 //
 
-import XCTest
 import ChouTiTest
+import XCTest
 
-class failTests: FailureCapturingTestCase {
+import Foundation
 
-  func test() {
-    let expectedMessage = "Test failure message"
+class UnwrapTests: XCTestCase {
 
-    fail(expectedMessage)
+  func testUnwrap() {
+    let nilValue: Int? = 1
+    expect(try unwrap(nilValue)) == 1
+    expect(try nilValue.unwrap()) == 1
 
-    assertFailureContains(expectedMessage: expectedMessage)
+    try expect(unwrap(nilValue)) == 1
+    try expect(nilValue.unwrap()) == 1
   }
 }

@@ -1,5 +1,5 @@
 //
-//  skip.swift
+//  SkipTests.swift
 //  ChouTi
 //
 //  Created by Honghao Zhang on 3/28/25.
@@ -28,24 +28,22 @@
 //  IN THE SOFTWARE.
 //
 
+import ChouTiTest
 import XCTest
 
-/// Skips remaining tests in a test method if the specified condition is met.
-/// - Parameters:
-///   - condition: A boolean value that determines whether to skip the remaining tests.
-///   - message: A message for the skip.
-///   - file: The file where the skip is occurred.
-///   - line: The line number where the skip is occurred.
-public func skipIf(_ condition: @autoclosure () throws -> Bool, _ message: @autoclosure () -> String? = nil, file: StaticString = #filePath, line: UInt = #line) throws {
-  try XCTSkipIf(condition(), message(), file: file, line: line)
-}
+class SkipTests: XCTestCase {
 
-/// Skips remaining tests in a test method unless the specified condition is met.
-/// - Parameters:
-///   - condition: A boolean value that determines whether to skip the remaining tests.
-///   - message: A message for the skip.
-///   - file: The file where the skip is occurred.
-///   - line: The line number where the skip is occurred.
-public func skipUnless(_ condition: @autoclosure () throws -> Bool, _ message: @autoclosure () -> String? = nil, file: StaticString = #filePath, line: UInt = #line) throws {
-  try XCTSkipUnless(condition(), message(), file: file, line: line)
+  func test_skipIf() throws {
+    try skipIf(false, "skip")
+    try skipIf(true, "skip")
+
+    fail("skipIf should have been skipped")
+  }
+
+  func test_skipUnless() throws {
+    try skipUnless(true, "skip")
+    try skipUnless(false, "skip")
+
+    fail("skipUnless should have been skipped")
+  }
 }
