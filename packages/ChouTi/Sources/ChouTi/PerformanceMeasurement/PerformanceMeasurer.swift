@@ -134,16 +134,15 @@ public extension PerformanceMeasurer {
   ///
   /// Example:
   /// ```swift
-  /// let numbers = Array(1...10_000)
   /// let elapsedTime = PerformanceMeasurer.measure {
-  ///   _ = numbers.concurrentMap { $0 * $0 }
+  ///   // some work
   /// }
   /// print("elapsed time: \(elapsedTime)")
   /// ```
   ///
   /// - Parameters:
   ///   - block: The execution block to measure.
-  /// - Returns: The elapsed duration.
+  /// - Returns: The elapsed time in seconds.
   @discardableResult
   static func measure(_ block: () -> Void) -> TimeInterval {
     let startTime = mach_absolute_time()
