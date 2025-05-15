@@ -115,3 +115,7 @@ class SomeTests: XCTestCase {
   }
 }
 ```
+
+## License
+
+ChouTi is available under the MIT license. See the [LICENSE](https://github.com/honghaoz/ChouTi/blob/master/LICENSE) file for more info.
