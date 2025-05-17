@@ -38,7 +38,7 @@ public extension NSObject {
   ///
   /// Example:
   /// ```
-  /// // inject a block to the `layoutSubviews` method
+  /// // inject a block to a view's `layoutSubviews` call
   /// let token = view.inject(selector: #selector(UIView.layoutSubviews), block: { view in
   ///   // add your logic here
   /// })
@@ -46,6 +46,9 @@ public extension NSObject {
   /// // cancel the injection
   /// token.cancel()
   /// ```
+  ///
+  /// - Note:
+  ///   - In Swift, the method to inject should be a `dynamic` method.
   ///
   /// - Parameters:
   ///   - selector: The selector to inject the callback to. The selector should match the signature of the block.

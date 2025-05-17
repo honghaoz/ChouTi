@@ -1,5 +1,5 @@
 //
-//  NSObject+SwizzleTests.swift
+//  NSObject+Swizzle_Void_to_VoidTests.swift
 //  ChouTi
 //
 //  Created by Honghao on 5/16/25.
@@ -34,7 +34,18 @@ import ChouTiTest
 
 import ChouTi
 
-class NSObject_SwizzleTests: XCTestCase {
+class NSObject_Swizzle_Void_to_Void: XCTestCase {
+
+  #if !os(watchOS)
+  private class TestLayer: CALayer {
+
+    var didLayoutSublayersCallCount = 0
+
+    override func layoutSublayers() {
+      super.layoutSublayers()
+      didLayoutSublayersCallCount += 1
+    }
+  }
 
   func test_inject() {
     var layer: TestLayer! = TestLayer()
@@ -54,6 +65,7 @@ class NSObject_SwizzleTests: XCTestCase {
     expect(getClassName(layer)) == layoutSublayersSubclassName
     expect(NSClassFromString(layoutSublayersSubclassName)) != nil
 
+    // check the block is called
     layer.layoutSublayers()
     expect(layer.didLayoutSublayersCallCount) == 1
     expect(layoutSublayersCallCount) == 1
@@ -71,6 +83,7 @@ class NSObject_SwizzleTests: XCTestCase {
     // check the host object still has the same subclass
     expect(getClassName(layer)) == layoutSublayersSubclassName
 
+    // check the block is called
     layer.layoutSublayers()
     expect(layer.didLayoutSublayersCallCount) == 3
     expect(layoutSublayersCallCount) == 3
@@ -87,6 +100,7 @@ class NSObject_SwizzleTests: XCTestCase {
     expect(getClassName(layer)) == displaySubclassName
     expect(NSClassFromString(displaySubclassName)) != nil
 
+    // check the block is called
     layer.display()
     expect(displayCallCount) == 1
 
@@ -96,6 +110,7 @@ class NSObject_SwizzleTests: XCTestCase {
     // cancel the injection
     token?.cancel()
 
+    // check the block is not called
     layer.display()
     expect(displayCallCount) == 2
 
@@ -105,14 +120,92 @@ class NSObject_SwizzleTests: XCTestCase {
     expect(NSClassFromString(layoutSublayersSubclassName)) == nil
     expect(NSClassFromString(displaySubclassName)) == nil
   }
-}
+  #endif
 
-private class TestLayer: CALayer {
+  #if os(watchOS)
+  private class TestObject: NSObject {
 
-  var didLayoutSublayersCallCount = 0
+    var testMethodCallCount = 0
 
-  override func layoutSublayers() {
-    super.layoutSublayers()
-    didLayoutSublayersCallCount += 1
+    @objc dynamic func testMethod() {
+      testMethodCallCount += 1
+    }
+
+    @objc dynamic func testMethod2() {}
   }
+
+  func test_inject() {
+    var object: TestObject! = TestObject()
+
+    let className = getClassName(object)
+
+    // inject layoutSublayers first time
+    var testMethodCallCount = 0
+    object.inject(selector: #selector(TestObject.testMethod), block: { [weak object] theObject in
+      expect(object) === theObject
+      testMethodCallCount += 1
+    })
+
+    // check the host object is subclassed
+    let memoryAddress = object.rawPointer()
+    let testMethodSubclassName = "\(className)_chouti_\(memoryAddress)_testMethod"
+    expect(getClassName(object)) == testMethodSubclassName
+    expect(NSClassFromString(testMethodSubclassName)) != nil
+
+    // check the block is called
+    object.testMethod()
+    expect(object.testMethodCallCount) == 1
+    expect(testMethodCallCount) == 1
+
+    object.testMethod()
+    expect(object.testMethodCallCount) == 2
+    expect(testMethodCallCount) == 2
+
+    // inject layoutSublayers again
+    var secondTestMethodCallCount = 0
+    object.inject(selector: #selector(TestObject.testMethod), block: { object in
+      secondTestMethodCallCount += 1
+    })
+
+    // check the host object still has the same subclass
+    expect(getClassName(object)) == testMethodSubclassName
+
+    // check the block is called
+    object.testMethod()
+    expect(object.testMethodCallCount) == 3
+    expect(testMethodCallCount) == 3
+    expect(secondTestMethodCallCount) == 1
+
+    // inject display
+    var testMethod2CallCount = 0
+    let token = object.inject(selector: #selector(TestObject.testMethod2), block: { object in
+      testMethod2CallCount += 1
+    })
+
+    // check the host object is subclassed again
+    let testMethod2SubclassName = "\(className)_chouti_\(memoryAddress)_testMethod_chouti_\(memoryAddress)_testMethod2"
+    expect(getClassName(object)) == testMethod2SubclassName
+    expect(NSClassFromString(testMethod2SubclassName)) != nil
+
+    // check the block is called
+    object.testMethod2()
+    expect(testMethod2CallCount) == 1
+
+    object.testMethod2()
+    expect(testMethod2CallCount) == 2
+
+    // cancel the injection
+    token?.cancel()
+
+    // check the block is not called
+    object.testMethod2()
+    expect(testMethod2CallCount) == 2
+
+    // check subclass is removed on deallocation
+    object = nil
+    wait(timeout: 0.01)
+    expect(NSClassFromString(testMethodSubclassName)) == nil
+    expect(NSClassFromString(testMethod2SubclassName)) == nil
+  }
+  #endif
 }
