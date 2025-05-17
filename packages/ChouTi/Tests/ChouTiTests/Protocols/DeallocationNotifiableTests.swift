@@ -50,19 +50,17 @@ class DeallocationNotifiableTests: XCTestCase {
   func test_add_multiple_deallocateBlock() {
     var object: TestObject? = TestObject()
 
-    var called1: Bool = false
-    var called2: Bool = false
+    var calls: [Int] = []
     object?.onDeallocate {
-      called1 = true
+      calls.append(1)
     }
     object?.onDeallocate {
-      called2 = true
+      calls.append(2)
     }
 
     object = nil
 
-    expect(called1) == true
-    expect(called2) == true
+    expect(calls) == [2, 1]
   }
 
   func test_remove_deallocateBlock() {

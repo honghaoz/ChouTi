@@ -35,6 +35,8 @@ public protocol DeallocationNotifiable: AnyObject {
 
   /// Add a block to be called when the host object deallocates.
   ///
+  /// The last added block will be called first when the host object deallocates.
+  ///
   /// - Parameter block: The block to be called when the host object deallocates.
   /// - Returns: A token that can be used to cancel the deallocation block.
   @discardableResult
@@ -84,7 +86,7 @@ private final class TokenManager {
   }
 
   func add(_ token: Token) {
-    tokens[ObjectIdentifier(token)] = token
+    tokens.insert(value: token, forKey: ObjectIdentifier(token), atIndex: 0)
   }
 
   func remove(_ token: Token) {
