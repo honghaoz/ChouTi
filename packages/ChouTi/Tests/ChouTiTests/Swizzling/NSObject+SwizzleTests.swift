@@ -41,48 +41,69 @@ class NSObject_SwizzleTests: XCTestCase {
 
     let className = layer.className
 
-    var callCount = 0
+    // inject layoutSublayers first time
+    var layoutSublayersCallCount = 0
     layer.inject(selector: #selector(TestLayer.layoutSublayers), block: { [weak layer] object in
       expect(object) === layer
-      callCount += 1
+      layoutSublayersCallCount += 1
     })
 
-    let a = CALayer.layoutSublayers
-
-    // check subclass is created
+    // check the host object is subclassed
     let memoryAddress = layer.rawPointer()
-    let subclassName = "\(className)_chouti_layoutSublayers_\(memoryAddress)"
-    expect(layer.className) == subclassName
-    expect(NSClassFromString(subclassName)) != nil
+    let layoutSublayersSubclassName = "\(className)_chouti_\(memoryAddress)_layoutSublayers"
+    expect(layer.className) == layoutSublayersSubclassName
+    expect(NSClassFromString(layoutSublayersSubclassName)) != nil
 
     layer.layoutSublayers()
     expect(layer.didLayoutSublayersCallCount) == 1
-    expect(callCount) == 1
+    expect(layoutSublayersCallCount) == 1
 
     layer.layoutSublayers()
     expect(layer.didLayoutSublayersCallCount) == 2
-    expect(callCount) == 2
+    expect(layoutSublayersCallCount) == 2
 
-    // inject again
-    var secondCallCount = 0
+    // inject layoutSublayers again
+    var secondLayoutSublayersCallCount = 0
     layer.inject(selector: #selector(TestLayer.layoutSublayers), block: { layer in
-      secondCallCount += 1
+      secondLayoutSublayersCallCount += 1
     })
 
-    // check another subclass is created
-    let anotherSubclassName = "\(className)_chouti_layoutSublayers_\(memoryAddress)_chouti_layoutSublayers_\(memoryAddress)"
-    expect(layer.className) == anotherSubclassName
-    expect(NSClassFromString(anotherSubclassName)) != nil
+    // check the host object still has the same subclass
+    expect(layer.className) == layoutSublayersSubclassName
 
     layer.layoutSublayers()
     expect(layer.didLayoutSublayersCallCount) == 3
-    expect(callCount) == 3
-    expect(secondCallCount) == 1
+    expect(layoutSublayersCallCount) == 3
+    expect(secondLayoutSublayersCallCount) == 1
+
+    // inject display
+    var displayCallCount = 0
+    let token = layer.inject(selector: #selector(CALayer.display), block: { layer in
+      displayCallCount += 1
+    })
+
+    // check the host object is subclassed again
+    let displaySubclassName = "\(className)_chouti_\(memoryAddress)_layoutSublayers_chouti_\(memoryAddress)_display"
+    expect(layer.className) == displaySubclassName
+    expect(NSClassFromString(displaySubclassName)) != nil
+
+    layer.display()
+    expect(displayCallCount) == 1
+
+    layer.display()
+    expect(displayCallCount) == 2
+
+    // cancel the injection
+    token?.cancel()
+
+    layer.display()
+    expect(displayCallCount) == 2
 
     // check subclass is removed on deallocation
     layer = nil
-    expect(NSClassFromString(subclassName)) == nil
-    expect(NSClassFromString(anotherSubclassName)) == nil
+    wait(timeout: 0.01)
+    expect(NSClassFromString(layoutSublayersSubclassName)) == nil
+    expect(NSClassFromString(displaySubclassName)) == nil
   }
 }
 
