@@ -66,7 +66,7 @@ public extension NSObject {
     }
 
     // 1) subclass the object if needed
-    let className = className
+    let className = getClassName(self)
     let subclassNameKey = "\(rawPointer())_\(selector)"
 
     if !className.components(separatedBy: Constants.delimiter).contains(subclassNameKey) {

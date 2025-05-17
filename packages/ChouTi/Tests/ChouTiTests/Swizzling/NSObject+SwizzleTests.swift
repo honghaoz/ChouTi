@@ -39,7 +39,7 @@ class NSObject_SwizzleTests: XCTestCase {
   func test_inject() {
     var layer: TestLayer! = TestLayer()
 
-    let className = layer.className
+    let className = getClassName(layer)
 
     // inject layoutSublayers first time
     var layoutSublayersCallCount = 0
@@ -51,7 +51,7 @@ class NSObject_SwizzleTests: XCTestCase {
     // check the host object is subclassed
     let memoryAddress = layer.rawPointer()
     let layoutSublayersSubclassName = "\(className)_chouti_\(memoryAddress)_layoutSublayers"
-    expect(layer.className) == layoutSublayersSubclassName
+    expect(getClassName(layer)) == layoutSublayersSubclassName
     expect(NSClassFromString(layoutSublayersSubclassName)) != nil
 
     layer.layoutSublayers()
@@ -69,7 +69,7 @@ class NSObject_SwizzleTests: XCTestCase {
     })
 
     // check the host object still has the same subclass
-    expect(layer.className) == layoutSublayersSubclassName
+    expect(getClassName(layer)) == layoutSublayersSubclassName
 
     layer.layoutSublayers()
     expect(layer.didLayoutSublayersCallCount) == 3
@@ -84,7 +84,7 @@ class NSObject_SwizzleTests: XCTestCase {
 
     // check the host object is subclassed again
     let displaySubclassName = "\(className)_chouti_\(memoryAddress)_layoutSublayers_chouti_\(memoryAddress)_display"
-    expect(layer.className) == displaySubclassName
+    expect(getClassName(layer)) == displaySubclassName
     expect(NSClassFromString(displaySubclassName)) != nil
 
     layer.display()
