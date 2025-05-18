@@ -109,28 +109,23 @@ public extension CancellableToken where Self: Hashable {
   }
 }
 
-// MARK: - Common
+// MARK: - DispatchWorkItem + CancellableToken
 
 extension DispatchWorkItem: CancellableToken {}
 
-// MARK: - CancellableTokenGroup
+// MARK: - SimpleCancellableToken
 
-/// A token that can group other tokens together.
-///
-/// Cancelling the token group will cancel all underlying tokens.
-public final class CancellableTokenGroup: CancellableToken, CustomStringConvertible {
+/// A `CancellableToken` implementation with a cancel block.
+public final class SimpleCancellableToken: CancellableToken, CustomStringConvertible {
 
-  private let tokens: [CancellableToken]
   private let cancelOnDeallocate: Bool
-  private let cancelBlock: (CancellableTokenGroup) -> Void
+  private let cancelBlock: (SimpleCancellableToken) -> Void
 
-  /// Initializes a `CancellableTokenGroup`.
+  /// Initializes a `SimpleCancellableToken`.
   /// - Parameters:
-  ///   - tokens: The child tokens.
   ///   - cancelOnDeallocate: Whether to call the cancel block on deallocate (`deinit`). Default is `true`.
   ///   - cancel: The cancel block to be called when the token cancels. Passes in the token itself.
-  public init(tokens: [CancellableToken], cancelOnDeallocate: Bool = true, cancel: @escaping (CancellableTokenGroup) -> Void) {
-    self.tokens = tokens
+  public init(cancelOnDeallocate: Bool = true, cancel: @escaping (SimpleCancellableToken) -> Void) {
     self.cancelOnDeallocate = cancelOnDeallocate
     self.cancelBlock = cancel
   }
@@ -142,14 +137,13 @@ public final class CancellableTokenGroup: CancellableToken, CustomStringConverti
   }
 
   public func cancel() {
-    tokens.forEach { $0.cancel() }
     cancelBlock(self)
   }
 
   // MARK: - CustomStringConvertible
 
   public var description: String {
-    "CancellableTokenGroup(\(rawPointer(self)))"
+    "SimpleCancellableToken(\(rawPointer(self)))"
   }
 }
 
@@ -193,19 +187,24 @@ public final class ValueCancellableToken<T>: CancellableToken, CustomStringConve
   }
 }
 
-// MARK: - SimpleCancellableToken
+// MARK: - CancellableTokenGroup
 
-/// A `CancellableToken` implementation with a cancel block.
-public final class SimpleCancellableToken: CancellableToken, CustomStringConvertible {
+/// A token that can group other tokens together.
+///
+/// Cancelling the token group will cancel all underlying tokens.
+public final class CancellableTokenGroup: CancellableToken, CustomStringConvertible {
 
+  private let tokens: [CancellableToken]
   private let cancelOnDeallocate: Bool
-  private let cancelBlock: (SimpleCancellableToken) -> Void
+  private let cancelBlock: (CancellableTokenGroup) -> Void
 
-  /// Initializes a `SimpleCancellableToken`.
+  /// Initializes a `CancellableTokenGroup`.
   /// - Parameters:
+  ///   - tokens: The child tokens.
   ///   - cancelOnDeallocate: Whether to call the cancel block on deallocate (`deinit`). Default is `true`.
   ///   - cancel: The cancel block to be called when the token cancels. Passes in the token itself.
-  public init(cancelOnDeallocate: Bool = true, cancel: @escaping (SimpleCancellableToken) -> Void) {
+  public init(tokens: [CancellableToken], cancelOnDeallocate: Bool = true, cancel: @escaping (CancellableTokenGroup) -> Void) {
+    self.tokens = tokens
     self.cancelOnDeallocate = cancelOnDeallocate
     self.cancelBlock = cancel
   }
@@ -217,12 +216,13 @@ public final class SimpleCancellableToken: CancellableToken, CustomStringConvert
   }
 
   public func cancel() {
+    tokens.forEach { $0.cancel() }
     cancelBlock(self)
   }
 
   // MARK: - CustomStringConvertible
 
   public var description: String {
-    "SimpleCancellableToken(\(rawPointer(self)))"
+    "CancellableTokenGroup(\(rawPointer(self)))"
   }
 }

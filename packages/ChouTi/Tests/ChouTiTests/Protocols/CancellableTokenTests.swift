@@ -102,6 +102,85 @@ final class CancellableTokenTests: XCTestCase {
   }
 }
 
+final class SimpleCancellableTokenTests: XCTestCase {
+
+  func test_cancel() {
+    var isCancelled = false
+    let token = SimpleCancellableToken { _ in
+      isCancelled = true
+    }
+    expect(isCancelled) == false
+    token.cancel()
+    expect(isCancelled) == true
+  }
+
+  func test_cancelOnDeallocate() {
+    var isCancelled = false
+    var token: SimpleCancellableToken! = SimpleCancellableToken(cancelOnDeallocate: true) { _ in
+      isCancelled = true
+    }
+    _ = token
+    expect(isCancelled) == false
+    token = nil
+    expect(isCancelled) == true
+  }
+
+  func test_cancelOnDeallocate_false() {
+    var isCancelled = false
+    var token: SimpleCancellableToken! = SimpleCancellableToken(cancelOnDeallocate: false) { _ in
+      isCancelled = true
+    }
+    _ = token
+    expect(isCancelled) == false
+    token = nil
+    expect(isCancelled) == false
+  }
+
+  func test_description() {
+    let token = SimpleCancellableToken { _ in }
+    expect(token.description) == "SimpleCancellableToken(\(ChouTi.rawPointer(token)))"
+  }
+}
+
+final class ValueCancellableTokenTests: XCTestCase {
+
+  func test() {
+    var isCancelled = false
+    let token = ValueCancellableToken(value: "Test") { _ in
+      isCancelled = true
+    }
+    expect(token.value) == "Test"
+    expect(isCancelled) == false
+    token.cancel()
+    expect(isCancelled) == true
+
+    let pattern = #"ValueCancellableToken<String>\(0x[0-9a-fA-F]+\)"#
+    expect(token.description.range(of: pattern, options: .regularExpression), "\(token.description)") != nil
+  }
+
+  func test_cancelOnDeallocate() {
+    var isCancelled = false
+    var token: ValueCancellableToken? = ValueCancellableToken(value: "Test") { _ in
+      isCancelled = true
+    }
+    _ = token
+    expect(isCancelled) == false
+    token = nil
+    expect(isCancelled) == true
+  }
+
+  func test_cancelOnDeallocate_false() {
+    var isCancelled = false
+    var token: ValueCancellableToken? = ValueCancellableToken(value: "Test", cancelOnDeallocate: false) { _ in
+      isCancelled = true
+    }
+    _ = token
+    expect(isCancelled) == false
+    token = nil
+    expect(isCancelled) == false
+  }
+}
+
 final class CancellableTokenGroupTests: XCTestCase {
 
   static var cancelIndex: Int = 0
@@ -173,84 +252,5 @@ final class CancellableTokenGroupTests: XCTestCase {
   func test_description() {
     let tokenGroup = CancellableTokenGroup(tokens: [], cancel: { _ in })
     expect(tokenGroup.description) == "CancellableTokenGroup(\(ChouTi.rawPointer(tokenGroup)))"
-  }
-}
-
-final class ValueCancellableTokenTests: XCTestCase {
-
-  func test() {
-    var isCancelled = false
-    let token = ValueCancellableToken(value: "Test") { _ in
-      isCancelled = true
-    }
-    expect(token.value) == "Test"
-    expect(isCancelled) == false
-    token.cancel()
-    expect(isCancelled) == true
-
-    let pattern = #"ValueCancellableToken<String>\(0x[0-9a-fA-F]+\)"#
-    expect(token.description.range(of: pattern, options: .regularExpression), "\(token.description)") != nil
-  }
-
-  func test_cancelOnDeallocate() {
-    var isCancelled = false
-    var token: ValueCancellableToken? = ValueCancellableToken(value: "Test") { _ in
-      isCancelled = true
-    }
-    _ = token
-    expect(isCancelled) == false
-    token = nil
-    expect(isCancelled) == true
-  }
-
-  func test_cancelOnDeallocate_false() {
-    var isCancelled = false
-    var token: ValueCancellableToken? = ValueCancellableToken(value: "Test", cancelOnDeallocate: false) { _ in
-      isCancelled = true
-    }
-    _ = token
-    expect(isCancelled) == false
-    token = nil
-    expect(isCancelled) == false
-  }
-}
-
-final class SimpleCancellableTokenTests: XCTestCase {
-
-  func test_cancel() {
-    var isCancelled = false
-    let token = SimpleCancellableToken { _ in
-      isCancelled = true
-    }
-    expect(isCancelled) == false
-    token.cancel()
-    expect(isCancelled) == true
-  }
-
-  func test_cancelOnDeallocate() {
-    var isCancelled = false
-    var token: SimpleCancellableToken! = SimpleCancellableToken(cancelOnDeallocate: true) { _ in
-      isCancelled = true
-    }
-    _ = token
-    expect(isCancelled) == false
-    token = nil
-    expect(isCancelled) == true
-  }
-
-  func test_cancelOnDeallocate_false() {
-    var isCancelled = false
-    var token: SimpleCancellableToken! = SimpleCancellableToken(cancelOnDeallocate: false) { _ in
-      isCancelled = true
-    }
-    _ = token
-    expect(isCancelled) == false
-    token = nil
-    expect(isCancelled) == false
-  }
-
-  func test_description() {
-    let token = SimpleCancellableToken { _ in }
-    expect(token.description) == "SimpleCancellableToken(\(ChouTi.rawPointer(token)))"
   }
 }
