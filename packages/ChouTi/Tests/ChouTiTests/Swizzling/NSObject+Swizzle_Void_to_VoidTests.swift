@@ -34,7 +34,7 @@ import ChouTiTest
 
 import ChouTi
 
-class NSObject_Swizzle_Void_to_Void: XCTestCase {
+class NSObject_Swizzle_Void_to_VoidTests: XCTestCase {
 
   #if !os(watchOS)
   private class TestLayer: CALayer {
@@ -47,7 +47,7 @@ class NSObject_Swizzle_Void_to_Void: XCTestCase {
     }
   }
 
-  func test_inject() {
+  func test_inject_layer() {
     var layer: TestLayer! = TestLayer()
 
     let className = getClassName(layer)
@@ -122,7 +122,6 @@ class NSObject_Swizzle_Void_to_Void: XCTestCase {
   }
   #endif
 
-  #if os(watchOS)
   private class TestObject: NSObject {
 
     var testMethodCallCount = 0
@@ -207,5 +206,4 @@ class NSObject_Swizzle_Void_to_Void: XCTestCase {
     expect(NSClassFromString(testMethodSubclassName)) == nil
     expect(NSClassFromString(testMethod2SubclassName)) == nil
   }
-  #endif
 }
