@@ -31,7 +31,7 @@
 import Foundation
 
 /// A protocol that represents a cancellable operation.
-public protocol CancellableToken: AnyObject {
+public protocol CancellableToken: AnyObject, UniquelyIdentifiable {
 
   /// Cancels the operation.
   func cancel()

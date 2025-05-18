@@ -94,10 +94,8 @@ public extension NSObject {
         castedOriginalMethodImp(object, selector)
 
         // call injected blocks
-        if let self = self {
-          for (_, block) in self.blocks {
-            block(object)
-          }
+        object.blocks.values.forEach {
+          $0(object)
         }
       }
 
@@ -125,11 +123,11 @@ public extension NSObject {
     }
 
     // 2) set the blocks
-    let token = TheCancellableToken { [weak self] token in
-      self?.blocks.removeValue(forKey: ObjectIdentifier(token))
+    let token = SimpleCancellableToken(cancelOnDeallocate: false) { [weak self] token in
+      self?.blocks.removeValue(forKey: token.uniqueIdentifier)
     }
 
-    self.blocks[ObjectIdentifier(token)] = { object in
+    self.blocks[token.uniqueIdentifier] = { object in
       if let typedSelf = object as? Self {
         block(typedSelf)
       } else {
@@ -156,10 +154,10 @@ private enum AssociateKey {
 private extension NSObject {
 
   /// The blocks to be called when the selector is called.
-  var blocks: OrderedDictionary<ObjectIdentifier, (NSObject) -> Void> {
+  var blocks: OrderedDictionary<String, (NSObject) -> Void> {
     get {
-      objc_getAssociatedObject(self, &AssociateKey.blocks) as? OrderedDictionary<ObjectIdentifier, (NSObject) -> Void> ?? {
-        let blocks = OrderedDictionary<ObjectIdentifier, (NSObject) -> Void>()
+      objc_getAssociatedObject(self, &AssociateKey.blocks) as? OrderedDictionary<String, (NSObject) -> Void> ?? {
+        let blocks = OrderedDictionary<String, (NSObject) -> Void>()
         objc_setAssociatedObject(self, &AssociateKey.blocks, blocks, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         return blocks
       }()
@@ -167,21 +165,5 @@ private extension NSObject {
     set {
       objc_setAssociatedObject(self, &AssociateKey.blocks, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
     }
-  }
-}
-
-// MARK: - TheCancellableToken
-
-/// A `CancellableToken` implementation that doesn't call cancel block on deinit.
-private final class TheCancellableToken: CancellableToken {
-
-  private let cancelBlock: (TheCancellableToken) -> Void
-
-  init(cancel: @escaping (TheCancellableToken) -> Void) {
-    self.cancelBlock = cancel
-  }
-
-  func cancel() {
-    cancelBlock(self)
   }
 }
