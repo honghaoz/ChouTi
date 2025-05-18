@@ -156,20 +156,25 @@ public final class ValueCancellableToken<T>: CancellableToken, CustomStringConve
   /// The value the token holds.
   public let value: T
 
+  private let cancelOnDeallocate: Bool
   private let cancelBlock: (ValueCancellableToken<T>) -> Void
 
   /// Initializes a `ValueCancellableToken`.
   ///
   /// - Parameters:
   ///   - value: The value the token holds.
+  ///   - cancelOnDeallocate: Whether to call the cancel block on deallocate (`deinit`). Default is `true`.
   ///   - cancel: The cancel block to be called when the token cancels. Passes in the token itself.
-  public init(value: T, cancel: @escaping (ValueCancellableToken<T>) -> Void) {
+  public init(value: T, cancelOnDeallocate: Bool = true, cancel: @escaping (ValueCancellableToken<T>) -> Void) {
     self.value = value
+    self.cancelOnDeallocate = cancelOnDeallocate
     self.cancelBlock = cancel
   }
 
   deinit {
-    cancel()
+    if cancelOnDeallocate {
+      cancel()
+    }
   }
 
   public func cancel() {
@@ -180,5 +185,39 @@ public final class ValueCancellableToken<T>: CancellableToken, CustomStringConve
 
   public var description: String {
     "ValueCancellableToken<\(T.self)>(\(rawPointer(self)))"
+  }
+}
+
+// MARK: - SimpleCancellableToken
+
+/// A `CancellableToken` implementation with a cancel block.
+public final class SimpleCancellableToken: CancellableToken, CustomStringConvertible {
+
+  private let cancelOnDeallocate: Bool
+  private let cancelBlock: (SimpleCancellableToken) -> Void
+
+  /// Initializes a `SimpleCancellableToken`.
+  /// - Parameters:
+  ///   - cancelOnDeallocate: Whether to call the cancel block on deallocate (`deinit`). Default is `true`.
+  ///   - cancel: The cancel block to be called when the token cancels. Passes in the token itself.
+  public init(cancelOnDeallocate: Bool = true, cancel: @escaping (SimpleCancellableToken) -> Void) {
+    self.cancelOnDeallocate = cancelOnDeallocate
+    self.cancelBlock = cancel
+  }
+
+  deinit {
+    if cancelOnDeallocate {
+      cancel()
+    }
+  }
+
+  public func cancel() {
+    cancelBlock(self)
+  }
+
+  // MARK: - CustomStringConvertible
+
+  public var description: String {
+    "SimpleCancellableToken(\(rawPointer(self)))"
   }
 }
