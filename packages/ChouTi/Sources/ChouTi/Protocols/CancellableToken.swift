@@ -121,19 +121,24 @@ extension DispatchWorkItem: CancellableToken {}
 public final class CancellableTokenGroup: CancellableToken, CustomStringConvertible {
 
   private let tokens: [CancellableToken]
+  private let cancelOnDeallocate: Bool
   private let cancelBlock: (CancellableTokenGroup) -> Void
 
   /// Initializes a `CancellableTokenGroup`.
   /// - Parameters:
   ///   - tokens: The child tokens.
+  ///   - cancelOnDeallocate: Whether to call the cancel block on deallocate (`deinit`). Default is `true`.
   ///   - cancel: The cancel block to be called when the token cancels. Passes in the token itself.
-  public init(tokens: [CancellableToken], cancel: @escaping (CancellableTokenGroup) -> Void) {
+  public init(tokens: [CancellableToken], cancelOnDeallocate: Bool = true, cancel: @escaping (CancellableTokenGroup) -> Void) {
     self.tokens = tokens
+    self.cancelOnDeallocate = cancelOnDeallocate
     self.cancelBlock = cancel
   }
 
   deinit {
-    cancel()
+    if cancelOnDeallocate {
+      cancel()
+    }
   }
 
   public func cancel() {

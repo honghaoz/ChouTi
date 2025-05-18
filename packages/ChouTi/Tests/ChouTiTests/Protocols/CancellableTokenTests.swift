@@ -118,7 +118,7 @@ final class CancellableTokenGroupTests: XCTestCase {
     }
   }
 
-  func testTokenGroupCancel() {
+  func test() {
     let token1 = TestToken()
     let token2 = TestToken()
     let tokenGroup = CancellableTokenGroup(tokens: [token1, token2], cancel: { _ in })
@@ -134,6 +134,45 @@ final class CancellableTokenGroupTests: XCTestCase {
 
     let pattern = #"CancellableTokenGroup\(0x[0-9a-fA-F]+\)"#
     expect(tokenGroup.description.range(of: pattern, options: .regularExpression)) != nil
+  }
+
+  func test_cancelOnDeallocate() {
+    let token1 = TestToken()
+    let token2 = TestToken()
+    var isCancelled = false
+    var tokenGroup: CancellableTokenGroup? = CancellableTokenGroup(tokens: [token1, token2]) { _ in
+      isCancelled = true
+    }
+    _ = tokenGroup
+    expect(isCancelled) == false
+    expect(token1.isCancelled) == false
+    expect(token2.isCancelled) == false
+    tokenGroup = nil
+    expect(isCancelled) == true
+    expect(token1.isCancelled) == true
+    expect(token2.isCancelled) == true
+  }
+
+  func test_cancelOnDeallocate_false() {
+    let token1 = TestToken()
+    let token2 = TestToken()
+    var isCancelled = false
+    var tokenGroup: CancellableTokenGroup? = CancellableTokenGroup(tokens: [token1, token2], cancelOnDeallocate: false) { _ in
+      isCancelled = true
+    }
+    _ = tokenGroup
+    expect(isCancelled) == false
+    expect(token1.isCancelled) == false
+    expect(token2.isCancelled) == false
+    tokenGroup = nil
+    expect(isCancelled) == false
+    expect(token1.isCancelled) == false
+    expect(token2.isCancelled) == false
+  }
+
+  func test_description() {
+    let tokenGroup = CancellableTokenGroup(tokens: [], cancel: { _ in })
+    expect(tokenGroup.description) == "CancellableTokenGroup(\(ChouTi.rawPointer(tokenGroup)))"
   }
 }
 
