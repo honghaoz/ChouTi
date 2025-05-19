@@ -82,6 +82,8 @@ public protocol TypeEraseWrapperBaseType {
   /// - Returns: The specified type if `self` can be cast, otherwise `nil`.
   func `as`<T>(_ type: T.Type) -> T?
 
+  // swiftformat:disable opaqueGenericParameters
+
   /// Returns a Boolean value indicating whether the type of `self` is the same as the type of the specified type.
   ///
   /// Example:
@@ -94,6 +96,8 @@ public protocol TypeEraseWrapperBaseType {
   /// - Parameter type: The type to compare to the type of `self`.
   /// - Returns: `true` if the type of `self` is the same as the type of the `type` parameter; otherwise, `false`.
   func `is`<T>(_ type: T.Type) -> Bool
+
+  // swiftformat:enable opaqueGenericParameters
 }
 
 public extension TypeEraseWrapperBaseType {
