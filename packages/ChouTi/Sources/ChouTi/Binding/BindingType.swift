@@ -118,8 +118,8 @@ public extension BindingType {
   func `as`<T>(_ type: T.Type) -> T? {
     if let selfAsT = self as? T {
       return selfAsT
-    } else if let anyShape = self as? AnyBinding<Value>,
-              let casted = anyShape.wrapped as? T
+    } else if let anyBinding = self as? AnyBinding<Value>,
+              let casted = anyBinding.wrapped as? T
     {
       return casted
     }
