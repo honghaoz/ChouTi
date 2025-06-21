@@ -44,8 +44,8 @@ import WatchKit
 public enum Device {
 
   public enum DeviceType {
-    case iPhone
-    case iPad
+    case phone
+    case pad
     case mac
     case tv
     case watch
@@ -55,21 +55,21 @@ public enum Device {
   public static let deviceType: DeviceType = {
     #if os(iOS)
     if UIDevice.current.userInterfaceIdiom == .pad {
-      return .iPad
+      return .pad
     } else {
-      return .iPhone
+      return .phone
     }
     #elseif os(macOS)
     return .mac
     #elseif os(tvOS)
     return .tv
     #elseif os(visionOS)
-    return .iPhone // TODO: support vision
+    return .phone // TODO: support vision
     #elseif os(watchOS)
     return .watch
     #else
     ChouTi.assertFailure("Unsupported device type.")
-    return .iPhone
+    return .phone
     #endif
   }()
 

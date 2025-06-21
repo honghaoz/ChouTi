@@ -47,9 +47,9 @@ final class DeviceTests: XCTestCase {
     #elseif os(iOS)
     switch UIDevice.current.userInterfaceIdiom {
     case .phone:
-      expect(Device.deviceType) == .iPhone
+      expect(Device.deviceType) == .phone
     case .pad:
-      expect(Device.deviceType) == .iPad
+      expect(Device.deviceType) == .pad
     case .unspecified:
       fail("Unsupported device type")
     case .tv:
