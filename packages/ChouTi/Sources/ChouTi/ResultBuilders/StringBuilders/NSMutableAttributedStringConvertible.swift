@@ -40,7 +40,7 @@ public protocol NSMutableAttributedStringConvertible {
 extension NSAttributedString: NSMutableAttributedStringConvertible {
 
   public func asMutableAttributedString() -> NSMutableAttributedString {
-    mutable(copy: false)
+    mutable(alwaysCopy: false)
   }
 }
 

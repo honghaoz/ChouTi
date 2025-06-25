@@ -57,18 +57,16 @@ public extension NSAttributedString {
 
   /// Return a mutable `NSMutableAttributedString`.
   ///
-  /// If `self` is already a `NSMutableAttributedString` and if `copy == false`, returns `self` directly.
-  ///
-  /// - Parameter copy: If should always make a new copy.
+  /// - Parameter alwaysCopy: If should always make a new copy. If `self` is already a `NSMutableAttributedString` and `alwaysCopy` is `false`, returns `self` directly.
   /// - Returns: A mutable version of attributed string.
   @inlinable
   @inline(__always)
-  func mutable(copy: Bool) -> NSMutableAttributedString {
-    if let mutable = self as? NSMutableAttributedString {
-      if copy {
+  func mutable(alwaysCopy: Bool) -> NSMutableAttributedString {
+    if let mutableString = self as? NSMutableAttributedString {
+      if alwaysCopy {
         return NSMutableAttributedString(attributedString: self)
       } else {
-        return mutable
+        return mutableString
       }
     } else {
       return NSMutableAttributedString(attributedString: self)
@@ -122,7 +120,7 @@ public extension NSAttributedString {
 
   /// Concatenate two `NSAttributedString`s.
   static func + (lhs: NSAttributedString, rhs: NSAttributedString) -> NSMutableAttributedString {
-    let mutable = lhs.mutable(copy: true)
+    let mutable = lhs.mutable(alwaysCopy: true)
     mutable.append(rhs)
     return mutable
   }

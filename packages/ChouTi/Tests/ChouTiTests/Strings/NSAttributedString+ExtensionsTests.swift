@@ -79,25 +79,25 @@ class NSAttributedString_ExtensionsTests: XCTestCase {
   func test_mutableCopy_attributedString() {
     let attributedString = NSAttributedString(string: "Test")
 
-    let mutableCopyTrue = attributedString.mutable(copy: true)
-    expect(attributedString) !== mutableCopyTrue
-    expect(attributedString) == mutableCopyTrue
+    let mutableAlwaysCopy = attributedString.mutable(alwaysCopy: true)
+    expect(attributedString) !== mutableAlwaysCopy
+    expect(attributedString) == mutableAlwaysCopy
 
-    let mutableCopyFalse = attributedString.mutable(copy: false)
-    expect(attributedString) !== mutableCopyFalse
-    expect(attributedString) == mutableCopyFalse
+    let mutableNotAlwaysCopy = attributedString.mutable(alwaysCopy: false)
+    expect(attributedString) !== mutableNotAlwaysCopy
+    expect(attributedString) == mutableNotAlwaysCopy
   }
 
   func test_mutableCopy_mutableAttributedString() {
     let mutableAttributedString = NSMutableAttributedString(string: "Test")
 
-    let mutableCopyTrue = mutableAttributedString.mutable(copy: true)
-    expect(mutableAttributedString) !== mutableCopyTrue
-    expect(mutableAttributedString) == mutableCopyTrue
+    let mutableAlwaysCopy = mutableAttributedString.mutable(alwaysCopy: true)
+    expect(mutableAttributedString) !== mutableAlwaysCopy
+    expect(mutableAttributedString) == mutableAlwaysCopy
 
-    let mutableCopyFalse = mutableAttributedString.mutable(copy: false)
-    expect(mutableAttributedString) === mutableCopyFalse
-    expect(mutableAttributedString) == mutableCopyFalse
+    let mutableNotAlwaysCopy = mutableAttributedString.mutable(alwaysCopy: false)
+    expect(mutableAttributedString) === mutableNotAlwaysCopy
+    expect(mutableAttributedString) == mutableNotAlwaysCopy
   }
 
   // MARK: - Attributes
