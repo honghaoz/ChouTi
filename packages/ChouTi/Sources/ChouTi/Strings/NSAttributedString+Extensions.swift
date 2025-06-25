@@ -75,27 +75,6 @@ public extension NSAttributedString {
 
   // MARK: - Attributes
 
-  /// Checks if the string contains links.
-  @inlinable
-  @inline(__always)
-  func containsLink() -> Bool {
-    contains(.link)
-  }
-
-  /// Checks if the string contains font attribute.
-  @inlinable
-  @inline(__always)
-  func containsFont() -> Bool {
-    contains(.font)
-  }
-
-  /// Checks if the string contains foreground color attribute.
-  @inlinable
-  @inline(__always)
-  func containsForegroundColor() -> Bool {
-    contains(.foregroundColor)
-  }
-
   /// Check if attributed string contains a specific attribute.
   ///
   /// - Parameter attribute: The attribute to check.
@@ -119,6 +98,8 @@ public extension NSAttributedString {
 public extension NSAttributedString {
 
   /// Concatenate two `NSAttributedString`s.
+  ///
+  /// - Returns: A new mutable attributed string.
   static func + (lhs: NSAttributedString, rhs: NSAttributedString) -> NSMutableAttributedString {
     let mutable = lhs.mutable(alwaysCopy: true)
     mutable.append(rhs)

@@ -104,34 +104,34 @@ class NSAttributedString_ExtensionsTests: XCTestCase {
 
   func test_containsLink() {
     let attributedString = NSAttributedString(string: "Test")
-    expect(attributedString.containsLink()) == false
+    expect(attributedString.contains(.link)) == false
 
     let linkString = NSAttributedString(string: "Test", attributes: [.link: "https://www.google.com"])
-    expect(linkString.containsLink()) == true
+    expect(linkString.contains(.link)) == true
   }
 
   func test_containsFont() {
     let attributedString = NSAttributedString(string: "Test")
-    expect(attributedString.containsFont()) == false
+    expect(attributedString.contains(.font)) == false
 
     #if os(macOS)
     let fontString = NSAttributedString(string: "Test", attributes: [.font: NSFont.systemFont(ofSize: 12)])
     #else
     let fontString = NSAttributedString(string: "Test", attributes: [.font: UIFont.systemFont(ofSize: 12)])
     #endif
-    expect(fontString.containsFont()) == true
+    expect(fontString.contains(.font)) == true
   }
 
   func test_containsForegroundColor() {
     let attributedString = NSAttributedString(string: "Test")
-    expect(attributedString.containsForegroundColor()) == false
+    expect(attributedString.contains(.foregroundColor)) == false
 
     #if os(macOS)
     let fontString = NSAttributedString(string: "Test", attributes: [.foregroundColor: NSColor.red])
     #else
     let fontString = NSAttributedString(string: "Test", attributes: [.foregroundColor: UIColor.red])
     #endif
-    expect(fontString.containsForegroundColor()) == true
+    expect(fontString.contains(.foregroundColor)) == true
   }
 
   // MARK: - Addition
