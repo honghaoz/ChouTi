@@ -133,28 +133,4 @@ class NSAttributedString_ExtensionsTests: XCTestCase {
     #endif
     expect(fontString.contains(.foregroundColor)) == true
   }
-
-  // MARK: - Addition
-
-  func test_addition() {
-    let attributedString1 = NSAttributedString(string: "Hello")
-    let attributedString2 = NSAttributedString(string: "World")
-    let combined = attributedString1 + attributedString2
-    expect(attributedString1.string) == "Hello"
-    expect(attributedString2.string) == "World"
-    expect(combined.string) == "HelloWorld"
-    expect(combined) !== attributedString1
-    expect(combined) !== attributedString2
-  }
-
-  func test_addition_mutableAttributedString() {
-    let mutableAttributedString1 = NSMutableAttributedString(string: "Hello")
-    let attributedString2 = NSAttributedString(string: "World")
-    let combined = mutableAttributedString1 + attributedString2
-    expect(mutableAttributedString1.string) == "Hello"
-    expect(attributedString2.string) == "World"
-    expect(combined.string) == "HelloWorld"
-    expect(combined) !== mutableAttributedString1
-    expect(combined) !== attributedString2
-  }
 }

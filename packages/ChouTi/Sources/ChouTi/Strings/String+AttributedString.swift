@@ -35,23 +35,23 @@ public extension String {
   /// Convert to `NSAttributedString`.
   ///
   /// - Parameters:
-  ///   - attrs: The attributes to apply to the string.
+  ///   - attributes: The attributes to apply to the string.
   /// - Returns: A new `NSAttributedString` with the given attributes.
   @inlinable
   @inline(__always)
-  func attributed(attrs: [NSAttributedString.Key: Any] = [:]) -> NSAttributedString {
-    NSAttributedString(string: self, attributes: attrs)
+  func attributed(attributes: [NSAttributedString.Key: Any] = [:]) -> NSAttributedString {
+    NSAttributedString(string: self, attributes: attributes)
   }
 
   /// Convert to `NSMutableAttributedString`.
   ///
   /// - Parameters:
-  ///   - attrs: The attributes to apply to the string.
+  ///   - attributes: The attributes to apply to the string.
   /// - Returns: A new `NSMutableAttributedString` with the given attributes.
   @inlinable
   @inline(__always)
-  func mutableAttributed(attrs: [NSAttributedString.Key: Any] = [:]) -> NSMutableAttributedString {
-    NSMutableAttributedString(string: self, attributes: attrs)
+  func mutableAttributed(attributes: [NSAttributedString.Key: Any] = [:]) -> NSMutableAttributedString {
+    NSMutableAttributedString(string: self, attributes: attributes)
   }
 }
 

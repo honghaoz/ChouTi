@@ -78,23 +78,93 @@ class NSAttributedStringBuilderTests: XCTestCase {
       }
       expect(result.string) == "Hello"
       expect(result) !== mutableAttributedString
+
+      // when modify the original mutable attributed string
+      mutableAttributedString.append(" World".attributed())
+
+      // the result string should not change
+      expect(mutableAttributedString.string) == "Hello World"
+      expect(result.string) == "Hello"
     }
   }
 
-  func test_two() {
-    let result = NSAttributedString {
-      "Hello"
-      "World"
+  func test_multiple() {
+    // simple case
+    do {
+      let result = NSAttributedString {
+        "Hello"
+        "World"
+      }
+      expect(result.string) == "HelloWorld"
     }
-    expect(result.string) == "HelloWorld"
-  }
 
-  func test_separator() {
-    let result = NSAttributedString(separator: ", ") {
-      "Hello"
-      "World"
+    // with simple separator
+    do {
+      let result = NSAttributedString(separator: ", ") {
+        "Hello"
+        "World"
+      }
+      expect(result.string) == "Hello, World"
     }
-    expect(result.string) == "Hello, World"
+
+    // with attributed separator
+    do {
+      let separator = "-".mutableAttributed(attributes: [.font: Font.systemFont(ofSize: 16)])
+      let result = NSAttributedString(separator: separator) {
+        "0"
+        "2"
+        "4"
+      }
+      expect(result.string) == "0-2-4"
+      expect(result.attribute(.font, at: 0, effectiveRange: nil) as? Font) == nil
+      expect(result.attribute(.font, at: 1, effectiveRange: nil) as? Font) == Font.systemFont(ofSize: 16)
+      expect(result.attribute(.font, at: 2, effectiveRange: nil) as? Font) == nil
+      expect(result.attribute(.font, at: 3, effectiveRange: nil) as? Font) == Font.systemFont(ofSize: 16)
+      expect(result.attribute(.font, at: 4, effectiveRange: nil) as? Font) == nil
+
+      // when modify the original mutable attributed string
+      separator.addAttribute(.font, value: Font.systemFont(ofSize: 12), range: NSRange(location: 0, length: separator.length))
+
+      // the result string should not change
+      expect(result.string) == "0-2-4"
+      expect(result.attribute(.font, at: 0, effectiveRange: nil) as? Font) == nil
+      expect(result.attribute(.font, at: 1, effectiveRange: nil) as? Font) == Font.systemFont(ofSize: 16)
+      expect(result.attribute(.font, at: 2, effectiveRange: nil) as? Font) == nil
+      expect(result.attribute(.font, at: 3, effectiveRange: nil) as? Font) == Font.systemFont(ofSize: 16)
+      expect(result.attribute(.font, at: 4, effectiveRange: nil) as? Font) == nil
+    }
+
+    // first component is mutable attributed string
+    do {
+      let mutableAttributedString = NSMutableAttributedString(string: "0", attributes: [.font: Font.systemFont(ofSize: 16)])
+      expect(mutableAttributedString.string) == "0"
+      expect(mutableAttributedString.attribute(.font, at: 0, effectiveRange: nil) as? Font) == Font.systemFont(ofSize: 16)
+
+      let result = NSAttributedString(separator: "-") {
+        mutableAttributedString
+        "2"
+      }
+      expect(result.string) == "0-2"
+      expect(result.attribute(.font, at: 0, effectiveRange: nil) as? Font) == Font.systemFont(ofSize: 16)
+      expect(result.attribute(.font, at: 1, effectiveRange: nil) as? Font) == nil
+      expect(result.attribute(.font, at: 2, effectiveRange: nil) as? Font) == nil
+
+      // the mutable attributed string is untouched
+      expect(mutableAttributedString.string) == "0"
+      expect(mutableAttributedString.attribute(.font, at: 0, effectiveRange: nil) as? Font) == Font.systemFont(ofSize: 16)
+
+      // when modify the original mutable attributed string
+      mutableAttributedString.append("0".attributed(attributes: [.font: Font.systemFont(ofSize: 12)]))
+      expect(mutableAttributedString.string) == "00"
+      expect(mutableAttributedString.attribute(.font, at: 0, effectiveRange: nil) as? Font) == Font.systemFont(ofSize: 16)
+      expect(mutableAttributedString.attribute(.font, at: 1, effectiveRange: nil) as? Font) == Font.systemFont(ofSize: 12)
+
+      // the result string should not change
+      expect(result.string) == "0-2"
+      expect(result.attribute(.font, at: 0, effectiveRange: nil) as? Font) == Font.systemFont(ofSize: 16)
+      expect(result.attribute(.font, at: 1, effectiveRange: nil) as? Font) == nil
+      expect(result.attribute(.font, at: 2, effectiveRange: nil) as? Font) == nil
+    }
   }
 
   func test_attributes() {

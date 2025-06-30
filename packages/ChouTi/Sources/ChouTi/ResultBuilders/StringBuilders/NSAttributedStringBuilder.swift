@@ -31,7 +31,7 @@
 import Foundation
 
 /// Build into `NSAttributedString` array.
-public typealias NSAttributedStringArrayBuilder = ArrayBuilder<NSMutableAttributedStringConvertible>
+public typealias NSAttributedStringArrayBuilder = ArrayBuilder<NSAttributedStringConvertible>
 
 public extension NSAttributedString {
 
@@ -43,11 +43,9 @@ public extension NSAttributedString {
    NSMutableAttributedString(separator: "") {
      "If you haven't done so, please "
      "write a review"
-       .link("http://google.com")
+       .link("http://ibluebox.com")
      "."
    }
-   .addDefaultFont(Font.systemFont(ofSize: 12, weight: .regular))
-   .addDefaultColor(Color.black(0.8))
    ```
 
    - Parameters:
@@ -55,20 +53,23 @@ public extension NSAttributedString {
      - builder: The builder block.
    */
   convenience init(separator: NSAttributedStringConvertible = "",
-                   @NSAttributedStringArrayBuilder builder: () -> [NSMutableAttributedStringConvertible])
+                   @NSAttributedStringArrayBuilder builder: () -> [NSAttributedStringConvertible])
   {
     let array = builder()
     if array.isEmpty {
       self.init(string: "")
     } else if array.count == 1 {
-      self.init(attributedString: array[0].asMutableAttributedString())
+      self.init(attributedString: array[0].asAttributedString())
     } else {
-      let rest: NSMutableAttributedString = array[1...]
-        .reduce(into: NSMutableAttributedString(string: "")) { partialResult, attributedStringConvertible in
-          partialResult.append(separator.asAttributedString())
-          partialResult.append(attributedStringConvertible.asMutableAttributedString())
-        }
-      self.init(attributedString: array[0].asMutableAttributedString() + rest)
+      let separatorAsAttributedString = separator.asAttributedString()
+      let rest: NSMutableAttributedString = array[1...].reduce(into: NSMutableAttributedString(string: "")) { partialResult, attributedStringConvertible in
+        partialResult.append(separatorAsAttributedString)
+        partialResult.append(attributedStringConvertible.asAttributedString())
+      }
+
+      let result = array[0].asAttributedString().mutable(alwaysCopy: true)
+      result.append(rest)
+      self.init(attributedString: result)
     }
   }
 }

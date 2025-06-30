@@ -93,20 +93,6 @@ public extension NSAttributedString {
   }
 }
 
-// MARK: - Addition
-
-public extension NSAttributedString {
-
-  /// Concatenate two `NSAttributedString`s.
-  ///
-  /// - Returns: A new mutable attributed string.
-  static func + (lhs: NSAttributedString, rhs: NSAttributedString) -> NSMutableAttributedString {
-    let mutable = lhs.mutable(alwaysCopy: true)
-    mutable.append(rhs)
-    return mutable
-  }
-}
-
 /**
  Opening hyperlinks in UILabel on iOS:
  https://augmentedcode.io/2020/12/20/opening-hyperlinks-in-uilabel-on-ios/

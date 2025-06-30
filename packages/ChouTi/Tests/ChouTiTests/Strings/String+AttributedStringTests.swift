@@ -51,7 +51,7 @@ class String_AttributedStringTests: XCTestCase {
     let attr = str.attributed()
     expect(attr.string) == str
 
-    let attr2 = str.attributed(attrs: [.font: Font.systemFont(ofSize: 16)])
+    let attr2 = str.attributed(attributes: [.font: Font.systemFont(ofSize: 16)])
     expect(attr2.string) == str
     expect(attr2.attribute(.font, at: 0, effectiveRange: nil) as? Font) == Font.systemFont(ofSize: 16)
   }
