@@ -33,6 +33,25 @@ import Foundation
 public enum System {
 
   #if os(macOS)
+
+  /// The current system is >= Tahoe.
+  public static var macOS_tahoe: Bool {
+    if #available(macOS 16, *) {
+      return true
+    } else {
+      return false
+    }
+  }
+
+  /// The current system is >= Sequoia.
+  public static var macOS_sequoia: Bool {
+    if #available(macOS 15, *) {
+      return true
+    } else {
+      return false
+    }
+  }
+
   /// The current system is >= Sonoma.
   public static var macOS_sonoma: Bool {
     if #available(macOS 14, *) {
