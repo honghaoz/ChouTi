@@ -92,8 +92,7 @@ show_current_versions() {
             jq -r '.pins[] | "  \(.identity): \(.state.revision[:8]) (\(.state.branch // .state.version // "commit"))"' "$package_resolved_path"
             ;;
     esac
-    
-    echo
+
     return 0
 }
 
@@ -179,7 +178,7 @@ update_xcode_project() {
     # Run the update command to fetch latest versions
     print_info "Resolving package dependencies..."
     if xcodebuild -resolvePackageDependencies -project "$project_path" >/dev/null 2>&1; then
-        print_success "Package update completed"
+        # print_success "Package update completed"
         return 0
     else
         print_error "Failed to resolve package dependencies"
@@ -230,7 +229,7 @@ update_xcworkspace() {
         local workspace_package_resolved="$project_path/xcshareddata/swiftpm/Package.resolved"
         print_info "Copying $package_level_resolved to $workspace_package_resolved..."
         cp "$package_level_resolved" "$workspace_package_resolved"
-        print_success "Package update completed"
+        # print_success "Package update completed"
         cd "$original_dir"
         return 0
     else
@@ -266,11 +265,11 @@ update_swift_package() {
     print_info "Updating package dependencies..."
     if swift package update >/dev/null 2>&1; then
         # Check if Package.resolved was created (indicates remote dependencies)
-        if [ -f "$package_resolved_path" ]; then
-            print_success "Package update completed"
-        else
-            print_success "No Package.resolved found - This package may only have local path dependencies"
-        fi
+        # if [ -f "$package_resolved_path" ]; then
+        #     print_success "Package update completed"
+        # else
+        #     print_success "No Package.resolved found - This package may only have local path dependencies"
+        # fi
         cd "$original_dir"
         return 0
     else
@@ -298,7 +297,6 @@ show_package_changes() {
     esac
     
     # Show what changed
-    echo
     print_info "Changes:"
     local temp_new=$(mktemp)
     
@@ -317,7 +315,7 @@ show_package_changes() {
         if [ -n "$new_line" ]; then
             local new_version=$(echo "$new_line" | cut -d: -f2 | xargs)
             if [ "$old_version" != "$new_version" ]; then
-                print_success "  $package: $old_version → $new_version"
+                echo "  $package: $old_version → $new_version"
                 changes_found=true
             fi
         fi
@@ -328,13 +326,13 @@ show_package_changes() {
         local package=$(echo "$line" | cut -d: -f1)
         if ! grep -q "^$package:" "$temp_old" 2>/dev/null; then
             local new_version=$(echo "$line" | cut -d: -f2 | xargs)
-            print_success "  $package: $new_version (new)"
+            echo "  $package: $new_version (new)"
             changes_found=true
         fi
     done < "$temp_new"
     
     if [ "$changes_found" = false ]; then
-        print_info "  No changes - packages were already up to date"
+        echo "  No changes - packages were already up to date"
     fi
     
     rm -f "$temp_new"
@@ -351,6 +349,8 @@ main() {
         print_info "  $0 /path/to/MyPackage           # Update Swift package dependencies"
         exit 1
     fi
+
+    print_info "Updating Swift packages..."
     
     local project_path=$(realpath "$1")
     print_info "Path: $project_path"
