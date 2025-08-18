@@ -34,7 +34,7 @@ public enum System {
 
   #if os(macOS)
 
-  /// The current system is >= Tahoe.
+  /// The current system is >= Tahoe. macOS 26
   public static var macOS_tahoe: Bool {
     if #available(macOS 16, *) {
       return true
@@ -43,7 +43,7 @@ public enum System {
     }
   }
 
-  /// The current system is >= Sequoia.
+  /// The current system is >= Sequoia. macOS 15
   public static var macOS_sequoia: Bool {
     if #available(macOS 15, *) {
       return true
@@ -52,7 +52,7 @@ public enum System {
     }
   }
 
-  /// The current system is >= Sonoma.
+  /// The current system is >= Sonoma. macOS 14
   public static var macOS_sonoma: Bool {
     if #available(macOS 14, *) {
       return true
@@ -61,7 +61,7 @@ public enum System {
     }
   }
 
-  /// The current system is >= Ventura.
+  /// The current system is >= Ventura. macOS 13
   public static var macOS_ventura: Bool {
     if #available(macOS 13, *) {
       return true
@@ -70,7 +70,7 @@ public enum System {
     }
   }
 
-  /// The current system is >= Monterey.
+  /// The current system is >= Monterey. macOS 12
   public static var macOS_monterey: Bool {
     // ProcessInfo.processInfo.isOperatingSystemAtLeast(OperatingSystemVersion(majorVersion: 12, minorVersion: 0, patchVersion: 0))
     if #available(macOS 12, *) {
@@ -80,7 +80,7 @@ public enum System {
     }
   }
 
-  /// The current system is >= Big Sur.
+  /// The current system is >= Big Sur. macOS 11
   public static var macOS_bigSur: Bool {
     if #available(macOS 10.16, *) {
       return true
@@ -91,6 +91,25 @@ public enum System {
   #endif
 
   #if os(iOS)
+
+  /// The current system is >= iOS 26
+  public static var iOS_26: Bool {
+    if #available(iOS 26, *) {
+      return true
+    } else {
+      return false
+    }
+  }
+
+  /// The current system is >= iOS 18
+  public static var iOS_18: Bool {
+    if #available(iOS 18, *) {
+      return true
+    } else {
+      return false
+    }
+  }
+
   /// The current system is >= iOS 17
   public static var iOS_17: Bool {
     if #available(iOS 17, *) {
