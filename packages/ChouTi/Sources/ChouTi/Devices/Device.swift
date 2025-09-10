@@ -160,7 +160,21 @@ public enum Device {
     }
     #endif
 
-    return notchModels.contains(modelIdentifier)
+    if notchModels.contains(modelIdentifier) {
+      return true
+    }
+
+    // if known models doesn't contain the model identifier, try to fetch from the Device.json file
+    let deviceJSONURL = URL(string: "https://raw.githubusercontent.com/honghaoz/ChouTi/refs/heads/master/packages/ChouTi/Sources/ChouTi/Devices/Device.json")! // swiftlint:disable:this force_unwrapping
+    do {
+      let deviceJSON = try JSONSerialization.jsonObject(with: Data(contentsOf: deviceJSONURL), options: []) as? [String: Any]
+      let macWithNotch: [String] = deviceJSON?["macWithNotch"] as? [String] ?? []
+      let macWithNotchSet = Set(macWithNotch)
+      return macWithNotchSet.contains(modelIdentifier)
+    } catch {
+      ChouTi.assertFailure("failed to get Device.json", metadata: ["error": "\(error)"])
+      return false
+    }
   }
 
   #else
