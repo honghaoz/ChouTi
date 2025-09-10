@@ -117,6 +117,10 @@ public enum Device {
   }
 
   /// Check if the MacBook has a notch.
+  ///
+  /// This method may trigger a network request to fetch the latest known models. You should call this method in a background thread and save the result to a local cache.
+  ///
+  /// - Returns: true if the MacBook has a notch, false otherwise.
   public static func hasNotch() -> Bool {
     guard let modelIdentifier = modelIdentifier() else {
       guard let menuBarHeight = NSApplication.shared.mainMenu?.menuBarHeight else {
@@ -145,21 +149,6 @@ public enum Device {
       "Mac16,13", // MacBook Air (15-inch, M4, 2025)
     ])
 
-    #if DEBUG
-    // last checked date: 2025-09-09
-    let calendar = Calendar.current
-    var components = DateComponents()
-    components.year = 2025
-    components.month = 9
-    components.day = 9
-    if let lastUpdatedAt = calendar.date(from: components).assert("failed to create date") {
-      let now = Date()
-      if now.hasBeen(.months(6), since: lastUpdatedAt) {
-        ChouTi.assertFailure("Please update the Mac notch models.")
-      }
-    }
-    #endif
-
     if notchModels.contains(modelIdentifier) {
       return true
     }
@@ -168,15 +157,13 @@ public enum Device {
     let deviceJSONURL = URL(string: "https://raw.githubusercontent.com/honghaoz/ChouTi/refs/heads/master/packages/ChouTi/Sources/ChouTi/Devices/Device.json")! // swiftlint:disable:this force_unwrapping
     do {
       let deviceJSON = try JSONSerialization.jsonObject(with: Data(contentsOf: deviceJSONURL), options: []) as? [String: Any]
-      let macWithNotch: [String] = deviceJSON?["macWithNotch"] as? [String] ?? []
-      let macWithNotchSet = Set(macWithNotch)
+      let macWithNotchSet: Set<String> = Set(deviceJSON?["macWithNotch"] as? [String] ?? [])
       return macWithNotchSet.contains(modelIdentifier)
     } catch {
       ChouTi.assertFailure("failed to get Device.json", metadata: ["error": "\(error)"])
       return false
     }
   }
-
   #else
 
   // MARK: - iOS
