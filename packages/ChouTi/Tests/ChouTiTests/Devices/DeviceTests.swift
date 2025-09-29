@@ -153,7 +153,7 @@ private extension DeviceTests {
     var components = DateComponents()
     components.year = 2025
     components.month = 9
-    components.day = 17
+    components.day = 28
     guard let lastCheckedDate = calendar.date(from: components) else {
       throw RuntimeError.reason("Failed to create date")
     }
