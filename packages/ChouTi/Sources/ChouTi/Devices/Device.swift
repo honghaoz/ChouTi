@@ -139,6 +139,7 @@ public enum Device {
       "Mac15,6", "Mac15,8", "Mac15,10", "Mac15,3", // MacBook Pro (14-inch, Nov 2023), M3
       "Mac16,7", "Mac16,5", // MacBook Pro (16-inch, 2024), M4
       "Mac16,6", "Mac16,8", "Mac16,1", // MacBook Pro (14-inch, 2024), M4
+      "Mac17,2", // MacBook Pro (14-inch, M5)
 
       /// MacBook Air: https://support.apple.com/en-us/102869
       "Mac14,2", // MacBook Air (M2, 2022)
