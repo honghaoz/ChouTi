@@ -98,6 +98,7 @@ private final class Token: CancellableToken {
 
   weak var manager: TokenManager?
   let block: BlockVoid
+  private var isCancelled: Bool = false
 
   init(manager: TokenManager, block: @escaping BlockVoid) {
     self.manager = manager
@@ -105,6 +106,10 @@ private final class Token: CancellableToken {
   }
 
   func cancel() {
+    guard !isCancelled else {
+      return
+    }
+    isCancelled = true
     manager?.remove(self)
   }
 }

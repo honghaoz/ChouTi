@@ -140,6 +140,40 @@ final class SimpleCancellableTokenTests: XCTestCase {
     let token = SimpleCancellableToken { _ in }
     expect(token.description) == "SimpleCancellableToken(\(ChouTi.rawPointer(token)))"
   }
+
+  func test_doubleCancelPrevention() {
+    var cancelCount = 0
+    let token = SimpleCancellableToken { _ in
+      cancelCount += 1
+    }
+
+    // first cancel should work
+    token.cancel()
+    expect(cancelCount) == 1
+
+    // second cancel should be ignored
+    token.cancel()
+    expect(cancelCount) == 1
+
+    // third cancel should also be ignored
+    token.cancel()
+    expect(cancelCount) == 1
+  }
+
+  func test_doubleCancelPrevention_manualThenDeallocate() {
+    var cancelCount = 0
+    var token: SimpleCancellableToken! = SimpleCancellableToken(cancelOnDeallocate: true) { _ in
+      cancelCount += 1
+    }
+
+    // manual cancel first
+    token.cancel()
+    expect(cancelCount) == 1
+
+    // deallocate should not trigger another cancel
+    token = nil
+    expect(cancelCount) == 1
+  }
 }
 
 final class ValueCancellableTokenTests: XCTestCase {
@@ -178,6 +212,40 @@ final class ValueCancellableTokenTests: XCTestCase {
     expect(isCancelled) == false
     token = nil
     expect(isCancelled) == false
+  }
+
+  func test_doubleCancelPrevention() {
+    var cancelCount = 0
+    let token = ValueCancellableToken(value: "Test") { _ in
+      cancelCount += 1
+    }
+
+    // first cancel should work
+    token.cancel()
+    expect(cancelCount) == 1
+
+    // second cancel should be ignored
+    token.cancel()
+    expect(cancelCount) == 1
+
+    // third cancel should also be ignored
+    token.cancel()
+    expect(cancelCount) == 1
+  }
+
+  func test_doubleCancelPrevention_manualThenDeallocate() {
+    var cancelCount = 0
+    var token: ValueCancellableToken<String>! = ValueCancellableToken(value: "Test", cancelOnDeallocate: true) { _ in
+      cancelCount += 1
+    }
+
+    // manual cancel first
+    token.cancel()
+    expect(cancelCount) == 1
+
+    // deallocate should not trigger another cancel
+    token = nil
+    expect(cancelCount) == 1
   }
 }
 
@@ -252,5 +320,60 @@ final class CancellableTokenGroupTests: XCTestCase {
   func test_description() {
     let tokenGroup = CancellableTokenGroup(tokens: [], cancel: { _ in })
     expect(tokenGroup.description) == "CancellableTokenGroup(\(ChouTi.rawPointer(tokenGroup)))"
+  }
+
+  func test_doubleCancelPrevention() {
+    let token1 = TestToken()
+    let token2 = TestToken()
+    var groupCancelCount = 0
+    let tokenGroup = CancellableTokenGroup(tokens: [token1, token2]) { _ in
+      groupCancelCount += 1
+    }
+
+    // first cancel should work
+    tokenGroup.cancel()
+    expect(token1.isCancelled) == true
+    expect(token2.isCancelled) == true
+    expect(groupCancelCount) == 1
+
+    // reset test tokens for verification
+    let originalToken1CancelIndex = token1.cancelIndex
+    let originalToken2CancelIndex = token2.cancelIndex
+
+    // second cancel should be ignored - tokens shouldn't be cancelled again
+    tokenGroup.cancel()
+    expect(token1.cancelIndex) == originalToken1CancelIndex // should not change
+    expect(token2.cancelIndex) == originalToken2CancelIndex // should not change
+    expect(groupCancelCount) == 1 // should not increment
+
+    // third cancel should also be ignored
+    tokenGroup.cancel()
+    expect(token1.cancelIndex) == originalToken1CancelIndex
+    expect(token2.cancelIndex) == originalToken2CancelIndex
+    expect(groupCancelCount) == 1
+  }
+
+  func test_doubleCancelPrevention_manualThenDeallocate() {
+    let token1 = TestToken()
+    let token2 = TestToken()
+    var groupCancelCount = 0
+    var tokenGroup: CancellableTokenGroup! = CancellableTokenGroup(tokens: [token1, token2], cancelOnDeallocate: true) { _ in
+      groupCancelCount += 1
+    }
+
+    // manual cancel first
+    tokenGroup.cancel()
+    expect(token1.isCancelled) == true
+    expect(token2.isCancelled) == true
+    expect(groupCancelCount) == 1
+
+    let originalToken1CancelIndex = token1.cancelIndex
+    let originalToken2CancelIndex = token2.cancelIndex
+
+    // deallocate should not trigger another cancel
+    tokenGroup = nil
+    expect(token1.cancelIndex) == originalToken1CancelIndex
+    expect(token2.cancelIndex) == originalToken2CancelIndex
+    expect(groupCancelCount) == 1
   }
 }

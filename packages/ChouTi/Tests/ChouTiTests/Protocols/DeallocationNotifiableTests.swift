@@ -75,6 +75,60 @@ class DeallocationNotifiableTests: XCTestCase {
     object = nil
     expect(called) == false
   }
+
+  func test_doubleCancelPrevention() {
+    var object: TestObject? = TestObject()
+    var callCount = 0
+    let token = object?.onDeallocate {
+      callCount += 1
+    }
+
+    // first cancel should work
+    token?.cancel()
+    expect(callCount) == 0
+
+    // second cancel should be ignored (no crash, no side effects)
+    token?.cancel()
+    expect(callCount) == 0
+
+    // third cancel should also be ignored
+    token?.cancel()
+    expect(callCount) == 0
+
+    // deallocate the object - the block should not be called since token was cancelled
+    object = nil
+    expect(callCount) == 0
+  }
+
+  func test_doubleCancelPrevention_multipleTokens() {
+    var object: TestObject? = TestObject()
+    var callCount1 = 0
+    var callCount2 = 0
+
+    let token1 = object?.onDeallocate {
+      callCount1 += 1
+    }
+    let token2 = object?.onDeallocate {
+      callCount2 += 1
+    }
+
+    // cancel first token multiple times
+    token1?.cancel()
+    expect(callCount1) == 0
+    token1?.cancel()
+    expect(callCount1) == 0
+    token1?.cancel()
+    expect(callCount1) == 0
+
+    // cancel second token once
+    token2?.cancel()
+    expect(callCount2) == 0
+
+    // deallocate the object - no blocks should be called
+    object = nil
+    expect(callCount1) == 0
+    expect(callCount2) == 0
+  }
 }
 
 private class TestObject: DeallocationNotifiable {}

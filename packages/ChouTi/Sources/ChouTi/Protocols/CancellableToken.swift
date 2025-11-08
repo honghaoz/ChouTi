@@ -120,6 +120,7 @@ public final class SimpleCancellableToken: CancellableToken, CustomStringConvert
 
   private let cancelOnDeallocate: Bool
   private let cancelBlock: (SimpleCancellableToken) -> Void
+  private var isCancelled: Bool = false
 
   /// Initializes a `SimpleCancellableToken`.
   /// - Parameters:
@@ -136,7 +137,16 @@ public final class SimpleCancellableToken: CancellableToken, CustomStringConvert
     }
   }
 
+  /// Cancels the token.
+  ///
+  /// If the token is already cancelled, this method does nothing.
+  ///
+  /// This method is not thread-safe. The cancel block is called on the same thread as the cancel method is called.
   public func cancel() {
+    guard !isCancelled else {
+      return
+    }
+    isCancelled = true
     cancelBlock(self)
   }
 
@@ -157,6 +167,7 @@ public final class ValueCancellableToken<T>: CancellableToken, CustomStringConve
 
   private let cancelOnDeallocate: Bool
   private let cancelBlock: (ValueCancellableToken<T>) -> Void
+  private var isCancelled: Bool = false
 
   /// Initializes a `ValueCancellableToken`.
   ///
@@ -176,7 +187,16 @@ public final class ValueCancellableToken<T>: CancellableToken, CustomStringConve
     }
   }
 
+  /// Cancels the token.
+  ///
+  /// If the token is already cancelled, this method does nothing.
+  ///
+  /// This method is not thread-safe. The cancel block is called on the same thread as the cancel method is called.
   public func cancel() {
+    guard !isCancelled else {
+      return
+    }
+    isCancelled = true
     cancelBlock(self)
   }
 
@@ -197,6 +217,7 @@ public final class CancellableTokenGroup: CancellableToken, CustomStringConverti
   private let tokens: [CancellableToken]
   private let cancelOnDeallocate: Bool
   private let cancelBlock: (CancellableTokenGroup) -> Void
+  private var isCancelled: Bool = false
 
   /// Initializes a `CancellableTokenGroup`.
   /// - Parameters:
@@ -215,7 +236,16 @@ public final class CancellableTokenGroup: CancellableToken, CustomStringConverti
     }
   }
 
+  /// Cancels the token.
+  ///
+  /// If the token is already cancelled, this method does nothing.
+  ///
+  /// This method is not thread-safe. The cancel block is called on the same thread as the cancel method is called.
   public func cancel() {
+    guard !isCancelled else {
+      return
+    }
+    isCancelled = true
     tokens.forEach { $0.cancel() }
     cancelBlock(self)
   }
