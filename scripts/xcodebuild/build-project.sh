@@ -18,6 +18,7 @@ print_help() {
   echo "  --scheme <scheme_name>                  The scheme to build. Required."
   echo "  --configuration <configuration>         The build configuration. Optional. Default is Debug."
   echo "  --os <iOS macOS tvOS visionOS watchOS>  The list of OS to build for. Optional. Default is 'macOS iOS tvOS visionOS watchOS'."
+  echo "  --beautify [true|false]                 Use xcbeautify to beautify the output. Optional. Default is true."
   echo "  --help, -h                              Show this help message."
   echo ""
   echo "${BOLD}EXAMPLES:${RESET}"
@@ -28,6 +29,7 @@ PROJECT_PATH=""
 SCHEME=""
 CONFIGURATION="Debug"
 OS=""
+BEAUTIFY=true
 
 while [[ "$#" -gt 0 ]]; do
   case $1 in
@@ -77,6 +79,22 @@ while [[ "$#" -gt 0 ]]; do
       OS="$OS $1"
       shift
     done
+    ;;
+  --beautify)
+    if [ -z "$2" ] || [[ "$2" == "--"* ]]; then
+      # No value provided, default to true
+      BEAUTIFY=true
+      shift # past option
+    else
+      # Value provided
+      if [[ "$2" != "true" ]] && [[ "$2" != "false" ]]; then
+        echo "🛑 Invalid value for --beautify: $2. Must be 'true' or 'false'" >&2
+        exit 1
+      fi
+      BEAUTIFY="$2"
+      shift # past option
+      shift # past value
+    fi
     ;;
   --help | -h)
     print_help
@@ -175,7 +193,11 @@ xcodebuild -project "$PROJECT" -scheme "$SCHEME" -showdestinations
 if [[ "$OS" == *"macOS"* ]]; then
   echo ""
   echo "➡️  Building for macOS ($CONFIGURATION)..."
-  set -o pipefail && xcodebuild clean build -project "$PROJECT" -scheme "$SCHEME" -configuration "$CONFIGURATION" | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
+  if [ "$BEAUTIFY" = true ]; then
+    set -o pipefail && xcodebuild clean build -project "$PROJECT" -scheme "$SCHEME" -configuration "$CONFIGURATION" | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
+  else
+    set -o pipefail && xcodebuild clean build -project "$PROJECT" -scheme "$SCHEME" -configuration "$CONFIGURATION" || ERROR_CODE=$?
+  fi
 fi
 
 # For iOS
@@ -186,7 +208,11 @@ if [[ "$OS" == *"iOS"* ]]; then
   # DESTINATION="generic/platform=iOS"
   echo ""
   echo "➡️  Building for ${CYAN}iOS ($CONFIGURATION)${RESET} on ${CYAN}$DESTINATION${RESET}..."
-  set -o pipefail && xcodebuild clean build -project "$PROJECT" -scheme "$SCHEME" -destination "$DESTINATION" -configuration "$CONFIGURATION" | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
+  if [ "$BEAUTIFY" = true ]; then
+    set -o pipefail && xcodebuild clean build -project "$PROJECT" -scheme "$SCHEME" -destination "$DESTINATION" -configuration "$CONFIGURATION" | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
+  else
+    set -o pipefail && xcodebuild clean build -project "$PROJECT" -scheme "$SCHEME" -destination "$DESTINATION" -configuration "$CONFIGURATION" || ERROR_CODE=$?
+  fi
 fi
 
 # For tvOS
@@ -196,7 +222,11 @@ if [[ "$OS" == *"tvOS"* ]]; then
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME"
   echo ""
   echo "➡️  Building for ${CYAN}tvOS ($CONFIGURATION)${RESET} on ${CYAN}$DESTINATION${RESET}..."
-  set -o pipefail && xcodebuild clean build -project "$PROJECT" -scheme "$SCHEME" -destination "$DESTINATION" -configuration "$CONFIGURATION" | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
+  if [ "$BEAUTIFY" = true ]; then
+    set -o pipefail && xcodebuild clean build -project "$PROJECT" -scheme "$SCHEME" -destination "$DESTINATION" -configuration "$CONFIGURATION" | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
+  else
+    set -o pipefail && xcodebuild clean build -project "$PROJECT" -scheme "$SCHEME" -destination "$DESTINATION" -configuration "$CONFIGURATION" || ERROR_CODE=$?
+  fi
 fi
 
 # For visionOS
@@ -207,7 +237,11 @@ if [[ "$OS" == *"visionOS"* ]]; then
   # DESTINATION="generic/platform=visionOS"
   echo ""
   echo "➡️  Building for ${CYAN}visionOS ($CONFIGURATION)${RESET} on ${CYAN}$DESTINATION${RESET}..."
-  set -o pipefail && xcodebuild clean build -project "$PROJECT" -scheme "$SCHEME" -destination "$DESTINATION" -configuration "$CONFIGURATION" | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
+  if [ "$BEAUTIFY" = true ]; then
+    set -o pipefail && xcodebuild clean build -project "$PROJECT" -scheme "$SCHEME" -destination "$DESTINATION" -configuration "$CONFIGURATION" | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
+  else
+    set -o pipefail && xcodebuild clean build -project "$PROJECT" -scheme "$SCHEME" -destination "$DESTINATION" -configuration "$CONFIGURATION" || ERROR_CODE=$?
+  fi
 fi
 
 # For watchOS
@@ -218,7 +252,11 @@ if [[ "$OS" == *"watchOS"* ]]; then
   # DESTINATION="generic/platform=watchOS"
   echo ""
   echo "➡️  Building for ${CYAN}watchOS ($CONFIGURATION)${RESET} on ${CYAN}$DESTINATION${RESET}..."
-  set -o pipefail && xcodebuild clean build -project "$PROJECT" -scheme "$SCHEME" -destination "$DESTINATION" -configuration "$CONFIGURATION" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
+  if [ "$BEAUTIFY" = true ]; then
+    set -o pipefail && xcodebuild clean build -project "$PROJECT" -scheme "$SCHEME" -destination "$DESTINATION" -configuration "$CONFIGURATION" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
+  else
+    set -o pipefail && xcodebuild clean build -project "$PROJECT" -scheme "$SCHEME" -destination "$DESTINATION" -configuration "$CONFIGURATION" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO || ERROR_CODE=$?
+  fi
 fi
 
 if [ $ERROR_CODE -ne 0 ]; then

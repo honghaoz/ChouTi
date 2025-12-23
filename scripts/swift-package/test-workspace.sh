@@ -17,6 +17,7 @@ print_help() {
   echo "  --workspace-path <workspace_path>       The path to the workspace. Required."
   echo "  --scheme <scheme_name>                  The scheme to build. Required."
   echo "  --os <iOS macOS tvOS visionOS watchOS>  The list of OS to build for. Optional. Default is 'macOS iOS tvOS visionOS watchOS'."
+  echo "  --beautify [true|false]                 Use xcbeautify to beautify the output. Optional. Default is true."
   echo "  --help, -h                              Show this help message."
   echo ""
   echo "${BOLD}EXAMPLES:${RESET}"
@@ -26,6 +27,7 @@ print_help() {
 WORKSPACE_PATH=""
 SCHEME=""
 OS=""
+BEAUTIFY=true
 
 while [[ "$#" -gt 0 ]]; do
   case $1 in
@@ -66,6 +68,22 @@ while [[ "$#" -gt 0 ]]; do
       OS="$OS $1"
       shift
     done
+    ;;
+  --beautify)
+    if [ -z "$2" ] || [[ "$2" == "--"* ]]; then
+      # No value provided, default to true
+      BEAUTIFY=true
+      shift # past option
+    else
+      # Value provided
+      if [[ "$2" != "true" ]] && [[ "$2" != "false" ]]; then
+        echo "🛑 Invalid value for --beautify: $2. Must be 'true' or 'false'" >&2
+        exit 1
+      fi
+      BEAUTIFY="$2"
+      shift # past option
+      shift # past value
+    fi
     ;;
   --help | -h)
     print_help
@@ -184,7 +202,11 @@ if [[ "$OS" == *"macOS"* ]]; then
   # set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -test-iterations 3 -retry-tests-on-failure | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
 
   RAW_OUTPUT=$(swift test -Xswiftc -DTEST || ERROR_CODE=$?)
-  echo "$RAW_OUTPUT" | "$REPO_ROOT"/bin/xcbeautify
+  if [ "$BEAUTIFY" = true ]; then
+    echo "$RAW_OUTPUT" | "$REPO_ROOT"/bin/xcbeautify
+  else
+    echo "$RAW_OUTPUT"
+  fi
 
   # Extract failed test case information
   # RAW_OUTPUT may include failed test cases like:
@@ -257,7 +279,11 @@ if [[ "$OS" == *"iOS"* ]]; then
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME,OS=$SIMULATOR_OS"
   echo ""
   echo "➡️  Running tests for ${CYAN}iOS${RESET} on ${CYAN}$DESTINATION${RESET}..."
-  set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -test-iterations 3 -retry-tests-on-failure | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
+  if [ "$BEAUTIFY" = true ]; then
+    set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -test-iterations 3 -retry-tests-on-failure | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
+  else
+    set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -test-iterations 3 -retry-tests-on-failure || ERROR_CODE=$?
+  fi
 fi
 
 # For tvOS
@@ -271,7 +297,11 @@ if [[ "$OS" == *"tvOS"* ]]; then
   PLATFORM="tvOS Simulator"
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME,OS=$SIMULATOR_OS"
   echo "➡️  Running tests for ${CYAN}tvOS${RESET} on ${CYAN}$DESTINATION${RESET}..."
-  set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -test-iterations 3 -retry-tests-on-failure | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
+  if [ "$BEAUTIFY" = true ]; then
+    set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -test-iterations 3 -retry-tests-on-failure | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
+  else
+    set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -test-iterations 3 -retry-tests-on-failure || ERROR_CODE=$?
+  fi
 fi
 
 # For visionOS
@@ -288,7 +318,11 @@ if [[ "$OS" == *"visionOS"* ]]; then
   PLATFORM="visionOS Simulator"
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME,OS=$SIMULATOR_OS"
   echo "➡️  Running tests for ${CYAN}visionOS${RESET} on ${CYAN}$DESTINATION${RESET}..."
-  set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -test-iterations 3 -retry-tests-on-failure | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
+  if [ "$BEAUTIFY" = true ]; then
+    set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -test-iterations 3 -retry-tests-on-failure | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
+  else
+    set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -test-iterations 3 -retry-tests-on-failure || ERROR_CODE=$?
+  fi
 fi
 
 # For watchOS
@@ -302,7 +336,11 @@ if [[ "$OS" == *"watchOS"* ]]; then
   PLATFORM="watchOS Simulator"
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME,OS=$SIMULATOR_OS"
   echo "➡️  Running tests for ${CYAN}watchOS${RESET} on ${CYAN}$DESTINATION${RESET}..."
-  set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -test-iterations 3 -retry-tests-on-failure | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
+  if [ "$BEAUTIFY" = true ]; then
+    set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -test-iterations 3 -retry-tests-on-failure | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
+  else
+    set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -test-iterations 3 -retry-tests-on-failure || ERROR_CODE=$?
+  fi
 fi
 
 if [ $ERROR_CODE -ne 0 ]; then
