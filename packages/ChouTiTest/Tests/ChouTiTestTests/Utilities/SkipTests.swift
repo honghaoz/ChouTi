@@ -33,6 +33,12 @@ import XCTest
 
 class SkipTests: XCTestCase {
 
+  func test_skip() throws {
+    try skip("skip")
+
+    fail("skip should have been skipped")
+  }
+
   func test_skipIf() throws {
     try skipIf(false, "skip")
     try skipIf(true, "skip")

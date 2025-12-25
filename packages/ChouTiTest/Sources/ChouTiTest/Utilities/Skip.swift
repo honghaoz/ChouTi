@@ -30,6 +30,15 @@
 
 import XCTest
 
+/// Skips the remaining tests in a test method unconditionally.
+/// - Parameters:
+///   - message: A message for the skip.
+///   - file: The file where the skip is occurred.
+///   - line: The line number where the skip is occurred.
+public func skip(_ message: @autoclosure () -> String? = nil, file: StaticString = #filePath, line: UInt = #line) throws {
+  throw XCTSkip(message(), file: file, line: line)
+}
+
 /// Skips remaining tests in a test method if the specified condition is met.
 /// - Parameters:
 ///   - condition: A boolean value that determines whether to skip the remaining tests.
