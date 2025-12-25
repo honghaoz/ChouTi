@@ -1,4 +1,4 @@
-name: build
+name: test
 on:
   push:
     branches-ignore:
@@ -21,23 +21,47 @@ env:
   DEVELOPER_DIR: /Applications/Xcode_${{ vars.XCODE_VERSION }}.app/Contents/Developer
 
 jobs:
-  build-root:
-    name: Build root package
+  test-codecov:
+    name: Test (macOS)
     runs-on: ${{ vars.MACOS }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
       - name: Bootstrap
         uses: ./.github/actions/bootstrap
-      - name: Build root package
-        run: make build
+      # ChouTi
+      - name: Test package "ChouTi" with Codecov
+        if: success() || failure()
+        run: make test-codecov -C packages/ChouTi
+      - name: Upload package "ChouTi" code coverage
+        uses: codecov/codecov-action@v4.5.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: packages/ChouTi/.build/debug/codecov/coverage.lcov
+          disable_search: true
+          flags: ChouTi
+          name: ChouTi
+          fail_ci_if_error: true
+      # ChouTiTest
+      - name: Test package "ChouTiTest" with Codecov
+        if: success() || failure()
+        run: make test-codecov -C packages/ChouTiTest
+      - name: Upload package "ChouTiTest" code coverage
+        uses: codecov/codecov-action@v4.5.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: packages/ChouTiTest/.build/debug/codecov/coverage.lcov
+          disable_search: true
+          flags: ChouTiTest
+          name: ChouTiTest
+          fail_ci_if_error: true
 
-  build:
-    name: Build
+  test:
+    name: Test
     strategy:
       fail-fast: false
       matrix:
-        platform: [macOS, iOS, tvOS, visionOS, watchOS]
+        platform: [iOS, tvOS, visionOS, watchOS]
     timeout-minutes: 30
     runs-on: ${{ vars.MACOS }}
     steps:
@@ -48,5 +72,6 @@ jobs:
       # - name: Download visionOS simulator
       #   if: matrix.platform == 'visionOS'
       #   run: xcodebuild -downloadPlatform visionOS
-      - name: Build
-        run: make build-release-${{ matrix.platform }} -C packages/ChouTi
+      - name: Test package "ChouTi" on ${{ matrix.platform }}
+        if: success() || failure()
+        run: make test-${{ matrix.platform }} -C packages/ChouTi
