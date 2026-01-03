@@ -50,13 +50,12 @@ public extension DispatchQueue {
   ///   - autoreleaseFrequency: The frequency with which to autorelease objects created by the blocks that the queue schedules.
   ///   - target: The target queue on which to execute blocks. Default value is `.global()` (non-overcommit queue).
   /// - Returns: A new queue.
-  static func make(
-    label: String,
-    qos: DispatchQoS = .unspecified,
-    attributes: DispatchQueue.Attributes = [],
-    autoreleaseFrequency: DispatchQueue.AutoreleaseFrequency = .inherit,
-    target: DispatchQueue? = .global()
-  ) -> DispatchQueue {
+  static func make(label: String,
+                   qos: DispatchQoS = .unspecified,
+                   attributes: DispatchQueue.Attributes = [],
+                   autoreleaseFrequency: DispatchQueue.AutoreleaseFrequency = .inherit,
+                   target: DispatchQueue? = .global()) -> DispatchQueue
+  {
     /// https://swiftrocks.com/discovering-which-dispatchqueue-a-method-is-running-on
 
     /**

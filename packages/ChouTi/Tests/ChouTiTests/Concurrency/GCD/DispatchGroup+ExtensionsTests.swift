@@ -202,11 +202,15 @@ class DispatchGroup_ExtensionsTests: XCTestCase {
         group.leave()
       }
 
-      group.sync(waitTimeout: .now() + 0.2, timeout: {
-        didTimeout = true
-      }) {
-        isWorkExecuted = true
-      }
+      group.sync(
+        waitTimeout: .now() + 0.2,
+        timeout: {
+          didTimeout = true
+        },
+        execute: {
+          isWorkExecuted = true
+        }
+      )
 
       expect(didTimeout) == false
       expect(isWorkExecuted) == true
@@ -224,11 +228,15 @@ class DispatchGroup_ExtensionsTests: XCTestCase {
         group.leave()
       }
 
-      group.sync(waitTimeout: .now() + 0.1, timeout: {
-        didTimeout = true
-      }) {
-        isWorkExecuted = true
-      }
+      group.sync(
+        waitTimeout: .now() + 0.1,
+        timeout: {
+          didTimeout = true
+        },
+        execute: {
+          isWorkExecuted = true
+        }
+      )
 
       expect(didTimeout) == true
       expect(isWorkExecuted) == false
@@ -248,11 +256,13 @@ class DispatchGroup_ExtensionsTests: XCTestCase {
         group.leave()
       }
 
-      group.sync(waitWallTimeout: .now() + 0.2, timeout: {
-        didTimeout = true
-      }) {
-        isWorkExecuted = true
-      }
+      group.sync(
+        waitWallTimeout: .now() + 0.2, timeout: {
+          didTimeout = true
+        }, execute: {
+          isWorkExecuted = true
+        }
+      )
 
       expect(didTimeout) == false
       expect(isWorkExecuted) == true
@@ -270,11 +280,13 @@ class DispatchGroup_ExtensionsTests: XCTestCase {
         group.leave()
       }
 
-      group.sync(waitWallTimeout: .now() + 0.1, timeout: {
-        didTimeout = true
-      }) {
-        isWorkExecuted = true
-      }
+      group.sync(
+        waitWallTimeout: .now() + 0.1, timeout: {
+          didTimeout = true
+        }, execute: {
+          isWorkExecuted = true
+        }
+      )
 
       expect(didTimeout) == true
       expect(isWorkExecuted) == false

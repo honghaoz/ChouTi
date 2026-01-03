@@ -52,58 +52,31 @@ fi
 
 # Helper Function
 
-# Test URL reachability.
+# Check if first version is greater than or equal to second version
 #
 # Example usage:
-# URL="https://github.com/realm/SwiftLint/releases/download/0.58.0/SwiftLintBinary.artifactbundle.zip"
-# test_url "$URL"
-# if [ $? -eq 0 ]; then
-#   echo "URL is valid"
+# if version_greater_than_or_equal_to "$version" "0.62.0"; then
+#   echo "$version >= 0.62.0"
 # else
-#   echo "URL is invalid"
+#   echo "$version < 0.62.0"
 # fi
-test_url() {
-  local URL="$1"
-  local RESPONSE
-  local STATUS
-  local HTTP_CODE
-  RESPONSE=$(curl --silent --head --fail "$URL")
-  STATUS=$?
-  HTTP_CODE=$(echo "$RESPONSE" | grep -E "^HTTP/[0-9.]+ [0-9]+" | awk '{print $2}')
-
-  if [ $STATUS -ne 0 ]; then
-    echo "--------------------------------"
-    echo "🛑 Error: Invalid URL"
-    echo "URL: $URL"
-    echo "HTTP Status: $HTTP_CODE"
-    echo -n "Response: $RESPONSE"
-    echo "--------------------------------"
-    return 1
-  fi
-
-  return 0
+version_greater_than_or_equal_to() {
+  [ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" = "$2" ]
 }
 
-# Define download URL and temporary directory
-
-# url before 0.58.0
-URL_MACOS="https://github.com/realm/SwiftLint/releases/download/$version/SwiftLintBinary-macos.artifactbundle.zip"
-
-# url since 0.58.0
-# https://github.com/realm/SwiftLint/releases/tag/0.58.0
-URL_GENERIC="https://github.com/realm/SwiftLint/releases/download/$version/SwiftLintBinary.artifactbundle.zip"
-
-# Test URL reachability and select the working URL
-echo "Testing SwiftLint download URLs..."
-if test_url "$URL_GENERIC"; then
-  URL="$URL_GENERIC"
-elif test_url "$URL_MACOS"; then
-  URL="$URL_MACOS"
+# Define download URL
+#
+# Bundle URL before 0.58.0: https://github.com/realm/SwiftLint/releases/download/$version/SwiftLintBinary-macos.artifactbundle.zip
+# Bundle URL after 0.58.0:  https://github.com/realm/SwiftLint/releases/download/$version/SwiftLintBinary.artifactbundle.zip
+URL=""
+if version_greater_than_or_equal_to "$version" "0.58.0"; then
+  URL="https://github.com/realm/SwiftLint/releases/download/$version/SwiftLintBinary.artifactbundle.zip"
 else
-  echo "🛑 ERROR: No valid SwiftLint download URL found."
-  echo "Tried:"
-  echo "  - $URL_GENERIC"
-  echo "  - $URL_MACOS"
+  URL="https://github.com/realm/SwiftLint/releases/download/$version/SwiftLintBinary-macos.artifactbundle.zip"
+fi
+
+if [ -z "$URL" ]; then
+  echo "🛑 ERROR: Invalid bundle URL."
   exit 1
 fi
 
@@ -129,7 +102,22 @@ echo "Unzipping..."
 unzip -q swiftlint.zip
 
 # Move the binary to the current directory
-mv SwiftLintBinary.artifactbundle/swiftlint-*/bin/swiftlint .
+#
+# bin path before 0.58.0: SwiftLintBinary.artifactbundle/swiftlint-0.57.0-macos/bin/swiftlint
+# bin path from 0.58.0:   SwiftLintBinary.artifactbundle/swiftlint-0.58.0-macos/bin/swiftlint
+# bin path from 0.62.0:   SwiftLintBinary.artifactbundle/macos/swiftlint
+BINARY_PATH=""
+if version_greater_than_or_equal_to "$version" "0.62.0"; then
+  BINARY_PATH="SwiftLintBinary.artifactbundle/macos/swiftlint"
+else
+  BINARY_PATH="SwiftLintBinary.artifactbundle/swiftlint-$version-macos/bin/swiftlint"
+fi
+if [ -z "$BINARY_PATH" ]; then
+  echo "🛑 ERROR: Invalid binary path."
+  exit 1
+fi
+
+mv "$BINARY_PATH" .
 
 process_bin swiftlint
 
