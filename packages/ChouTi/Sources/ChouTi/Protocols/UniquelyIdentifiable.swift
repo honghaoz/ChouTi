@@ -35,7 +35,7 @@ public protocol UniquelyIdentifiable {
 
   /// A unique identifier for the object.
   ///
-  /// - Note: Using `ObjectIdentifier` might be not a good idea since the memory address can be reused.
+  /// - Note: Using `ObjectIdentifier` may not work as expected since the memory address can be reused.
   /// For example, when an instance is just deallocated before the next instance is allocated, the new instance
   /// will have the same `ObjectIdentifier` as the previous instance:
   ///
@@ -51,6 +51,7 @@ public protocol UniquelyIdentifiable {
   /// ```
   ///
   /// A default implementation is provided that uses `UUID.uuidString` as the unique identifier.
+  /// The default implementation is NOT thread-safe.
   var uniqueIdentifier: String { get }
 }
 

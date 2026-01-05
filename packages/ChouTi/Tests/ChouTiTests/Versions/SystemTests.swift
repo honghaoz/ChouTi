@@ -38,6 +38,7 @@ class SystemTests: XCTestCase {
 
   #if os(macOS)
   func testSystem() {
+    expect(System.macOS_sequoia) == true
     expect(System.macOS_sonoma) == true
     expect(System.macOS_ventura) == true
     expect(System.macOS_monterey) == true
@@ -47,6 +48,7 @@ class SystemTests: XCTestCase {
 
   #if os(iOS)
   func testSystem() {
+    expect(System.iOS_18) == true
     expect(System.iOS_17) == true
     expect(System.iOS_16) == true
     expect(System.iOS_15) == true

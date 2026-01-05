@@ -200,4 +200,50 @@ class ThrottlerTests: XCTestCase {
 
     expect(called) == false
   }
+
+  func test_self_deallocated_withMockClock() {
+    var throttler: Throttler? = Throttler(interval: 0.1, latest: true, queue: .main)
+
+    var called = false
+    throttler?.throttle {
+      called = true
+    }
+    expect(called) == false
+
+    // deallocate the throttler before the delay task fires
+    throttler = nil
+
+    // advance time to when the delay task should fire
+    clock.advance(to: 0.15)
+
+    // the block should not be called because throttler was deallocated
+    expect(called) == false
+  }
+
+  func test_self_deallocated_invokeImmediately() {
+    var throttler: Throttler? = Throttler(interval: 0.1, latest: true, invokeImmediately: true, queue: .main)
+
+    var receivedValues: [Int] = []
+
+    // first call - invokes immediately
+    throttler?.throttle {
+      receivedValues.append(1)
+    }
+    expect(receivedValues) == [1]
+
+    // second call - throttled
+    throttler?.throttle {
+      receivedValues.append(2)
+    }
+    expect(receivedValues) == [1]
+
+    // deallocate the throttler before the delay task fires
+    throttler = nil
+
+    // advance time to when the delay task should fire
+    clock.advance(to: 0.15)
+
+    // the second block should not be called because throttler was deallocated
+    expect(receivedValues) == [1]
+  }
 }
