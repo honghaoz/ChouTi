@@ -212,7 +212,9 @@ if [[ "$OS" == *"macOS"* ]]; then
   # RAW_OUTPUT may include failed test cases like:
   #   /Users/foo/Developer/bluebox/packages/ChouTiExt/Tests/ChouTiExtTests/Utilities/EventFlowControl/ThrottlerTests.swift:134: error: -[ChouTiExtTests.ThrottlerTests test_latest_invokeImmediately] : failed - expect "[1.0, 2.0, 4.0, 5.0, 0.0]" to be equal to "[1.0, 2.0, 4.0, 5.0]"
   # Extract the test case name like: ChouTiExt.ThrottlerTests/test_latest_invokeImmediately
-  FAILED_TESTS=$(echo "$RAW_OUTPUT" | grep -E ' error: ' | sed -E 's|.*error: -\[(.+)\.(.+) (.+)\] :.*|\1.\2/\3|')
+  #
+  # Note: Use ' error: -\[' to match only test failures, not system errors like "CoreData: error: Failed to create NSXPCConnection"
+  FAILED_TESTS=$(echo "$RAW_OUTPUT" | grep -E ' error: -\[' | sed -E 's|.*error: -\[(.+)\.(.+) (.+)\] :.*|\1.\2/\3|')
 
   # dedupe FAILED_TESTS
   FAILED_TESTS=$(echo "$FAILED_TESTS" | sort | uniq)
