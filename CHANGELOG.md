@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [0.0.10](https://github.com/honghaoz/ChouTi/releases/tag/0.0.10) (2026-01-04)
+
+- Framework `ChouTi`:
+  - Added `cancelOnDeallocate` option to cancellable tokens so that the cancel block can be not called on deallocate.
+  - Added `SimpleCancellableToken`.
+  - Updated cancellable tokens to only call the cancel block once.
+  - Updated `Device.DeviceType` cases.
+  - Minor updates in NSAttributedString utilities.
+
+- Framework `ChouTiTest`:
+  - Added time measurement utilities.
+  - Added `skip`, `skipIf` and `skipUnless` utilities.
+  - Added `Environment` utility.
+  - Added `TestWindow` utility.
+
 ## [0.0.9](https://github.com/honghaoz/ChouTi/releases/tag/0.0.9) (2025-02-26)
 
 - Fixed CGRect utilities.

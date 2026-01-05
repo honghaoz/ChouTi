@@ -15,7 +15,7 @@ Add the following to your `Package.swift` file:
 ```swift
 dependencies: [
   // add the package to your package dependencies
-  .package(url: "https://github.com/honghaoz/ChouTi", from: "0.0.9"),
+  .package(url: "https://github.com/honghaoz/ChouTi", from: "0.0.10"),
 ],
 targets: [
   // add products to your target dependencies
