@@ -125,8 +125,10 @@ class QueueTests: XCTestCase {
     let queue = Queue<Int?>()
     queue.enqueue(nil)
     queue.enqueue(nil)
-    expect(queue.dequeue()) != nil
+    expect(String(describing: queue.dequeue())) == "Optional(nil)"
     expect(queue.dequeue()!) == nil // swiftlint:disable:this force_unwrapping
+
+    expect(queue.count) == 0
 
     queue.enqueue(1)
     expect(queue.dequeue()) == 1
