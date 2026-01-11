@@ -41,7 +41,19 @@ public struct BeNilExpectation<T>: ExpressibleByNilLiteral, OptionalExpectation 
     if T.self == Any.self {
       return actualValue == nil || String(describing: actualValue) == "Optional(nil)"
     } else {
-      return actualValue == nil
+      // check if actualValue is nil at the outer level
+      if actualValue == nil {
+        return true
+      }
+
+      // check if T is itself an optional type and the inner value is nil
+      // this handles cases like BeNilExpectation<Int?> where actualValue is Int?? = .some(nil)
+      let mirror = Mirror(reflecting: actualValue!) // swiftlint:disable:this force_unwrapping
+      if mirror.displayStyle == .optional, mirror.children.isEmpty {
+        return true
+      }
+
+      return false
     }
   }
 

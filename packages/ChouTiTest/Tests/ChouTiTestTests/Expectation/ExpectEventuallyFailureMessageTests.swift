@@ -243,6 +243,48 @@ class ExpectEventuallyFailureMessageTests: FailureCapturingTestCase {
     }
   }
 
+  func testEventuallyBeNilTimeout() {
+    do {
+      func calculate() -> Int? {
+        return 1
+      }
+
+      expect(calculate()).toEventually(beNil(), timeout: 0.05)
+      let expectedMessage = #"failed - expect "1" to be nil eventually"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+    do {
+      func calculate() -> Int? {
+        return nil
+      }
+
+      expect(calculate()).toEventuallyNot(beNil(), timeout: 0.05)
+      let expectedMessage = #"failed - expect "nil" to not be nil eventually"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
+  func testEventuallyBeNilTimeout_withDescription() {
+    do {
+      func calculate() -> Int? {
+        return 1
+      }
+
+      expect(calculate(), "Number").toEventually(beNil(), timeout: 0.05)
+      let expectedMessage = #"failed - expect "Number" ("1") to be nil eventually"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+    do {
+      func calculate() -> Int? {
+        return nil
+      }
+
+      expect(calculate(), "Number").toEventuallyNot(beNil(), timeout: 0.05)
+      let expectedMessage = #"failed - expect "Number" ("nil") to not be nil eventually"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
   func testEventually_invalidInterval() {
     func calculate() -> Bool {
       return false

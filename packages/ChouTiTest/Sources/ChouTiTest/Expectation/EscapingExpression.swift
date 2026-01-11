@@ -50,7 +50,7 @@ public struct EscapingExpression<T> {
     self.line = line
   }
 
-  // MARK: - To
+  // MARK: - To (Expectation)
 
   /// Evaluate the expression with an expectation repeatedly until the expectation is satisfied or timeout.
   /// - Parameters:
@@ -58,6 +58,22 @@ public struct EscapingExpression<T> {
   ///   - interval: The repeating interval to evaluate the expression. Default is 0.01 seconds.
   ///   - timeout: The timeout to stop evaluating the expression. Default is 3 seconds.
   public func toEventually(_ expectation: some Expectation<T, Never>, interval: TimeInterval = 0.01, timeout: TimeInterval = 3) {
+    _toEventually(expectationEvaluate: expectation.evaluate, expectationDescription: { expectation.description }, interval: interval, timeout: timeout)
+  }
+
+  // MARK: - To (OptionalExpectation)
+
+  /// Evaluate the expression with an optional expectation repeatedly until the expectation is satisfied or timeout.
+  /// - Parameters:
+  ///   - expectation: The optional expectation to evaluate.
+  ///   - interval: The repeating interval to evaluate the expression. Default is 0.01 seconds.
+  ///   - timeout: The timeout to stop evaluating the expression. Default is 3 seconds.
+  public func toEventually(_ expectation: some OptionalExpectation<T, Never>, interval: TimeInterval = 0.01, timeout: TimeInterval = 3) {
+    _toEventually(expectationEvaluate: expectation.evaluate, expectationDescription: { expectation.description }, interval: interval, timeout: timeout)
+  }
+
+  /// The internal implementation of `toEventually` for both `Expectation` and `OptionalExpectation`.
+  private func _toEventually(expectationEvaluate: @escaping (T) -> Bool, expectationDescription: () -> String, interval: TimeInterval, timeout: TimeInterval) {
     guard interval > 0 else {
       XCTFail("interval must be greater than 0.", file: file, line: line)
       return
@@ -73,7 +89,7 @@ public struct EscapingExpression<T> {
     repeating(interval: interval, timeout: timeout, queue: .main) { _ in
       do {
         let value = try expression()
-        if expectation.evaluate(value) {
+        if expectationEvaluate(value) {
           testExpectation.fulfill()
           return true
         }
@@ -101,10 +117,11 @@ public struct EscapingExpression<T> {
     case .completed:
       break
     case .timedOut:
+      let formattedValue = formatValue(lastValue)
       if let description = description() {
-        XCTFail("expect \"\(description)\" (\"\(lastValue ??? "nil")\") to \(expectation.description) eventually", file: file, line: line)
+        XCTFail("expect \"\(description)\" (\"\(formattedValue)\") to \(expectationDescription()) eventually", file: file, line: line)
       } else {
-        XCTFail("expect \"\(lastValue ??? "nil")\" to \(expectation.description) eventually", file: file, line: line)
+        XCTFail("expect \"\(formattedValue)\" to \(expectationDescription()) eventually", file: file, line: line)
       }
     default:
       fatalError("Unexpected wait result: \(result)") // swiftlint:disable:this fatal_error
@@ -114,7 +131,7 @@ public struct EscapingExpression<T> {
   // TODO: support throw error expectation
   // TODO: support throw error type expectation
 
-  // MARK: - To Not
+  // MARK: - To Not (Expectation)
 
   /// Evaluate the expression with an expectation repeatedly until the expectation is **not** satisfied or timeout.
   /// - Parameters:
@@ -122,6 +139,22 @@ public struct EscapingExpression<T> {
   ///   - interval: The repeating interval to evaluate the expression. Default is 0.01 seconds.
   ///   - timeout: The timeout to stop evaluating the expression. Default is 3 seconds.
   public func toEventuallyNot(_ expectation: some Expectation<T, Never>, interval: TimeInterval = 0.01, timeout: TimeInterval = 3) {
+    _toEventuallyNot(expectationEvaluate: expectation.evaluate, expectationDescription: { expectation.description }, interval: interval, timeout: timeout)
+  }
+
+  // MARK: - To Not (OptionalExpectation)
+
+  /// Evaluate the expression with an optional expectation repeatedly until the expectation is **not** satisfied or timeout.
+  /// - Parameters:
+  ///   - expectation: The optional expectation to evaluate.
+  ///   - interval: The repeating interval to evaluate the expression. Default is 0.01 seconds.
+  ///   - timeout: The timeout to stop evaluating the expression. Default is 3 seconds.
+  public func toEventuallyNot(_ expectation: some OptionalExpectation<T, Never>, interval: TimeInterval = 0.01, timeout: TimeInterval = 3) {
+    _toEventuallyNot(expectationEvaluate: expectation.evaluate, expectationDescription: { expectation.description }, interval: interval, timeout: timeout)
+  }
+
+  /// The internal implementation of `toEventuallyNot` for both `Expectation` and `OptionalExpectation`.
+  private func _toEventuallyNot(expectationEvaluate: @escaping (T) -> Bool, expectationDescription: () -> String, interval: TimeInterval, timeout: TimeInterval) {
     guard interval > 0 else {
       XCTFail("interval must be greater than 0.", file: file, line: line)
       return
@@ -137,7 +170,7 @@ public struct EscapingExpression<T> {
     repeating(interval: interval, timeout: timeout, queue: .main) { _ in
       do {
         let value = try expression()
-        if !expectation.evaluate(value) {
+        if !expectationEvaluate(value) {
           testExpectation.fulfill()
           return true
         }
@@ -165,13 +198,35 @@ public struct EscapingExpression<T> {
     case .completed:
       break
     case .timedOut:
+      let formattedValue = formatValue(lastValue)
       if let description = description() {
-        XCTFail("expect \"\(description)\" (\"\(lastValue ??? "nil")\") to not \(expectation.description) eventually", file: file, line: line)
+        XCTFail("expect \"\(description)\" (\"\(formattedValue)\") to not \(expectationDescription()) eventually", file: file, line: line)
       } else {
-        XCTFail("expect \"\(lastValue ??? "nil")\" to not \(expectation.description) eventually", file: file, line: line)
+        XCTFail("expect \"\(formattedValue)\" to not \(expectationDescription()) eventually", file: file, line: line)
       }
     default:
       fatalError("Unexpected wait result: \(result)") // swiftlint:disable:this fatal_error
     }
+  }
+
+  /// Helper function to format a value for display, unwrapping nested optionals.
+  private func formatValue(_ value: T?) -> String {
+    guard let value = value else {
+      return "nil" // impossible as the lastValue is always non-nil since repeating interval is always less than timeout, so when the timeout is reached, the lastValue is always non-nil
+    }
+
+    // check if the value is an optional using Mirror
+    let mirror = Mirror(reflecting: value)
+    if mirror.displayStyle == .optional {
+      if mirror.children.isEmpty {
+        // the optional is .none
+        return "nil"
+      } else if let (_, wrappedValue) = mirror.children.first {
+        // the optional is .some, get the wrapped value
+        return "\(wrappedValue)"
+      }
+    }
+
+    return "\(value)"
   }
 }

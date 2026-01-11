@@ -35,7 +35,7 @@ import Foundation
 
 class ExpectEventuallyTests: XCTestCase {
 
-  func testEventuallyTrue() {
+  func test_eventually_beTrue() {
     do {
       var count = 0
       func calculate() -> Bool {
@@ -44,7 +44,6 @@ class ExpectEventuallyTests: XCTestCase {
       }
       expect(calculate()).toEventually(beTrue())
     }
-
     do {
       var count = 0
       func calculate() -> Bool {
@@ -59,7 +58,7 @@ class ExpectEventuallyTests: XCTestCase {
     }
   }
 
-  func testEventuallyFalse() {
+  func test_eventually_beFalse() {
     do {
       var count = 0
       func calculate() -> Bool {
@@ -82,7 +81,7 @@ class ExpectEventuallyTests: XCTestCase {
     }
   }
 
-  func testEventuallyEqual() {
+  func test_eventually_beEqual() {
     do {
       var count = 0
       func calculate() -> Int {
@@ -105,7 +104,7 @@ class ExpectEventuallyTests: XCTestCase {
     }
   }
 
-  func testEventuallyIdentical() {
+  func test_eventually_beIdentical() {
     class Foo: CustomStringConvertible {
       let value: Int
 
@@ -145,12 +144,31 @@ class ExpectEventuallyTests: XCTestCase {
     }
   }
 
-  func testEventuallyBeEmpty() {
+  func test_eventually_beEmpty() {
     var array = [1, 2, 3]
     func calculate() -> [Int] {
       array.removeLast()
       return array
     }
     expect(calculate()).toEventually(beEmpty())
+  }
+
+  func test_eventually_beNil() {
+    do {
+      var count = 0
+      func calculate() -> Int? {
+        count += 1
+        return count == 3 ? nil : 1
+      }
+      expect(calculate()).toEventually(beNil())
+    }
+    do {
+      var count = 0
+      func calculate() -> Int? {
+        count += 1
+        return count == 3 ? 1 : nil
+      }
+      expect(calculate()).toEventuallyNot(beNil())
+    }
   }
 }
