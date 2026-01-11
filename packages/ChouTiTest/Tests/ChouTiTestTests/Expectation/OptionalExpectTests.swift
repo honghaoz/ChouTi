@@ -35,7 +35,7 @@ import Foundation
 
 class OptionalExpectTests: XCTestCase {
 
-  func testBeNil() {
+  func test_beNil() {
     let validValue: Int? = 1
     let nilValue: Int? = nil
 
@@ -45,7 +45,7 @@ class OptionalExpectTests: XCTestCase {
     expect(validValue) != nil
   }
 
-  func testBeNil_Any() {
+  func test_beNil_Any() {
     let validValue: Any? = 1
     let nilValue: Any? = nil
 
@@ -55,7 +55,7 @@ class OptionalExpectTests: XCTestCase {
     expect(validValue) != nil
   }
 
-  func testBeIdentical() {
+  func test_beIdentical() {
     class Foo: CustomStringConvertible {
       let value: Int
 
@@ -84,5 +84,113 @@ class OptionalExpectTests: XCTestCase {
 
     expect((beIdentical(to: foo1) as BeIdenticalOptionalExpectation<Foo>).description) == "be identical to \"Foo(1)\""
     expect((beIdentical(to: nilValue) as BeIdenticalOptionalExpectation<Foo>).description) == "be identical to nil"
+  }
+
+  func test_beEmpty() {
+    let nonEmptyValue: [Int]? = [1]
+    let emptyValue: [Int]? = []
+    let nilValue: [Int]? = nil
+
+    expect(nonEmptyValue).toNot(beEmpty())
+    expect(emptyValue).to(beEmpty())
+    expect(nilValue).toNot(beEmpty())
+  }
+
+  func test_beEqual() {
+    let value: Int? = 1
+    let nilValue: Int? = nil
+
+    expect(value).to(beEqual(to: 1))
+    expect(value).toNot(beEqual(to: 2))
+
+    expect(value) == 1
+    expect(value) != 2
+
+    expect(nilValue).toNot(beEqual(to: 1))
+    expect(nilValue).toNot(beEqual(to: 2))
+
+    expect(nilValue) == nil
+    expect(nilValue) != 1
+  }
+
+  func test_beTrue() {
+    let value: Bool? = true
+    let nilValue: Bool? = nil
+
+    expect(value).to(beTrue())
+    expect(value).toNot(beFalse())
+    expect(nilValue).toNot(beTrue())
+
+    expect(value) == true
+    expect(value) != false
+    expect(nilValue) == nil
+    expect(nilValue) != true
+  }
+
+  func test_beFalse() {
+    let value: Bool? = false
+    let nilValue: Bool? = nil
+
+    expect(value).to(beFalse())
+    expect(value).toNot(beTrue())
+    expect(nilValue).toNot(beFalse())
+
+    expect(value) == false
+    expect(value) != true
+    expect(nilValue) == nil
+    expect(nilValue) != false
+  }
+
+  func test_beGreaterThan() {
+    let value: Int? = 2
+    let nilValue: Int? = nil
+
+    expect(value).to(beGreaterThan(1))
+    expect(value).toNot(beGreaterThan(2))
+    expect(nilValue).toNot(beGreaterThan(1))
+
+    expect(value) > 1
+    expect(value) <= 2
+  }
+
+  func test_beGreaterThanOrEqual() {
+    let value: Int? = 2
+    let nilValue: Int? = nil
+
+    expect(value).to(beGreaterThanOrEqual(to: 1))
+    expect(value).to(beGreaterThanOrEqual(to: 2))
+    expect(value).toNot(beGreaterThanOrEqual(to: 3))
+    expect(nilValue).toNot(beGreaterThanOrEqual(to: 1))
+
+    expect(value) >= 1
+    expect(value) >= 2
+    expect(value) < 3
+  }
+
+  func test_beLessThan() {
+    let value: Int? = 1
+    let nilValue: Int? = nil
+
+    expect(value).to(beLessThan(2))
+    expect(value).toNot(beLessThan(1))
+    expect(nilValue).toNot(beLessThan(2))
+
+    expect(value) < 2
+    expect(value) >= 1
+    expect(nilValue).toNot(beLessThan(2))
+  }
+
+  func test_beLessThanOrEqual() {
+    let value: Int? = 1
+    let nilValue: Int? = nil
+
+    expect(value).to(beLessThanOrEqual(to: 2))
+    expect(value).to(beLessThanOrEqual(to: 1))
+    expect(value).toNot(beLessThanOrEqual(to: 0))
+    expect(nilValue).toNot(beLessThanOrEqual(to: 2))
+
+    expect(value) <= 2
+    expect(value) <= 1
+    expect(value) > 0
   }
 }
