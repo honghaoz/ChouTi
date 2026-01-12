@@ -129,19 +129,6 @@ public struct Expression<T> {
     }
   }
 
-  /// Evaluate the expression to throw an error.
-  /// - Parameter expectation: The expectation to evaluate.
-  public func to(_ expectation: ThrowAnErrorExpectation) {
-    if thrownError == nil {
-      if let description = description() {
-        XCTFail("expect \"\(description)\" to throw an error", file: file, line: line)
-      } else {
-        XCTFail("expect to throw an error", file: file, line: line)
-      }
-      return
-    }
-  }
-
   // MARK: - To Not
 
   /// Evaluate the expression to **not** meet the expectation.
@@ -171,6 +158,16 @@ public struct Expression<T> {
   public func toNot<E: Swift.Error>(_ expectation: ThrowErrorExpectation<E>) {
     guard let thrownError else {
       // no thrown error, good
+      return
+    }
+
+    if expectation.expectAnyError {
+      // expected to throw any error, and got one, bad
+      if let description = description() {
+        XCTFail("expect \"\(description)\" to not throw an error, but got: \(thrownError)", file: file, line: line)
+      } else {
+        XCTFail("expect to not throw an error, but got: \(thrownError)", file: file, line: line)
+      }
       return
     }
 
@@ -204,19 +201,6 @@ public struct Expression<T> {
       } else {
         XCTFail("expect \"\(thrownError)\" to not be a type of \"\(E.self)\"", file: file, line: line)
       }
-    }
-  }
-
-  /// Evaluate the expression to **not** throw an error.
-  /// - Parameter expectation: The expectation to evaluate.
-  public func toNot(_ expectation: ThrowAnErrorExpectation) {
-    if let thrownError {
-      if let description = description() {
-        XCTFail("expect \"\(description)\" to not throw an error, but got: \(thrownError)", file: file, line: line)
-      } else {
-        XCTFail("expect to not throw an error, but got: \(thrownError)", file: file, line: line)
-      }
-      return
     }
   }
 }

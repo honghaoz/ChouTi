@@ -36,8 +36,14 @@ public struct ThrowErrorExpectation<E: Swift.Error>: Expectation {
   public typealias T = Any
   public typealias ThrownErrorType = E
 
+  /// The error expect to throw.
   let error: ThrownErrorType
+
+  /// The block to check if the thrown error matches the expected error.
   fileprivate let isErrorMatched: (ThrownErrorType) -> Bool
+
+  /// Whether expect to throw any error.
+  let expectAnyError: Bool
 
   public func evaluate(_ actualValue: T) -> Bool {
     fatalError("unexpected call") // swiftlint:disable:this fatal_error
@@ -60,7 +66,8 @@ public func throwError<E: Swift.Error & Equatable>(_ error: E) -> ThrowErrorExpe
     error: error,
     isErrorMatched: { thrownError in
       thrownError == error
-    }
+    },
+    expectAnyError: false
   )
 }
 
@@ -74,6 +81,23 @@ public func throwError<E: Swift.Error>(_ error: E, isErrorMatched: @escaping (_ 
     error: error,
     isErrorMatched: { thrownError in
       isErrorMatched(error, thrownError)
-    }
+    },
+    expectAnyError: false
   )
+}
+
+/// Make an expectation that the expression throws an error.
+/// - Returns: An expectation.
+public func throwAnError() -> ThrowErrorExpectation<Swift.Error> {
+  ThrowErrorExpectation(
+    error: AnyError.anyError,
+    isErrorMatched: { _ in
+      return true
+    },
+    expectAnyError: true
+  )
+}
+
+private enum AnyError: Swift.Error {
+  case anyError
 }
