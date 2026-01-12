@@ -36,21 +36,31 @@ public struct ThrowErrorExpectation<E: Swift.Error>: Expectation {
   public typealias T = Any
   public typealias ThrownErrorType = E
 
-  /// The error expect to throw.
-  let error: ThrownErrorType
+  /// The type of the error expectation.
+  enum ExpectationType {
+    /// Expect the expression to throw any error.
+    case anyError
+    /// Expect the expression to throw a specific error.
+    case specificError(E, isErrorMatched: (ThrownErrorType) -> Bool)
+    /// Expect the expression to throw an error of the expected type.
+    case thrownErrorType
+  }
 
-  /// The block to check if the thrown error matches the expected error.
-  fileprivate let isErrorMatched: (ThrownErrorType) -> Bool
-
-  /// Whether expect to throw any error.
-  let expectAnyError: Bool
+  let expectationType: ExpectationType
 
   public func evaluate(_ actualValue: T) -> Bool {
     fatalError("unexpected call") // swiftlint:disable:this fatal_error
   }
 
   public func evaluateError(_ thrownError: ThrownErrorType) -> Bool {
-    isErrorMatched(thrownError)
+    switch expectationType {
+    case .anyError:
+      return true
+    case .specificError(_, let isErrorMatched):
+      return isErrorMatched(thrownError)
+    case .thrownErrorType:
+      return true // not used
+    }
   }
 
   public var description: String {
@@ -58,46 +68,39 @@ public struct ThrowErrorExpectation<E: Swift.Error>: Expectation {
   }
 }
 
-/// Make an expectation that the expression throws an error.
+/// Make an expectation that the expression throws a specific error.
 /// - Parameter error: The error expect to throw.
 /// - Returns: An expectation.
 public func throwError<E: Swift.Error & Equatable>(_ error: E) -> ThrowErrorExpectation<E> {
   ThrowErrorExpectation(
-    error: error,
-    isErrorMatched: { thrownError in
+    expectationType: .specificError(error, isErrorMatched: { thrownError in
       thrownError == error
-    },
-    expectAnyError: false
+    })
   )
 }
 
-/// Make an expectation that the expression throws an error.
+/// Make an expectation that the expression throws a specific error.
 /// - Parameters:
 ///   - error: The error expect to throw.
 ///   - isErrorMatched: A block to returns `true` if the expected error matches the thrown error.
 /// - Returns: An expectation.
 public func throwError<E: Swift.Error>(_ error: E, isErrorMatched: @escaping (_ expectedError: E, _ thrownError: E) -> Bool) -> ThrowErrorExpectation<E> {
   ThrowErrorExpectation(
-    error: error,
-    isErrorMatched: { thrownError in
+    expectationType: .specificError(error, isErrorMatched: { thrownError in
       isErrorMatched(error, thrownError)
-    },
-    expectAnyError: false
+    })
   )
 }
 
-/// Make an expectation that the expression throws an error.
+/// Make an expectation that the expression throws any error.
 /// - Returns: An expectation.
 public func throwAnError() -> ThrowErrorExpectation<Swift.Error> {
-  ThrowErrorExpectation(
-    error: AnyError.anyError,
-    isErrorMatched: { _ in
-      return true
-    },
-    expectAnyError: true
-  )
+  ThrowErrorExpectation(expectationType: .anyError)
 }
 
-private enum AnyError: Swift.Error {
-  case anyError
+/// Make an expectation that the expression throws an error of the expected type.
+/// - Parameter error: The error type expect to throw.
+/// - Returns: An expectation.
+public func throwErrorOfType<E: Swift.Error>(_ error: E.Type) -> ThrowErrorExpectation<E> {
+  ThrowErrorExpectation(expectationType: .thrownErrorType)
 }
