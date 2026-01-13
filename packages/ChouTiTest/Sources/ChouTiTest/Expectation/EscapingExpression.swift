@@ -50,9 +50,10 @@ public struct EscapingExpression<T> {
     self.line = line
   }
 
-  // MARK: - To (Expectation)
+  // MARK: - To
 
   /// Evaluate the expression with an expectation repeatedly until the expectation is satisfied or timeout.
+  ///
   /// - Parameters:
   ///   - expectation: The expectation to evaluate.
   ///   - interval: The repeating interval to evaluate the expression. Default is 0.01 seconds.
@@ -61,9 +62,8 @@ public struct EscapingExpression<T> {
     _toEventually(expectationEvaluate: expectation.evaluate, expectationDescription: { expectation.description }, interval: interval, timeout: timeout)
   }
 
-  // MARK: - To (OptionalExpectation)
-
   /// Evaluate the expression with an optional expectation repeatedly until the expectation is satisfied or timeout.
+  ///
   /// - Parameters:
   ///   - expectation: The optional expectation to evaluate.
   ///   - interval: The repeating interval to evaluate the expression. Default is 0.01 seconds.
@@ -128,12 +128,96 @@ public struct EscapingExpression<T> {
     }
   }
 
-  // TODO: support throw error expectation
-  // TODO: support throw error type expectation
+  /// Evaluate the expression to eventually throw an error.
+  ///
+  /// - Parameters:
+  ///   - expectation: The expectation to evaluate.
+  ///   - interval: The repeating interval to evaluate the expression. Default is 0.01 seconds.
+  ///   - timeout: The timeout to stop evaluating the expression. Default is 3 seconds.
+  public func toEventually<E: Swift.Error>(_ expectation: ThrowErrorExpectation<E>, interval: TimeInterval = 0.01, timeout: TimeInterval = 3) {
+    guard interval > 0 else {
+      XCTFail("interval must be greater than 0.", file: file, line: line)
+      return
+    }
+    guard timeout > interval else {
+      XCTFail("timeout must be greater than interval.", file: file, line: line)
+      return
+    }
 
-  // MARK: - To Not (Expectation)
+    let testExpectation = XCTestExpectation()
+    var lastError: Error?
+    repeating(interval: interval, timeout: timeout, queue: .main) { _ in
+      do {
+        _ = try expression()
+        return false
+      } catch {
+        switch expectation.expectationType {
+        case .anyError:
+          testExpectation.fulfill()
+          return true
+        case .specificError,
+             .thrownErrorType:
+          if let thrownError = error as? E, expectation.evaluateError(thrownError) {
+            testExpectation.fulfill()
+            return true
+          }
+          lastError = error
+          return false
+        }
+      }
+    }
+
+    let result = XCTWaiter.wait(for: [testExpectation], timeout: timeout)
+
+    switch result {
+    case .completed:
+      break
+    case .timedOut:
+      switch expectation.expectationType {
+      case .anyError:
+        if let description = description() {
+          XCTFail("expect \"\(description)\" to throw an error eventually", file: file, line: line)
+        } else {
+          XCTFail("expect to throw an error eventually", file: file, line: line)
+        }
+      case .specificError(let expectedError, _):
+        if let lastError {
+          if let description = description() {
+            XCTFail("expect \"\(description)\"'s thrown error (\"\(lastError)\") to be \"\(expectedError)\" eventually", file: file, line: line)
+          } else {
+            XCTFail("expect thrown error (\"\(lastError)\") to be \"\(expectedError)\" eventually", file: file, line: line)
+          }
+        } else {
+          if let description = description() {
+            XCTFail("expect \"\(description)\" to throw error \"\(expectedError)\" eventually", file: file, line: line)
+          } else {
+            XCTFail("expect to throw error \"\(expectedError)\" eventually", file: file, line: line)
+          }
+        }
+      case .thrownErrorType:
+        if let lastError {
+          if let description = description() {
+            XCTFail("expect \"\(description)\"'s thrown error (\"\(lastError)\") to be a type of \"\(E.self)\" eventually", file: file, line: line)
+          } else {
+            XCTFail("expect thrown error (\"\(lastError)\") to be a type of \"\(E.self)\" eventually", file: file, line: line)
+          }
+        } else {
+          if let description = description() {
+            XCTFail("expect \"\(description)\" to throw an error of type \"\(E.self)\" eventually", file: file, line: line)
+          } else {
+            XCTFail("expect to throw an error of type \"\(E.self)\" eventually", file: file, line: line)
+          }
+        }
+      }
+    default:
+      fatalError("Unexpected wait result: \(result)") // swiftlint:disable:this fatal_error
+    }
+  }
+
+  // MARK: - To Not
 
   /// Evaluate the expression with an expectation repeatedly until the expectation is **not** satisfied or timeout.
+  ///
   /// - Parameters:
   ///   - expectation: The expectation to evaluate.
   ///   - interval: The repeating interval to evaluate the expression. Default is 0.01 seconds.
@@ -142,9 +226,8 @@ public struct EscapingExpression<T> {
     _toEventuallyNot(expectationEvaluate: expectation.evaluate, expectationDescription: { expectation.description }, interval: interval, timeout: timeout)
   }
 
-  // MARK: - To Not (OptionalExpectation)
-
   /// Evaluate the expression with an optional expectation repeatedly until the expectation is **not** satisfied or timeout.
+  ///
   /// - Parameters:
   ///   - expectation: The optional expectation to evaluate.
   ///   - interval: The repeating interval to evaluate the expression. Default is 0.01 seconds.
@@ -208,6 +291,82 @@ public struct EscapingExpression<T> {
       fatalError("Unexpected wait result: \(result)") // swiftlint:disable:this fatal_error
     }
   }
+
+  /// Evaluate the expression to eventually not throw an error.
+  ///
+  /// - Parameters:
+  ///   - expectation: The expectation to evaluate.
+  ///   - interval: The repeating interval to evaluate the expression. Default is 0.01 seconds.
+  ///   - timeout: The timeout to stop evaluating the expression. Default is 3 seconds.
+  public func toEventuallyNot<E: Swift.Error>(_ expectation: ThrowErrorExpectation<E>, interval: TimeInterval = 0.01, timeout: TimeInterval = 3) {
+    guard interval > 0 else {
+      XCTFail("interval must be greater than 0.", file: file, line: line)
+      return
+    }
+    guard timeout > interval else {
+      XCTFail("timeout must be greater than interval.", file: file, line: line)
+      return
+    }
+
+    let testExpectation = XCTestExpectation()
+    var lastError: Error?
+    repeating(interval: interval, timeout: timeout, queue: .main) { _ in
+      do {
+        _ = try expression()
+        testExpectation.fulfill()
+        return true
+      } catch {
+        switch expectation.expectationType {
+        case .anyError:
+          // expected to not throw any error, but got one, bad
+          lastError = error
+          return false
+        case .specificError,
+             .thrownErrorType:
+          if let thrownError = error as? E, expectation.evaluateError(thrownError) {
+            lastError = error
+            return false
+          }
+          testExpectation.fulfill()
+          return true
+        }
+      }
+    }
+
+    let result = XCTWaiter.wait(for: [testExpectation], timeout: timeout)
+
+    switch result {
+    case .completed:
+      break
+    case .timedOut:
+      if let lastError {
+        switch expectation.expectationType {
+        case .anyError:
+          if let description = description() {
+            XCTFail("expect \"\(description)\" to not throw an error eventually, but got: \(lastError)", file: file, line: line)
+          } else {
+            XCTFail("expect to not throw an error eventually, but got: \(lastError)", file: file, line: line)
+          }
+        case .specificError(let expectedError, _):
+          if let description = description() {
+            XCTFail("expect \"\(description)\" to not throw error \"\(expectedError)\" eventually", file: file, line: line)
+          } else {
+            XCTFail("expect to not throw error \"\(expectedError)\" eventually", file: file, line: line)
+          }
+        case .thrownErrorType:
+          if let description = description() {
+            XCTFail("expect \"\(description)\"'s thrown error (\"\(lastError)\") to not be a type of \"\(E.self)\" eventually", file: file, line: line)
+          } else {
+            XCTFail("expect thrown error (\"\(lastError)\") to not be a type of \"\(E.self)\" eventually", file: file, line: line)
+          }
+        }
+      }
+    default:
+      fatalError("Unexpected wait result: \(result)") // swiftlint:disable:this fatal_error
+    }
+  }
+
+  // MARK: - Helper
 
   /// Helper function to format a value for display, unwrapping nested optionals.
   private func formatValue(_ value: T?) -> String {

@@ -54,11 +54,10 @@ public struct ThrowErrorExpectation<E: Swift.Error>: Expectation {
 
   public func evaluateError(_ thrownError: ThrownErrorType) -> Bool {
     switch expectationType {
-    case .anyError:
-      return true
     case .specificError(_, let isErrorMatched):
       return isErrorMatched(thrownError)
-    case .thrownErrorType:
+    case .anyError,
+         .thrownErrorType:
       return true // not used
     }
   }

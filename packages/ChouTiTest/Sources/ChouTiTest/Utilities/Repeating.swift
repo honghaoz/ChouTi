@@ -35,7 +35,7 @@ import Foundation
 ///   - interval: The interval at which to repeat the block.
 ///   - timeout: The maximum time to repeat the block.
 ///   - queue: The queue on which to repeat the block.
-///   - block: The block to repeat.
+///   - block: The block to repeat. It should return `true` to stop the repeating task.
 /// - Returns: A token that can be used to stop the repeating task.
 func repeating(interval: TimeInterval,
                timeout: TimeInterval = .greatestFiniteMagnitude,

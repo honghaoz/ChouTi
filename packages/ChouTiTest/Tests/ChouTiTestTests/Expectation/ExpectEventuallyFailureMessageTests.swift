@@ -314,4 +314,250 @@ class ExpectEventuallyFailureMessageTests: FailureCapturingTestCase {
       assertFailure(expectedMessage: expectedMessage)
     }
   }
+
+  // MARK: - Throw Error
+
+  func testEventuallyThrowAnError() {
+    enum FooError: Swift.Error {
+      case error1
+    }
+
+    do {
+      func calculate() throws -> Int {
+        return 1
+      }
+
+      expect(try calculate()).toEventually(throwAnError(), timeout: 0.05)
+      let expectedMessage = #"failed - expect to throw an error eventually"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      func calculate() throws -> Int {
+        throw FooError.error1
+      }
+
+      expect(try calculate()).toEventuallyNot(throwAnError(), timeout: 0.05)
+      let expectedMessage = #"failed - expect to not throw an error eventually, but got: error1"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
+  func testEventuallyThrowAnError_withDescription() {
+    enum FooError: Swift.Error {
+      case error1
+    }
+
+    do {
+      func calculate() throws -> Int {
+        return 1
+      }
+
+      expect(try calculate(), "Calculate").toEventually(throwAnError(), timeout: 0.05)
+      let expectedMessage = #"failed - expect "Calculate" to throw an error eventually"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      func calculate() throws -> Int {
+        throw FooError.error1
+      }
+
+      expect(try calculate(), "Calculate").toEventuallyNot(throwAnError(), timeout: 0.05)
+      let expectedMessage = #"failed - expect "Calculate" to not throw an error eventually, but got: error1"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
+  func testEventuallyThrowError() {
+    enum FooError: Swift.Error, Equatable {
+      case fooError1
+      case fooError2
+    }
+
+    enum BarError: Swift.Error {
+      case barError1
+    }
+
+    do {
+      func calculate() throws -> Int {
+        return 1
+      }
+
+      expect(try calculate()).toEventually(throwError(FooError.fooError1), timeout: 0.05)
+      let expectedMessage = #"failed - expect to throw error "fooError1" eventually"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      func calculate() throws -> Int {
+        throw FooError.fooError2
+      }
+
+      expect(try calculate()).toEventually(throwError(FooError.fooError1), timeout: 0.05)
+      let expectedMessage = #"failed - expect thrown error ("fooError2") to be "fooError1" eventually"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      func calculate() throws -> Int {
+        throw FooError.fooError1
+      }
+
+      expect(try calculate()).toEventuallyNot(throwError(FooError.fooError1), timeout: 0.05)
+      let expectedMessage = #"failed - expect to not throw error "fooError1" eventually"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
+  func testEventuallyThrowError_withDescription() {
+    enum FooError: Swift.Error, Equatable {
+      case error1
+      case error2
+    }
+
+    do {
+      func calculate() throws -> Int {
+        return 1
+      }
+
+      expect(try calculate(), "Calculate").toEventually(throwError(FooError.error1), timeout: 0.05)
+      let expectedMessage = #"failed - expect "Calculate" to throw error "error1" eventually"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      func calculate() throws -> Int {
+        throw FooError.error2
+      }
+
+      expect(try calculate(), "Calculate").toEventually(throwError(FooError.error1), timeout: 0.05)
+      let expectedMessage = #"failed - expect "Calculate"'s thrown error ("error2") to be "error1" eventually"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      func calculate() throws -> Int {
+        throw FooError.error1
+      }
+
+      expect(try calculate(), "Calculate").toEventuallyNot(throwError(FooError.error1), timeout: 0.05)
+      let expectedMessage = #"failed - expect "Calculate" to not throw error "error1" eventually"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
+  func testEventuallyThrowErrorOfType() {
+    enum FooError: Swift.Error {
+      case fooError1
+    }
+
+    enum BarError: Swift.Error {
+      case barError1
+    }
+
+    do {
+      func calculate() throws -> Int {
+        return 1
+      }
+
+      expect(try calculate()).toEventually(throwErrorOfType(FooError.self), timeout: 0.05)
+      let expectedMessage = #"failed - expect to throw an error of type "FooError" eventually"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      func calculate() throws -> Int {
+        throw BarError.barError1
+      }
+
+      expect(try calculate()).toEventually(throwErrorOfType(FooError.self), timeout: 0.05)
+      let expectedMessage = #"failed - expect thrown error ("barError1") to be a type of "FooError" eventually"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      func calculate() throws -> Int {
+        throw FooError.fooError1
+      }
+
+      expect(try calculate()).toEventuallyNot(throwErrorOfType(FooError.self), timeout: 0.05)
+      let expectedMessage = #"failed - expect thrown error ("fooError1") to not be a type of "FooError" eventually"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
+  func testEventuallyThrowErrorOfType_withDescription() {
+    enum FooError: Swift.Error {
+      case fooError1
+    }
+
+    enum BarError: Swift.Error {
+      case barError1
+    }
+
+    do {
+      func calculate() throws -> Int {
+        return 1
+      }
+
+      expect(try calculate(), "Calculate").toEventually(throwErrorOfType(FooError.self), timeout: 0.05)
+      let expectedMessage = #"failed - expect "Calculate" to throw an error of type "FooError" eventually"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      func calculate() throws -> Int {
+        throw BarError.barError1
+      }
+
+      expect(try calculate(), "Calculate").toEventually(throwErrorOfType(FooError.self), timeout: 0.05)
+      let expectedMessage = #"failed - expect "Calculate"'s thrown error ("barError1") to be a type of "FooError" eventually"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      func calculate() throws -> Int {
+        throw FooError.fooError1
+      }
+
+      expect(try calculate(), "Calculate").toEventuallyNot(throwErrorOfType(FooError.self), timeout: 0.05)
+      let expectedMessage = #"failed - expect "Calculate"'s thrown error ("fooError1") to not be a type of "FooError" eventually"#
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
+
+  func testEventuallyThrowError_invalidInterval() {
+    enum FooError: Swift.Error {
+      case error1
+    }
+
+    func calculate() throws -> Int {
+      return 1
+    }
+
+    do {
+      expect(try calculate()).toEventually(throwError(FooError.error1), interval: 0)
+      let expectedMessage = "failed - interval must be greater than 0."
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      expect(try calculate()).toEventually(throwError(FooError.error1), interval: 1, timeout: 0.5)
+      let expectedMessage = "failed - timeout must be greater than interval."
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      expect(try calculate()).toEventuallyNot(throwError(FooError.error1), interval: 0)
+      let expectedMessage = "failed - interval must be greater than 0."
+      assertFailure(expectedMessage: expectedMessage)
+    }
+
+    do {
+      expect(try calculate()).toEventuallyNot(throwError(FooError.error1), interval: 1, timeout: 0.5)
+      let expectedMessage = "failed - timeout must be greater than interval."
+      assertFailure(expectedMessage: expectedMessage)
+    }
+  }
 }
