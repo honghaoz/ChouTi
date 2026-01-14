@@ -164,14 +164,14 @@ public extension Array {
   /// Example:
   /// ```swift
   /// let array = [1, 2, 3, 4, 5, 6, 7]
-  /// array.chunked(2, acceptPartialResult: true) => [[1, 2], [3, 4], [5, 6], [7]]
+  /// array.chunked(by: 2, acceptPartialResult: true) => [[1, 2], [3, 4], [5, 6], [7]]
   /// ```
   ///
   /// - Parameters:
   ///   - size: The size of each group. Must be greater than 1 and can be greater than the number of elements in this collection.
   ///   - acceptPartialResult: If `true`, the last group may have fewer elements than the given size.
   /// - Returns: An array of groups.
-  func chunked(_ size: Int, acceptPartialResult: Bool = false) -> [[Element]] {
+  func chunked(by size: Int, acceptPartialResult: Bool = false) -> [[Element]] {
     guard !isEmpty else {
       return []
     }
@@ -209,7 +209,7 @@ public extension Array {
   ///
   /// - Returns: An array of pairs.
   func asPairs() -> [(Element, Element)] {
-    chunked(2, acceptPartialResult: false).map { ($0[0], $0[1]) }
+    chunked(by: 2, acceptPartialResult: false).map { ($0[0], $0[1]) }
   }
 }
 

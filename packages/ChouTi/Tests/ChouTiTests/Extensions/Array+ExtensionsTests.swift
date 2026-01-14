@@ -165,14 +165,14 @@ class Array_ExtensionsTests: XCTestCase {
 
   func test_chunked() {
     let emptyArray: [Int] = []
-    expect(emptyArray.chunked(0)) == []
-    expect(emptyArray.chunked(1)) == []
+    expect(emptyArray.chunked(by: 0)) == []
+    expect(emptyArray.chunked(by: 1)) == []
 
     let array = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-    let result0 = array.chunked(0)
+    let result0 = array.chunked(by: 0)
     expect(result0.count) == 0
 
-    let result1 = array.chunked(1)
+    let result1 = array.chunked(by: 1)
     expect(result1.count) == array.count
     expect(result1[0]) == [array[0]]
     expect(result1[1]) == [array[1]]
@@ -184,14 +184,14 @@ class Array_ExtensionsTests: XCTestCase {
     expect(result1[7]) == [array[7]]
     expect(result1[8]) == [array[8]]
 
-    let result2NoPartial = array.chunked(2)
+    let result2NoPartial = array.chunked(by: 2)
     expect(result2NoPartial.count) == 4
     expect(result2NoPartial[0]) == [array[0], array[1]]
     expect(result2NoPartial[1]) == [array[2], array[3]]
     expect(result2NoPartial[2]) == [array[4], array[5]]
     expect(result2NoPartial[3]) == [array[6], array[7]]
 
-    let result2WithPartial = array.chunked(2, acceptPartialResult: true)
+    let result2WithPartial = array.chunked(by: 2, acceptPartialResult: true)
     expect(result2WithPartial.count) == 5
     expect(result2WithPartial[0]) == [array[0], array[1]]
     expect(result2WithPartial[1]) == [array[2], array[3]]
