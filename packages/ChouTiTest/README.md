@@ -74,18 +74,30 @@ class SomeTests: XCTestCase {
 
     // error type
     expect(try expression()).to(throwErrorOfType(SomeError.self))
+    expect(try expression()).toNot(throwErrorOfType(SomeError.self))
 
     // any error
     expect(try expression()).to(throwAnError())
+    expect(try expression()).toNot(throwAnError())
 
     // eventually
     expect(expression).toEventually(beTrue())
     expect(expression).toEventually(beEmpty())
     expect(expression).toEventually(beEqual(to: 2))
     expect(expression).toEventually(beIdentical(to: object))
+    expect(expression).toEventually(beNil())
+    expect(try expression()).toEventually(throwError(SomeError.error))
+    expect(try expression()).toEventually(throwErrorOfType(SomeError.self))
+    expect(try expression()).toEventually(throwAnError())
 
     expect(expression).toEventuallyNot(beTrue())
     expect(expression).toEventuallyNot(beEmpty())
+    expect(expression).toEventuallyNot(beEqual(to: 2))
+    expect(expression).toEventuallyNot(beIdentical(to: object))
+    expect(expression).toEventuallyNot(beNil())
+    expect(try expression()).toEventuallyNot(throwError(SomeError.error))
+    expect(try expression()).toEventuallyNot(throwErrorOfType(SomeError.self))
+    expect(try expression()).toEventuallyNot(throwAnError())
   }
 }
 ```
