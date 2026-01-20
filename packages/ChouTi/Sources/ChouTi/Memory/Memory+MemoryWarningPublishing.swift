@@ -37,9 +37,10 @@ import UIKit
 
 extension Memory: MemoryWarningPublishing {
 
-  static let memoryWarningPublisher = Foundation.NotificationCenter.default
+  public static let memoryWarningPublisher: AnyPublisher<Void, Never> = Foundation.NotificationCenter.default
     .publisher(for: UIApplication.didReceiveMemoryWarningNotification)
     .map { _ in () }
+    .eraseToAnyPublisher()
 }
 
 #elseif os(macOS)
@@ -59,13 +60,13 @@ extension Memory: MemoryWarningPublishing {
   private static let _didReceiveMemoryWarningPublisher = PassthroughSubject<Void, Never>()
   private static var _memoryWarningMonitor: MemoryPressureMonitor?
 
-  public static var memoryWarningPublisher: PassthroughSubject<Void, Never> {
+  public static var memoryWarningPublisher: AnyPublisher<Void, Never> {
     if _memoryWarningMonitor == nil {
       _memoryWarningMonitor = MemoryPressureMonitor(warningHandler: { [weak _didReceiveMemoryWarningPublisher] in
         _didReceiveMemoryWarningPublisher?.send()
       })
     }
-    return _didReceiveMemoryWarningPublisher
+    return _didReceiveMemoryWarningPublisher.eraseToAnyPublisher()
   }
 
   #if DEBUG

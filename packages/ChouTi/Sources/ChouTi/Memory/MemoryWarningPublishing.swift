@@ -44,5 +44,5 @@ public protocol MemoryWarningPublishing {
   ///     self?.resetCache()
   ///   })
   /// ```
-  static var memoryWarningPublisher: PassthroughSubject<Void, Never> { get }
+  static var memoryWarningPublisher: AnyPublisher<Void, Never> { get }
 }

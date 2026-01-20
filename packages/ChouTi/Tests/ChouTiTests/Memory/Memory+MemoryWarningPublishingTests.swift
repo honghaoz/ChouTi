@@ -73,13 +73,46 @@ class Memory_MemoryWarningPublisherTests: XCTestCase {
     wait(for: [expectation1, expectation2], timeout: 1)
   }
 
-  func test_memoryWarningPublisher_multipleAccesses() {
+  func test_memoryWarningPublisher_sameInstanceOnMultipleAccesses() {
     // when accessing the publisher multiple times
     let publisher1 = Memory.memoryWarningPublisher
     let publisher2 = Memory.memoryWarningPublisher
 
-    // then they should be the same publisher instance
-    expect(publisher1 === publisher2).to(beTrue())
+    // then they should share the same underlying PassthroughSubject
+    // extract the underlying publisher's memory address by diving into the AnyPublisher structure
+    func getUnderlyingPublisherAddress(_ publisher: AnyPublisher<some Any, Never>) -> String? {
+      let mirror = Mirror(reflecting: publisher)
+
+      // AnyPublisher has a "box" property that wraps the underlying publisher
+      guard let boxChild = mirror.children.first,
+            boxChild.label == "box"
+      else {
+        return nil
+      }
+
+      // mirror the box to get to the actual publisher inside
+      let boxMirror = Mirror(reflecting: boxChild.value)
+
+      // look for the underlying publisher
+      for child in boxMirror.children {
+        if child.label == "base" {
+          // found the underlying publisher - get its memory address
+          return String(describing: Unmanaged.passUnretained(child.value as AnyObject).toOpaque())
+        }
+      }
+
+      // if not found, return nil
+      return nil
+    }
+
+    let address1 = getUnderlyingPublisherAddress(publisher1)
+    let address2 = getUnderlyingPublisherAddress(publisher2)
+
+    expect(address1).toNot(beNil())
+    expect(address2).toNot(beNil())
+
+    // both publishers should point to the same underlying PassthroughSubject
+    expect(address1) == address2
   }
 
   func test_memoryWarningPublisher_cancellation() {
