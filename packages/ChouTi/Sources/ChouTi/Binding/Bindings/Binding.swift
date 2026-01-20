@@ -168,8 +168,7 @@ public final class Binding<T>: MutableBindingType, InternalBindingType {
       } else if let set = _set {
         set(newValue)
       } else {
-        // swiftlint:disable:next fatal_error
-        fatalError("unexpected")
+        fatalError("unexpected") // swiftlint:disable:this fatal_error
       }
 
       implementation.invoke(with: newValue)

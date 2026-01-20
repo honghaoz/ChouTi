@@ -139,7 +139,6 @@ public func assertFailure(_ message: @autoclosure () -> String = String(),
   if Thread.isRunningXCTest {
     Assert.testAssertionFailureHandler?(message(), metadata(), file, line, column)
   } else {
-
     let message: LogMessage = """
     🛑 Assertion Failure 🛑
     ----------------------------------------------------------------------------------------------------------------------

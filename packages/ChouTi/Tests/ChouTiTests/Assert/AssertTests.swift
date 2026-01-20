@@ -68,13 +68,27 @@ class AssertTests: XCTestCase {
       capturedColumn = column
     }
 
-    ChouTi.assertFailure("Expected failure message", metadata: ["key1": "value1", "key2": "value2"])
+    // swiftformat:disable:next all
+    ChouTi.assert(false, "Expected failure message", metadata: ["key1": "value1", "key2": "value2"])
 
     expect(capturedMessage) == "Expected failure message"
     expect(capturedMetadata) == ["key1": "value1", "key2": "value2"]
     expect(capturedFile).toNot(beNil())
     expect(capturedLine).toNot(beNil())
     expect(capturedColumn).toNot(beNil())
+  }
+
+  func test_assert_conditionFalse_defaultMessage() {
+    var capturedMessage = ""
+
+    Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
+      capturedMessage = message
+    }
+
+    // swiftformat:disable:next all
+    ChouTi.assert(false)
+
+    expect(capturedMessage) == ""
   }
 
   // MARK: - assertFailure
@@ -101,6 +115,16 @@ class AssertTests: XCTestCase {
     expect(capturedFile).toNot(beNil())
     expect(capturedLine).toNot(beNil())
     expect(capturedColumn).toNot(beNil())
+  }
+
+  func test_assertFailure_defaultMessage() {
+    var capturedMessage = ""
+    Assert.setTestAssertionFailureHandler { message, _, _, _, _ in
+      capturedMessage = message
+    }
+
+    ChouTi.assertFailure()
+    expect(capturedMessage) == ""
   }
 
   // MARK: - Multiple Assertions
