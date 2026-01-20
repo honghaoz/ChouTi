@@ -1,5 +1,5 @@
 //
-//  Memory+MemoryWarningPublisher.swift
+//  Memory+MemoryWarningPublishing.swift
 //  ChouTi
 //
 //  Created by Honghao Zhang on 11/18/21.
@@ -35,19 +35,8 @@ import Combine
 #if canImport(UIKit) && !os(watchOS)
 import UIKit
 
-public extension Memory {
+extension Memory: MemoryWarningPublishing {
 
-  /// A publisher that emits when a memory warning is received.
-  ///
-  /// Example:
-  /// ```swift
-  /// private var memoryWarningObservationToken: Cancellable?
-  ///
-  /// self.memoryWarningObservationToken = Memory.memoryWarningPublisher
-  ///   .sink(receiveValue: { [weak self] in
-  ///     self?.resetCache()
-  ///   })
-  /// ```
   static let memoryWarningPublisher = Foundation.NotificationCenter.default
     .publisher(for: UIApplication.didReceiveMemoryWarningNotification)
     .map { _ in () }
@@ -59,7 +48,7 @@ public extension Memory {
 
 import AppKit
 
-public extension Memory {
+extension Memory: MemoryWarningPublishing {
 
   /// To trigger a memory warning on Mac:
   /// - `sudo memory_pressure -S -l warning`
@@ -70,18 +59,7 @@ public extension Memory {
   private static let _didReceiveMemoryWarningPublisher = PassthroughSubject<Void, Never>()
   private static var _memoryWarningMonitor: MemoryPressureMonitor?
 
-  /// A publisher that emits when a memory warning is received.
-  ///
-  /// Example:
-  /// ```swift
-  /// private var memoryWarningObservationToken: Cancellable?
-  ///
-  /// self.memoryWarningObservationToken = Memory.memoryWarningPublisher
-  ///   .sink(receiveValue: { [weak self] in
-  ///     self?.resetCache()
-  ///   })
-  /// ```
-  static var memoryWarningPublisher: PassthroughSubject<Void, Never> {
+  public static var memoryWarningPublisher: PassthroughSubject<Void, Never> {
     if _memoryWarningMonitor == nil {
       _memoryWarningMonitor = MemoryPressureMonitor(warningHandler: { [weak _didReceiveMemoryWarningPublisher] in
         _didReceiveMemoryWarningPublisher?.send()
@@ -91,44 +69,77 @@ public extension Memory {
   }
 
   #if DEBUG
-  /// Trigger memory warning manually.
-  /// For testing only.
-  static func triggerMemoryWarning() {
-    _didReceiveMemoryWarningPublisher.send(())
+  /// Test namespace for accessing internal components.
+  static var test: Test { Test() }
+
+  struct Test {
+    fileprivate init() {
+      ChouTi.assert(Thread.isRunningXCTest, "Test namespace should only be used in test target.")
+    }
+
+    var monitor: MemoryPressureMonitor? {
+      Memory._memoryWarningMonitor
+    }
   }
   #endif
 }
 
-private final class MemoryPressureMonitor {
+final class MemoryPressureMonitor {
 
   // Reference: https://pushpsenairekar.medium.com/respond-to-low-memory-warnings-using-4-different-ways-bb3da998735a
 
   private let dispatchSource = DispatchSource.makeMemoryPressureSource(eventMask: [.warning, .critical], queue: .main)
+  private let warningHandler: BlockVoid?
 
-  fileprivate init(warningHandler: BlockVoid?) {
+  init(warningHandler: BlockVoid?) {
+    self.warningHandler = warningHandler
     dispatchSource.setEventHandler { [weak self] in
-      if let event = self?.dispatchSource.data, self?.dispatchSource.isCancelled == false {
-        switch event {
-        case .warning:
-          #if DEBUG
-          print("⚠️ Low memory warning")
-          #endif
-          warningHandler?()
-        case .critical:
-          #if DEBUG
-          print("🚨 Critical low memory warning")
-          #endif
-          warningHandler?()
-        default:
-          break
-        }
+      guard let self, self.dispatchSource.isCancelled == false else {
+        return
       }
+      self.handleMemoryPressureEvent(self.dispatchSource.data)
     }
     dispatchSource.activate()
+  }
+
+  private func handleMemoryPressureEvent(_ event: DispatchSource.MemoryPressureEvent) {
+    switch event {
+    case .warning:
+      #if DEBUG
+      print("⚠️ Low memory warning")
+      #endif
+      warningHandler?()
+    case .critical:
+      #if DEBUG
+      print("🚨 Critical low memory warning")
+      #endif
+      warningHandler?()
+    default:
+      break
+    }
   }
 
   deinit {
     dispatchSource.cancel()
   }
+
+  // MARK: - Testing
+
+  #if DEBUG
+  var test: Test { Test(host: self) }
+
+  struct Test {
+    private let host: MemoryPressureMonitor
+
+    fileprivate init(host: MemoryPressureMonitor) {
+      ChouTi.assert(Thread.isRunningXCTest, "Test namespace should only be used in test target.")
+      self.host = host
+    }
+
+    func simulateMemoryPressureEvent(_ event: DispatchSource.MemoryPressureEvent) {
+      host.handleMemoryPressureEvent(event)
+    }
+  }
+  #endif
 }
 #endif

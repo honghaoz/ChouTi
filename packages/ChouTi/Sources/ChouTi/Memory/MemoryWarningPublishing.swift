@@ -1,8 +1,8 @@
 //
-//  Memory+MemoryWarningPublisherTests.swift
+//  MemoryWarningPublishing.swift
 //  ChouTi
 //
-//  Created by Honghao Zhang on 5/26/24.
+//  Created by Honghao Zhang on 1/19/26.
 //  Copyright © 2020 Honghao Zhang.
 //
 //  MIT License
@@ -28,28 +28,21 @@
 //  IN THE SOFTWARE.
 //
 
-#if os(macOS)
-
 import Combine
 
-import ChouTiTest
+/// A protocol for types that publish memory warning events.
+public protocol MemoryWarningPublishing {
 
-import ChouTi
-
-class Memory_MemoryWarningPublisherTests: XCTestCase {
-
-  func test_memoryWarningPublisher() {
-    let expectation = XCTestExpectation(description: "memoryWarningPublisher")
-    let memoryWarningObservationToken = Memory.memoryWarningPublisher
-      .sink {
-        expectation.fulfill()
-      }
-    _ = memoryWarningObservationToken
-
-    Memory.triggerMemoryWarning()
-
-    wait(for: [expectation], timeout: 1)
-  }
+  /// A publisher that emits when a memory warning is received.
+  ///
+  /// Example:
+  /// ```swift
+  /// private var memoryWarningObservationToken: Cancellable?
+  ///
+  /// self.memoryWarningObservationToken = Memory.memoryWarningPublisher
+  ///   .sink(receiveValue: { [weak self] in
+  ///     self?.resetCache()
+  ///   })
+  /// ```
+  static var memoryWarningPublisher: PassthroughSubject<Void, Never> { get }
 }
-
-#endif
