@@ -72,7 +72,7 @@ public extension DispatchQueue {
   ///
   /// - Parameter block: The block to be executed.
   /// - Returns: The result of the block.
-  static func onMainSync<T>(_ block: @escaping () throws -> T) rethrows -> T {
+  static func onMainSync<T>(_ block: () throws -> T) rethrows -> T {
     if Thread.isMainThread {
       return try block()
     } else {
@@ -108,6 +108,6 @@ public func onMainAsync(delay: TimeInterval? = nil, execute workItem: DispatchWo
 /// - Returns: The result of the block.
 @inlinable
 @inline(__always)
-public func onMainSync<T>(_ block: @escaping () throws -> T) rethrows -> T {
+public func onMainSync<T>(_ block: () throws -> T) rethrows -> T {
   try DispatchQueue.onMainSync(block)
 }
