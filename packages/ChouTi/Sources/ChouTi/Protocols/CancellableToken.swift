@@ -44,7 +44,7 @@ public extension CancellableToken {
   /// - Parameter collection: The collection in which to store this `CancellableToken`.
   @inlinable
   @inline(__always)
-  func store<C>(in collection: inout C) where C: RangeReplaceableCollection, C.Element == Self {
+  func store<C: RangeReplaceableCollection>(in collection: inout C) where C.Element == Self {
     collection.append(self)
   }
 

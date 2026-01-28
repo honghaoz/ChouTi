@@ -29,7 +29,7 @@
 //
 
 /// Aggregated continuation. It uses `CheckedContinuation` for DEBUG build, uses `UnsafeContinuation` for RELEASE build.
-public struct Continuation<T, E>: Sendable where E: Error {
+public struct Continuation<T, E: Error>: Sendable {
 
   #if DEBUG
   public let continuation: CheckedContinuation<T, E>

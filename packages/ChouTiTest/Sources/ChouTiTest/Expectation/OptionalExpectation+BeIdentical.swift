@@ -53,7 +53,7 @@ public struct BeIdenticalOptionalExpectation<T: AnyObject>: OptionalExpectation 
 /// Make an expectation that the actual value is identical to the expected value.
 /// - Parameter value: The expected value.
 /// - Returns: An expectation.
-public func beIdentical<T>(to value: T?) -> BeIdenticalOptionalExpectation<T> where T: AnyObject {
+public func beIdentical<T: AnyObject>(to value: T?) -> BeIdenticalOptionalExpectation<T> {
   BeIdenticalOptionalExpectation(value: value)
 }
 
