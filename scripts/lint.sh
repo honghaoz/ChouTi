@@ -78,10 +78,11 @@ function measure_end() {
 REPO_ROOT=$(git rev-parse --show-toplevel)
 cd "$REPO_ROOT" || exit 1
 
+CONFIG_PATH="$REPO_ROOT/configs"
 SWIFTFORMAT_BIN="$REPO_ROOT/bin/swiftformat" && [[ ! -f "$SWIFTFORMAT_BIN" ]] && { echo "🛑 Error: swiftformat not found."; exit 1; }
 SWIFTFORMAT_VERSION=$("$SWIFTFORMAT_BIN" --version)
 SWIFTFORMAT_CONFIG_NAME=".swiftformat"
-SWIFTFORMAT_CONFIG="$REPO_ROOT/configs/$SWIFTFORMAT_CONFIG_NAME" && [[ ! -f "$SWIFTFORMAT_CONFIG" ]] && { echo "🛑 Error: swiftformat config not found."; exit 1; }
+SWIFTFORMAT_CONFIG="$CONFIG_PATH/$SWIFTFORMAT_CONFIG_NAME" && [[ ! -f "$SWIFTFORMAT_CONFIG" ]] && { echo "🛑 Error: swiftformat config not found."; exit 1; }
 SWIFTFORMAT_REPO_ROOT_CONFIG="$REPO_ROOT/$SWIFTFORMAT_CONFIG_NAME"
 SWIFTFORMAT_CACHE="$REPO_ROOT/.temp/swiftformat-cache" && mkdir -p "$REPO_ROOT/.temp"
 SWIFTFORMAT_BEAUTIFY="$REPO_ROOT/scripts/swiftformat-beautify"
@@ -89,7 +90,7 @@ SWIFTFORMAT_BEAUTIFY="$REPO_ROOT/scripts/swiftformat-beautify"
 SWIFTLINT_BIN="$REPO_ROOT/bin/swiftlint" && [[ ! -f "$SWIFTLINT_BIN" ]] && { echo "🛑 Error: swiftlint not found."; exit 1; }
 SWIFTLINT_VERSION=$("$SWIFTLINT_BIN" version)
 SWIFTLINT_CONFIG_NAME=".swiftlint.yml"
-SWIFTLINT_CONFIG="$REPO_ROOT/configs/$SWIFTLINT_CONFIG_NAME" && [[ ! -f "$SWIFTLINT_CONFIG" ]] && { echo "🛑 Error: swiftlint config not found."; exit 1; }
+SWIFTLINT_CONFIG="$CONFIG_PATH/$SWIFTLINT_CONFIG_NAME" && [[ ! -f "$SWIFTLINT_CONFIG" ]] && { echo "🛑 Error: swiftlint config not found."; exit 1; }
 SWIFTLINT_REPO_ROOT_CONFIG="$REPO_ROOT/$SWIFTLINT_CONFIG_NAME"
 SWIFTLINT_CACHE_DIR="$REPO_ROOT/.temp/swiftlint-cache" && mkdir -p "$SWIFTLINT_CACHE_DIR"
 SWIFTLINT_BEAUTIFY="$REPO_ROOT/scripts/swiftlint-beautify"
@@ -99,7 +100,7 @@ ERROR_CODE=0
 if [[ "$LINT_ALL" == "true" ]]; then
   # copy config files to the root directory
   cp "$SWIFTFORMAT_CONFIG" "$SWIFTFORMAT_REPO_ROOT_CONFIG"
-  # copy $REPO_ROOT/configs/swiftlint.yml to $REPO_ROOT/.swiftlint.yml
+  # copy $CONFIG_PATH/swiftlint.yml to $REPO_ROOT/.swiftlint.yml
   # so that .swiftlint.yml in child directories can be nested
   cp "$SWIFTLINT_CONFIG" "$SWIFTLINT_REPO_ROOT_CONFIG"
 
@@ -120,7 +121,7 @@ if [[ "$LINT_ALL" == "true" ]]; then
   echo "➡️  Executing swiftformat ($SWIFTFORMAT_VERSION)..."
 
   measure_start
-  set -o pipefail && "$SWIFTFORMAT_BIN" --lint --cache "$SWIFTFORMAT_CACHE" "$REPO_ROOT" 2>&1 | "$SWIFTFORMAT_BEAUTIFY" || ERROR_CODE=$?
+  set -o pipefail && "$SWIFTFORMAT_BIN" --lint --exclude "$CONFIG_PATH" --cache "$SWIFTFORMAT_CACHE" "$REPO_ROOT" 2>&1 | "$SWIFTFORMAT_BEAUTIFY" || ERROR_CODE=$?
   measure_end "swiftformat"
 
   # swiftlint
