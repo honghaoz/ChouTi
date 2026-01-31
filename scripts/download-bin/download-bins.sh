@@ -2,6 +2,9 @@
 
 set -e
 
+# remember the directory where the script was invoked
+ORIGINAL_DIR=$(pwd)
+
 # change to the directory in which this script is located
 pushd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
 
@@ -50,6 +53,15 @@ done
 # check if bin-folder is provided
 if [ -z "$BIN_DIR" ]; then
   print_help
+fi
+
+# make BIN_DIR absolute (resolve relative to invocation dir)
+if [[ "$BIN_DIR" != /* ]]; then
+  BIN_DIR="$ORIGINAL_DIR/$BIN_DIR"
+fi
+if ! BIN_DIR="$(cd "$BIN_DIR" 2>/dev/null && pwd)"; then
+  echo "🔴 ERROR: $BIN_DIR is not a valid directory."
+  exit 1
 fi
 
 VERSIONS_FILE="$BIN_DIR/.versions"
