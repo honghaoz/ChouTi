@@ -44,7 +44,7 @@ class InstanceMethodInterceptorTests: XCTestCase {
     @objc dynamic func foo() {}
   }
 
-  final class TestObject: NSObject {
+  class TestObject: NSObject {
 
     private let lock = NSLock()
 
@@ -81,6 +81,44 @@ class InstanceMethodInterceptorTests: XCTestCase {
       returnCallCount += 1
       lock.unlock()
       return 42
+    }
+  }
+
+  final class TestObjectSubclass: TestObject {
+
+    private(set) var subclassFooCallCount = 0
+
+    @objc override dynamic func foo() {
+      subclassFooCallCount += 1
+      super.foo()
+    }
+  }
+
+  final class TestObjectNoSuperSubclass: TestObject {
+
+    private(set) var subclassFooCallCount = 0
+
+    @objc override dynamic func foo() {
+      subclassFooCallCount += 1
+    }
+  }
+
+  final class TestObjectSelectorSubclass: TestObject {
+
+    private(set) var bazCallCount = 0
+
+    @objc dynamic func baz() {
+      bazCallCount += 1
+    }
+  }
+
+  final class AnotherTestObjectSubclass: TestObject {
+
+    private(set) var subclassFooCallCount = 0
+
+    @objc override dynamic func foo() {
+      subclassFooCallCount += 1
+      super.foo()
     }
   }
 
@@ -609,6 +647,139 @@ class InstanceMethodInterceptorTests: XCTestCase {
     expect(getClassName(object)) == originalClassName
   }
 
+  func test_intercept_on_base_and_subclass_instances() {
+    // given a base instance with an interception
+    let baseObject = TestObject()
+    let baseClassName = getClassName(baseObject)
+
+    var baseHookCount = 0
+    let baseToken = baseObject.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+      baseHookCount += 1
+      callOriginal()
+    }
+    expect(getClassName(baseObject)) == "ChouTiIMI_\(baseClassName)"
+
+    // when a subclass instance intercepts the same selector
+    let subclassObject = TestObjectSubclass()
+    let subclassClassName = getClassName(subclassObject)
+
+    var subclassHookCount = 0
+    let subclassToken = subclassObject.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+      subclassHookCount += 1
+      callOriginal()
+    }
+    expect(getClassName(subclassObject)) == "ChouTiIMI_\(subclassClassName)"
+
+    // then each instance should invoke its own hook and original once per call
+    baseObject.foo()
+    expect(baseHookCount) == 1
+    expect(baseObject.fooCallCount) == 1
+
+    subclassObject.foo()
+    expect(subclassHookCount) == 1
+    expect(subclassObject.fooCallCount) == 1
+    expect(subclassObject.subclassFooCallCount) == 1
+
+    // cancelling one interception should not affect the other
+    baseToken.cancel()
+    expect(getClassName(baseObject)) == baseClassName
+    expect(getClassName(subclassObject)) == "ChouTiIMI_\(subclassClassName)"
+
+    subclassToken.cancel()
+    expect(getClassName(subclassObject)) == subclassClassName
+  }
+
+  func test_intercept_on_subclass_without_calling_super() {
+    // given a subclass that does not call super
+    let object = TestObjectNoSuperSubclass()
+    let originalClassName = getClassName(object)
+
+    var hookCount = 0
+    let token = object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+      hookCount += 1
+      callOriginal()
+    }
+    expect(getClassName(object)) == "ChouTiIMI_\(originalClassName)"
+
+    // when calling the method
+    object.foo()
+
+    // then the hook and subclass implementation should be invoked
+    expect(hookCount) == 1
+    expect(object.subclassFooCallCount) == 1
+    expect(object.fooCallCount) == 0
+
+    // cleanup
+    token.cancel()
+    expect(getClassName(object)) == originalClassName
+  }
+
+  func test_intercept_selector_defined_only_on_subclass() {
+    // given a subclass that defines its own selector
+    let object = TestObjectSelectorSubclass()
+    let originalClassName = getClassName(object)
+
+    var hookCount = 0
+    let token = object.intercept(selector: #selector(TestObjectSelectorSubclass.baz)) { _, _, callOriginal in
+      hookCount += 1
+      callOriginal()
+    }
+    expect(getClassName(object)) == "ChouTiIMI_\(originalClassName)"
+
+    // when calling the subclass-only selector
+    object.baz()
+
+    // then the hook and original should run
+    expect(hookCount) == 1
+    expect(object.bazCallCount) == 1
+
+    // cleanup
+    token.cancel()
+    expect(getClassName(object)) == originalClassName
+  }
+
+  func test_intercept_on_multiple_subclasses() {
+    // given two different subclasses
+    let object1 = TestObjectSubclass()
+    let object2 = AnotherTestObjectSubclass()
+    let className1 = getClassName(object1)
+    let className2 = getClassName(object2)
+
+    var hookCount1 = 0
+    let token1 = object1.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+      hookCount1 += 1
+      callOriginal()
+    }
+    expect(getClassName(object1)) == "ChouTiIMI_\(className1)"
+
+    var hookCount2 = 0
+    let token2 = object2.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+      hookCount2 += 1
+      callOriginal()
+    }
+    expect(getClassName(object2)) == "ChouTiIMI_\(className2)"
+    expect(getClassName(object1)) != getClassName(object2)
+
+    // when calling the method on each instance
+    object1.foo()
+    object2.foo()
+
+    // then hooks and originals should be called for each instance
+    expect(hookCount1) == 1
+    expect(object1.subclassFooCallCount) == 1
+    expect(object1.fooCallCount) == 1
+
+    expect(hookCount2) == 1
+    expect(object2.subclassFooCallCount) == 1
+    expect(object2.fooCallCount) == 1
+
+    // cleanup
+    token1.cancel()
+    token2.cancel()
+    expect(getClassName(object1)) == className1
+    expect(getClassName(object2)) == className2
+  }
+
   // MARK: - KVO
 
   func test_KVO_singleSelector_singleHook_KVO_intercept_unintercept_unKVO() {
@@ -760,6 +931,164 @@ class InstanceMethodInterceptorTests: XCTestCase {
     object.foo()
     // then the hooks should be called in the order of the interceptors
     expect(order) == [1, 2, 0, 3] // the original method should be called in the middle
+  }
+
+  func test_KVO_instance_intercept_then_nonKVO_instance_intercept() {
+    // given a KVO object with an interception
+    let kvoObject = TestObject()
+    let originalClassName = getClassName(kvoObject)
+
+    let observation = kvoObject.observe(\.value, options: [.new]) { _, _ in }
+    _ = observation
+    expect(getClassName(kvoObject)) == "NSKVONotifying_\(originalClassName)"
+
+    var kvoHookCount = 0
+    let kvoToken = kvoObject.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+      kvoHookCount += 1
+      callOriginal()
+    }
+    expect(getClassName(kvoObject)) == "NSKVONotifying_\(originalClassName)"
+
+    kvoObject.foo()
+    expect(kvoHookCount) == 1
+    expect(kvoObject.fooCallCount) == 1
+
+    // when another non-KVO instance intercepts the same selector
+    let plainObject = TestObject()
+    let plainOriginalClassName = getClassName(plainObject)
+
+    var plainHookCount = 0
+    let plainToken = plainObject.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+      plainHookCount += 1
+      callOriginal()
+    }
+    expect(getClassName(plainObject)) == "ChouTiIMI_\(plainOriginalClassName)"
+
+    // then both instances should invoke their hooks exactly once per call
+    plainObject.foo()
+    expect(plainHookCount) == 1
+    expect(plainObject.fooCallCount) == 1
+
+    kvoObject.foo()
+    plainObject.foo()
+    expect(kvoHookCount) == 2
+    expect(kvoObject.fooCallCount) == 2
+    expect(plainHookCount) == 2
+    expect(plainObject.fooCallCount) == 2
+
+    // cleanup
+    plainToken.cancel()
+    expect(getClassName(plainObject)) == plainOriginalClassName
+
+    kvoToken.cancel()
+    expect(getClassName(kvoObject)) == "NSKVONotifying_\(originalClassName)"
+
+    observation.invalidate()
+    expect(getClassName(kvoObject)) == originalClassName
+  }
+
+  func test_KVO_subclass_instance_then_base_instance_intercept() {
+    // given a KVO subclass instance with an interception
+    let subclassObject = TestObjectSubclass()
+    let subclassOriginalClassName = getClassName(subclassObject)
+
+    let observation = subclassObject.observe(\.value, options: [.new]) { _, _ in }
+    _ = observation
+    expect(getClassName(subclassObject)) == "NSKVONotifying_\(subclassOriginalClassName)"
+
+    var subclassHookCount = 0
+    let subclassToken = subclassObject.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+      subclassHookCount += 1
+      callOriginal()
+    }
+    expect(getClassName(subclassObject)) == "NSKVONotifying_\(subclassOriginalClassName)"
+
+    subclassObject.foo()
+    expect(subclassHookCount) == 1
+    expect(subclassObject.subclassFooCallCount) == 1
+    expect(subclassObject.fooCallCount) == 1
+
+    // when a base instance intercepts the same selector
+    let baseObject = TestObject()
+    let baseOriginalClassName = getClassName(baseObject)
+
+    var baseHookCount = 0
+    let baseToken = baseObject.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+      baseHookCount += 1
+      callOriginal()
+    }
+    expect(getClassName(baseObject)) == "ChouTiIMI_\(baseOriginalClassName)"
+
+    baseObject.foo()
+    expect(baseHookCount) == 1
+    expect(baseObject.fooCallCount) == 1
+
+    // then both instances still invoke hooks once per call
+    subclassObject.foo()
+    baseObject.foo()
+    expect(subclassHookCount) == 2
+    expect(subclassObject.subclassFooCallCount) == 2
+    expect(subclassObject.fooCallCount) == 2
+    expect(baseHookCount) == 2
+    expect(baseObject.fooCallCount) == 2
+
+    // cleanup
+    baseToken.cancel()
+    expect(getClassName(baseObject)) == baseOriginalClassName
+
+    subclassToken.cancel()
+    expect(getClassName(subclassObject)) == "NSKVONotifying_\(subclassOriginalClassName)"
+
+    observation.invalidate()
+    expect(getClassName(subclassObject)) == subclassOriginalClassName
+  }
+
+  func test_KVO_base_instance_then_subclass_instance_intercept() {
+    // given a KVO base instance with an interception
+    let baseObject = TestObject()
+    let baseOriginalClassName = getClassName(baseObject)
+
+    let observation = baseObject.observe(\.value, options: [.new]) { _, _ in }
+    _ = observation
+    expect(getClassName(baseObject)) == "NSKVONotifying_\(baseOriginalClassName)"
+
+    var baseHookCount = 0
+    let baseToken = baseObject.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+      baseHookCount += 1
+      callOriginal()
+    }
+    expect(getClassName(baseObject)) == "NSKVONotifying_\(baseOriginalClassName)"
+
+    baseObject.foo()
+    expect(baseHookCount) == 1
+    expect(baseObject.fooCallCount) == 1
+
+    // when a non-KVO subclass instance intercepts the same selector
+    let subclassObject = TestObjectSubclass()
+    let subclassOriginalClassName = getClassName(subclassObject)
+
+    var subclassHookCount = 0
+    let subclassToken = subclassObject.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+      subclassHookCount += 1
+      callOriginal()
+    }
+    expect(getClassName(subclassObject)) == "ChouTiIMI_\(subclassOriginalClassName)"
+
+    subclassObject.foo()
+    expect(subclassHookCount) == 1
+    expect(subclassObject.subclassFooCallCount) == 1
+    expect(subclassObject.fooCallCount) == 1
+    expect(baseHookCount) == 1
+
+    // cleanup
+    subclassToken.cancel()
+    expect(getClassName(subclassObject)) == subclassOriginalClassName
+
+    baseToken.cancel()
+    expect(getClassName(baseObject)) == "NSKVONotifying_\(baseOriginalClassName)"
+
+    observation.invalidate()
+    expect(getClassName(baseObject)) == baseOriginalClassName
   }
 
   func test_KVO_multipleSelectors() {
