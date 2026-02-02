@@ -61,6 +61,22 @@ final class BindingImplementation<T> {
   }
 
   func invoke(with value: T) {
+    guard let binding else {
+      return
+    }
+
+    guard BindingLoopDetector.enter(binding: binding) else {
+      if #available(macOS 13, iOS 16, tvOS 16, watchOS 9, *) {
+        ChouTi.assertFailure("Binding loop detected.", metadata: ["binding": "\(binding)"])
+      } else {
+        ChouTi.assertFailure("Binding loop detected.")
+      }
+      return
+    }
+    defer {
+      BindingLoopDetector.leave(binding: binding)
+    }
+
     registeredObservations.values.forEach { box in
       box.object.assert()?.invoke(with: value)
     }
@@ -70,5 +86,47 @@ final class BindingImplementation<T> {
 
   func removeRegisteredObservation(_ observation: BindingObservation) {
     registeredObservations.removeValue(forKey: ObjectIdentifier(observation))
+  }
+}
+
+// MARK: - Binding Loop Detection
+
+private enum BindingLoopDetector {
+
+  private enum Constants {
+    static let threadDictionaryKey = "io.chouti.binding.loop.detector"
+  }
+
+  private final class Context {
+    var activeBindings: Set<ObjectIdentifier> = []
+  }
+
+  static func enter(binding: AnyObject) -> Bool {
+    let context = contextForCurrentThread()
+    let identifier = ObjectIdentifier(binding)
+    guard !context.activeBindings.contains(identifier) else {
+      return false
+    }
+    context.activeBindings.insert(identifier)
+    return true
+  }
+
+  static func leave(binding: AnyObject) {
+    let context = contextForCurrentThread()
+    context.activeBindings.remove(ObjectIdentifier(binding))
+    if context.activeBindings.isEmpty {
+      Thread.current.threadDictionary.removeObject(forKey: Constants.threadDictionaryKey)
+    }
+  }
+
+  private static func contextForCurrentThread() -> Context {
+    let threadDictionary = Thread.current.threadDictionary
+    if let context = threadDictionary[Constants.threadDictionaryKey] as? Context {
+      return context
+    }
+
+    let context = Context()
+    threadDictionary[Constants.threadDictionaryKey] = context
+    return context
   }
 }

@@ -699,6 +699,81 @@ class BindingTests: XCTestCase {
     expect(mappedBindingWeak) == nil
   }
 
+  func test_subscribe_detectLoop() {
+    let binding1 = Binding<Int>(0)
+    let binding2 = Binding<Int>(0)
+    let storage = BindingObservationStorage()
+
+    binding1.subscribe(to: binding2).store(in: storage)
+    binding2.subscribe(to: binding1).store(in: storage)
+
+    var capturedMessage = ""
+    Assert.setTestAssertionFailureHandler { message, _, _, _, _ in
+      capturedMessage = message
+    }
+    defer {
+      Assert.resetTestAssertionFailureHandler()
+    }
+
+    binding1.value = 1
+
+    expect(capturedMessage) == "Binding loop detected."
+    expect(binding1.value) == 1
+    expect(binding2.value) == 1
+  }
+
+  func test_subscribe_detectLoop_indirect() {
+    let binding1 = Binding<Int>(0)
+    let binding2 = Binding<Int>(0)
+    let binding3 = Binding<Int>(0)
+    let storage = BindingObservationStorage()
+
+    binding1.subscribe(to: binding2).store(in: storage)
+    binding2.subscribe(to: binding3).store(in: storage)
+    binding3.subscribe(to: binding1).store(in: storage)
+
+    var messages: [String] = []
+    Assert.setTestAssertionFailureHandler { message, _, _, _, _ in
+      messages.append(message)
+    }
+    defer {
+      Assert.resetTestAssertionFailureHandler()
+    }
+
+    binding1.value = 2
+
+    expect(messages.count) == 1
+    expect(messages.first) == "Binding loop detected."
+    expect(binding1.value) == 2
+    expect(binding2.value) == 2
+    expect(binding3.value) == 2
+  }
+
+  func test_subscribe_detectLoop_transformedCombined() {
+    let binding1 = Binding<Int>(0)
+    let binding2 = Binding<Int>(0)
+    let storage = BindingObservationStorage()
+    let combined = binding1.combine(with: binding2)
+    let summed = combined.map { $0 + $1 }
+
+    binding1.subscribe(to: summed).store(in: storage)
+
+    var messages: [String] = []
+    Assert.setTestAssertionFailureHandler { message, _, _, _, _ in
+      messages.append(message)
+    }
+    defer {
+      Assert.resetTestAssertionFailureHandler()
+    }
+
+    binding1.value = 1
+
+    expect(messages.count) == 1
+    expect(messages.first) == "Binding loop detected."
+    expect(binding1.value) == 1
+    expect(binding2.value) == 0
+  }
+
   // MARK: - Map
 
   func test_map() {

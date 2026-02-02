@@ -228,8 +228,6 @@ public final class Binding<T>: MutableBindingType, InternalBindingType {
   ///   - source: A source binding, which can update to self.
   /// - Returns: An observation.
   public func subscribe(to source: some BindingType<T>) -> BindingObservation {
-    // TODO: can detect binding loop and post error. can use throw
-
     let sourceObservation = source.observe { [weak self] value in
       guard let self else {
         ChouTi.assertFailure("downstream is nil, the source binding's observation should've be torn down")

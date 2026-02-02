@@ -24,6 +24,7 @@ You are an expert iOS/macOS developer with a passion for writing clean, maintain
 ## Coding Style & Naming Conventions
 - Formatting and linting are handled by `make format` and `make lint`.
 - Follow existing naming patterns: `lowerCamelCase` for vars/functions, `UpperCamelCase` for types.
+- Use `io.chouti` for reverse-domain identifiers (queue labels, thread dictionary keys, etc.).
 - Add documentation for public APIs. If helpful, add examples. See `Debouncer.swift`, `KVOObserver.swift` for references.
 - Documentation should be concise and valuable so that a new developer can understand the codebase quickly. Don't assume the reader are experts in the domain.
 - Add inline comments for complex logic so that maintainers can remember the purpose of the code later.
