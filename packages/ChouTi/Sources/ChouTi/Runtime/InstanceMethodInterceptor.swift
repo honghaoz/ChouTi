@@ -32,6 +32,7 @@ import ObjectiveC
 import Foundation
 
 public typealias InstanceMethodInvokeBlock = (_ object: AnyObject, _ selector: Selector, _ callOriginal: @escaping () -> Void) -> Void
+public typealias InstanceMethodInvokeBlockWithArg<Arg> = (_ object: AnyObject, _ selector: Selector, _ arg: Arg, _ callOriginal: @escaping (Arg) -> Void) -> Void
 
 public extension NSObject {
 
@@ -49,6 +50,23 @@ public extension NSObject {
   /// - Returns: A cancellable token that can be used to cancel the interception.
   @discardableResult
   func intercept(selector: Selector, block: @escaping InstanceMethodInvokeBlock) -> CancellableToken {
+    InstanceMethodInterceptor.intercept(self, selector: selector, block: block)
+  }
+
+  /// Intercepts a void, single-argument instance method on this object.
+  ///
+  /// This method could be called on the same selector multiple times, the block will be called in the order of the calls.
+  ///
+  /// The interceptor receives a `callOriginal` callback that invokes the original implementation. If multiple interceptors
+  /// are registered for the same selector, all interceptors run regardless of whether any of them calls `callOriginal`.
+  /// The original implementation is executed at most once per invocation.
+  ///
+  /// - Parameters:
+  ///   - selector: The selector to intercept. The selector must be a void method with a single argument.
+  ///   - block: The block to call when the method is invoked. The block will be called with the object, the selector, the argument, and a callback to call the original method.
+  /// - Returns: A cancellable token that can be used to cancel the interception.
+  @discardableResult
+  func intercept<Arg>(selector: Selector, block: @escaping InstanceMethodInvokeBlockWithArg<Arg>) -> CancellableToken {
     InstanceMethodInterceptor.intercept(self, selector: selector, block: block)
   }
 }
@@ -83,29 +101,35 @@ public extension NSObject {
 ///
 ///   This pattern could be ended up with a clean state. However, during the process, the original class method is modified,
 ///   which may break other mechanisms that also modify the same method on the original class.
-private enum InstanceMethodInterceptor {
+enum InstanceMethodInterceptor {
 
-  private typealias HookBlocks = OrderedDictionary<ObjectIdentifier, ValueCancellableToken<InstanceMethodInvokeBlock>>
+  typealias InstanceMethodInvokeBlockWithArgAny = (_ object: AnyObject, _ selector: Selector, _ arg: Any, _ callOriginal: @escaping (Any) -> Void) -> Void
+
+  typealias HookBlocks = OrderedDictionary<ObjectIdentifier, ValueCancellableToken<InstanceMethodInvokeBlock>>
+  typealias HookBlocksWithArg = OrderedDictionary<ObjectIdentifier, ValueCancellableToken<InstanceMethodInvokeBlockWithArgAny>>
+
   private typealias VoidMethodIMP = @convention(c) (AnyObject, Selector) -> Void
 
-  private final class State {
+  final class State {
     /// The "true" original class for this instance (before any isa-swizzle).
     var originalClass: AnyClass?
     /// Hooks registered for each selector on this instance.
     var hookBlocksBySelector: [Selector: HookBlocks] = [:]
+    /// Hooks registered for each selector (single-argument) on this instance.
+    var hookBlocksBySelectorWithArg: [Selector: HookBlocksWithArg] = [:]
     /// Track selectors swizzled via KVO path for cleanup.
     var kvoSwizzledSelectors: Set<Selector> = []
     /// Track deallocation tokens for KVO swizzling cleanup.
     var kvoDeallocationTokens: [Selector: CancellableToken] = [:]
   }
 
-  private enum AssociateKey {
+  enum AssociateKey {
     static var state: UInt8 = 0
   }
 
   private static let stateLock = NSLock()
 
-  private static func state(for object: AnyObject) -> State {
+  static func state(for object: AnyObject) -> State {
     stateLock.lock()
     defer {
       stateLock.unlock()
@@ -156,6 +180,14 @@ private enum InstanceMethodInterceptor {
 
     guard isVoidNoArgsMethod(originalMethod) else {
       ChouTi.assertFailure("intercept only supports void methods with no args", metadata: [
+        "selector": NSStringFromSelector(selector),
+        "class": NSStringFromClass(originalClass),
+      ])
+      return SimpleCancellableToken(cancel: { _ in })
+    }
+
+    guard state.hookBlocksBySelectorWithArg[selector] == nil else {
+      ChouTi.assertFailure("intercept only supports one signature per selector; existing single-arg hook found", metadata: [
         "selector": NSStringFromSelector(selector),
         "class": NSStringFromClass(originalClass),
       ])
@@ -234,7 +266,7 @@ private enum InstanceMethodInterceptor {
       state.hookBlocksBySelector[selector] = hooks
     }
 
-    guard state.hookBlocksBySelector.isEmpty else {
+    guard state.hookBlocksBySelector.isEmpty, state.hookBlocksBySelectorWithArg.isEmpty else {
       return
     }
 
@@ -291,7 +323,7 @@ private enum InstanceMethodInterceptor {
   // MARK: - Reentrancy Guard
 
   /// Records “this thread is now inside selector X for object/state Y” and returns whether hooks should run.
-  private static func enterReentrancyGuard(state: State, selector: Selector) -> Bool {
+  static func enterReentrancyGuard(state: State, selector: Selector) -> Bool {
     let threadDict = Thread.current.threadDictionary // per‑thread storage,
     let stateKey = NSValue(nonretainedObject: state)
     let selectorKey = NSStringFromSelector(selector) as NSString
@@ -311,7 +343,7 @@ private enum InstanceMethodInterceptor {
   }
 
   /// Decrements the recursion depth for that selector on this thread, and cleans up storage when it reaches zero.
-  private static func exitReentrancyGuard(state: State, selector: Selector) {
+  static func exitReentrancyGuard(state: State, selector: Selector) {
     let threadDict = Thread.current.threadDictionary
     let stateKey = NSValue(nonretainedObject: state)
     guard let selectorCounts = threadDict[stateKey] as? NSMutableDictionary else {
@@ -331,7 +363,7 @@ private enum InstanceMethodInterceptor {
   }
 
   /// Resolves the original class if the given class is one of our dynamic subclasses.
-  private static func resolveOriginalClass(from aClass: AnyClass) -> AnyClass {
+  static func resolveOriginalClass(from aClass: AnyClass) -> AnyClass {
     let className = NSStringFromClass(aClass)
     guard className.hasPrefix(Constants.subclassPrefix),
           let superClass = class_getSuperclass(aClass)
@@ -350,7 +382,7 @@ private enum InstanceMethodInterceptor {
   }
 
   /// Ensures a dynamic subclass exists and returns it.
-  private static func ensureSubclass(for originalClass: AnyClass) -> AnyClass {
+  static func ensureSubclass(for originalClass: AnyClass) -> AnyClass {
     let subclassName = subclassName(for: originalClass)
     if let existingClass = NSClassFromString(subclassName) {
       return existingClass
@@ -366,11 +398,11 @@ private enum InstanceMethodInterceptor {
   }
 
   /// Tracks which subclass/selector pairs have been overridden.
-  private static var subclassSelectorOverrides: Set<String> = []
-  private static let subclassSelectorOverridesLock = NSLock()
+  static var subclassSelectorOverrides: Set<String> = []
+  static let subclassSelectorOverridesLock = NSLock()
 
   /// Keeps IMPs alive for dynamically added subclass methods.
-  private static var subclassMethodIMPs: [IMP] = []
+  static var subclassMethodIMPs: [IMP] = []
 
   private static func addSubclassOverrideIfNeeded(subclass: AnyClass, originalClass: AnyClass, selector: Selector) {
     let key = "\(NSStringFromClass(subclass))|\(NSStringFromSelector(selector))"
@@ -407,7 +439,7 @@ private enum InstanceMethodInterceptor {
   }
 
   /// Restores the original class if this instance is currently using our dynamic subclass.
-  private static func revertToOriginalClassIfNeeded(object: AnyObject, originalClass: AnyClass?) {
+  static func revertToOriginalClassIfNeeded(object: AnyObject, originalClass: AnyClass?) {
     guard let originalClass else {
       return // impossible
     }
@@ -440,23 +472,23 @@ private enum InstanceMethodInterceptor {
   /// When the reference count reaches zero, we restore the original method.
 
   /// Stores swizzled IMPs to keep them alive for KVO-class method replacement.
-  private static var swizzledMethodIMPs: [String: IMP] = [:]
-  private static let swizzledMethodIMPsLock = NSLock()
+  static var swizzledMethodIMPs: [String: IMP] = [:]
+  static let swizzledMethodIMPsLock = NSLock()
 
   /// Stores original IMPs for restoration.
-  private static var swizzledMethodOriginalIMPs: [String: IMP] = [:]
-  private static let swizzledMethodOriginalIMPsLock = NSLock()
+  static var swizzledMethodOriginalIMPs: [String: IMP] = [:]
+  static let swizzledMethodOriginalIMPsLock = NSLock()
 
   /// Tracks which original class/selector pairs are currently swizzled.
-  private static var swizzledMethods: Set<String> = []
-  private static let swizzledMethodsLock = NSLock()
+  static var swizzledMethods: Set<String> = []
+  static let swizzledMethodsLock = NSLock()
 
   /// Tracks how many KVO instances are using each original class/selector pair.
-  private static var kvoInstanceCallbackCounts: [String: Int] = [:]
-  private static let kvoInstanceCallbackCountsLock = NSLock()
+  static var kvoInstanceCallbackCounts: [String: Int] = [:]
+  static let kvoInstanceCallbackCountsLock = NSLock()
 
   /// Combines class + selector into a stable dictionary key.
-  private static func methodKey(originalClass: AnyClass, selector: Selector) -> String {
+  static func methodKey(originalClass: AnyClass, selector: Selector) -> String {
     "\(NSStringFromClass(originalClass))|\(NSStringFromSelector(selector))"
   }
 
@@ -500,7 +532,7 @@ private enum InstanceMethodInterceptor {
   }
 
   /// Increment KVO usage count for an original class/selector pair.
-  private static func incrementKVOCallbackCount(for originalClass: AnyClass, selector: Selector) {
+  static func incrementKVOCallbackCount(for originalClass: AnyClass, selector: Selector) {
     let key = methodKey(originalClass: originalClass, selector: selector)
     kvoInstanceCallbackCountsLock.lock()
     kvoInstanceCallbackCounts[key, default: 0] += 1
@@ -508,7 +540,7 @@ private enum InstanceMethodInterceptor {
   }
 
   /// Decrement KVO usage count and restore the original method when it reaches zero.
-  private static func decrementKVOCallbackCount(for originalClass: AnyClass, selector: Selector) {
+  static func decrementKVOCallbackCount(for originalClass: AnyClass, selector: Selector) {
     let key = methodKey(originalClass: originalClass, selector: selector)
 
     kvoInstanceCallbackCountsLock.lock()

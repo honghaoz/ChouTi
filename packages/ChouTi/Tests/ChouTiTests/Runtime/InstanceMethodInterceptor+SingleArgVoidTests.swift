@@ -1,5 +1,5 @@
 //
-//  InstanceMethodInterceptorTests.swift
+//  InstanceMethodInterceptor+SingleArgVoidTests.swift
 //  ChouTi
 //
 //  Created by Honghao Zhang on 2/1/26.
@@ -36,12 +36,12 @@ import ChouTiTest
 
 @testable import ChouTi
 
-class InstanceMethodInterceptorTests: XCTestCase {
+class InstanceMethodInterceptorSingleArgVoidTests: XCTestCase {
 
-  @objc(ChouTiIMI_PrefixedTestObject)
+  @objc(ChouTiIMI_PrefixedSingleArgTestObject)
   final class PrefixedTestObject: NSObject {
 
-    @objc dynamic func foo() {}
+    @objc dynamic func foo(_ value: Int) {}
   }
 
   class TestObject: NSObject {
@@ -54,17 +54,18 @@ class InstanceMethodInterceptorTests: XCTestCase {
     private(set) var barCallCount = 0
     private(set) var argCallCount = 0
     private(set) var returnCallCount = 0
+    private(set) var noArgCallCount = 0
 
-    var fooClosure: (() -> Void)?
+    var fooClosure: ((Int) -> Void)?
 
-    @objc dynamic func foo() {
+    @objc dynamic func foo(_ value: Int) {
       lock.lock()
       fooCallCount += 1
       lock.unlock()
-      fooClosure?()
+      fooClosure?(value)
     }
 
-    @objc dynamic func bar() {
+    @objc dynamic func bar(_ value: Int) {
       lock.lock()
       barCallCount += 1
       lock.unlock()
@@ -76,7 +77,13 @@ class InstanceMethodInterceptorTests: XCTestCase {
       lock.unlock()
     }
 
-    @objc dynamic func returnsInt() -> Int {
+    @objc dynamic func noArg() {
+      lock.lock()
+      noArgCallCount += 1
+      lock.unlock()
+    }
+
+    @objc dynamic func returnsInt(_ value: Int) -> Int {
       lock.lock()
       returnCallCount += 1
       lock.unlock()
@@ -88,9 +95,9 @@ class InstanceMethodInterceptorTests: XCTestCase {
 
     private(set) var subclassFooCallCount = 0
 
-    @objc override dynamic func foo() {
+    @objc override dynamic func foo(_ value: Int) {
       subclassFooCallCount += 1
-      super.foo()
+      super.foo(value)
     }
   }
 
@@ -98,7 +105,7 @@ class InstanceMethodInterceptorTests: XCTestCase {
 
     private(set) var subclassFooCallCount = 0
 
-    @objc override dynamic func foo() {
+    @objc override dynamic func foo(_ value: Int) {
       subclassFooCallCount += 1
     }
   }
@@ -107,7 +114,7 @@ class InstanceMethodInterceptorTests: XCTestCase {
 
     private(set) var bazCallCount = 0
 
-    @objc dynamic func baz() {
+    @objc dynamic func baz(_ value: Int) {
       bazCallCount += 1
     }
   }
@@ -116,9 +123,9 @@ class InstanceMethodInterceptorTests: XCTestCase {
 
     private(set) var subclassFooCallCount = 0
 
-    @objc override dynamic func foo() {
+    @objc override dynamic func foo(_ value: Int) {
       subclassFooCallCount += 1
-      super.foo()
+      super.foo(value)
     }
   }
 
@@ -131,18 +138,18 @@ class InstanceMethodInterceptorTests: XCTestCase {
 
     // when intercept the method
     var hookCount = 0
-    let token = object.intercept(selector: #selector(TestObject.foo)) { theObject, selector, callOriginal in
+    let token = object.intercept(selector: #selector(TestObject.foo(_:))) { (theObject, selector, value: Int, callOriginal) in
       expect(theObject) === object
-      expect(selector) == #selector(TestObject.foo)
+      expect(selector) == #selector(TestObject.foo(_:))
       hookCount += 1
-      callOriginal()
+      callOriginal(value)
     }
 
     // then the class should be the dynamic subclass
     expect(getClassName(object)) == "ChouTiIMI_\(originalClassName)"
 
     // when call the method
-    object.foo()
+    object.foo(1)
 
     // then the hook should be called
     expect(hookCount) == 1
@@ -155,7 +162,7 @@ class InstanceMethodInterceptorTests: XCTestCase {
     expect(getClassName(object)) == originalClassName
 
     // when call the method again
-    object.foo()
+    object.foo(1)
 
     // then the hook should not be called
     expect(hookCount) == 1
@@ -167,18 +174,18 @@ class InstanceMethodInterceptorTests: XCTestCase {
     let object = TestObject()
 
     var order: [Int] = []
-    object.fooClosure = {
+    object.fooClosure = { _ in
       order.append(1)
     }
 
     // when intercept the method
-    object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
-      callOriginal() // call original first
+    object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
+      callOriginal(value) // call original first
       order.append(2)
     }
 
     // when call the method
-    object.foo()
+    object.foo(1)
 
     // then the original should be called first
     expect(order) == [1, 2]
@@ -189,18 +196,18 @@ class InstanceMethodInterceptorTests: XCTestCase {
     let object = TestObject()
 
     var order: [Int] = []
-    object.fooClosure = {
+    object.fooClosure = { _ in
       order.append(1)
     }
 
     // when intercept the method
-    object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       order.append(2)
-      callOriginal() // call original last
+      callOriginal(value) // call original last
     }
 
     // when call the method
-    object.foo()
+    object.foo(1)
 
     // then the original should be called last
     expect(order) == [2, 1]
@@ -212,31 +219,31 @@ class InstanceMethodInterceptorTests: XCTestCase {
     let originalClassName = getClassName(object)
 
     var order: [Int] = []
-    object.fooClosure = {
+    object.fooClosure = { _ in
       order.append(0)
     }
 
     // when intercept the method with multiple hooks
-    let token1 = object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    let token1 = object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       order.append(1)
-      callOriginal()
+      callOriginal(value)
     }
     expect(getClassName(object)) == "ChouTiIMI_\(originalClassName)" // the class should be the dynamic subclass
 
-    let token2 = object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    let token2 = object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       order.append(2)
-      callOriginal()
+      callOriginal(value)
     }
     expect(getClassName(object)) == "ChouTiIMI_\(originalClassName)" // no nested subclassing
 
-    let token3 = object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    let token3 = object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       order.append(3)
-      callOriginal()
+      callOriginal(value)
     }
     expect(getClassName(object)) == "ChouTiIMI_\(originalClassName)" // no nested subclassing
 
     // when call the method
-    object.foo()
+    object.foo(1)
 
     // then the hooks should be called in the order of the interceptors
     expect(order) == [1, 0, 2, 3]
@@ -258,24 +265,24 @@ class InstanceMethodInterceptorTests: XCTestCase {
     let object = TestObject()
 
     var order: [Int] = []
-    object.fooClosure = {
+    object.fooClosure = { _ in
       order.append(0)
     }
 
     // when intercept the method with multiple hooks
-    object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       order.append(1)
     }
-    object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       order.append(2)
-      callOriginal() // call original in middle
+      callOriginal(value) // call original in middle
     }
-    object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       order.append(3)
     }
 
     // when call the method
-    object.foo()
+    object.foo(1)
 
     // then the hooks should be called in the order of the interceptors
     expect(order) == [1, 2, 0, 3] // the original method should be called in the middle
@@ -289,28 +296,28 @@ class InstanceMethodInterceptorTests: XCTestCase {
 
     // when intercept the methods
     var fooHooks = 0
-    let fooToken = object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    let fooToken = object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       fooHooks += 1
-      callOriginal()
+      callOriginal(value)
     }
     expect(getClassName(object)) == "ChouTiIMI_\(originalClassName)" // the class should be the dynamic subclass
 
     // when intercept the other method
     var barHooks = 0
-    let barToken = object.intercept(selector: #selector(TestObject.bar)) { _, _, callOriginal in
+    let barToken = object.intercept(selector: #selector(TestObject.bar(_:))) { (_, _, value: Int, callOriginal) in
       barHooks += 1
-      callOriginal()
+      callOriginal(value)
     }
     expect(getClassName(object)) == "ChouTiIMI_\(originalClassName)" // the class should be the same as the previous one
 
     // when call the methods
-    object.foo()
+    object.foo(1)
     expect(fooHooks) == 1
     expect(barHooks) == 0
     expect(object.fooCallCount) == 1
     expect(object.barCallCount) == 0
 
-    object.bar()
+    object.bar(2)
     expect(fooHooks) == 1
     expect(barHooks) == 1
     expect(object.fooCallCount) == 1
@@ -323,7 +330,7 @@ class InstanceMethodInterceptorTests: XCTestCase {
     expect(getClassName(object)) == originalClassName // the class should revert to the original class
   }
 
-  func test_selectorWithArguments_isIgnored() {
+  func test_selectorWithNoArguments_isIgnored() {
     // given a non-KVO object
     let object = TestObject()
     let originalClassName = getClassName(object)
@@ -338,60 +345,21 @@ class InstanceMethodInterceptorTests: XCTestCase {
     }
 
     // when intercept the method with arguments
-    object.intercept(selector: #selector(TestObject.withArg(_:))) { _, _, callOriginal in
+    object.intercept(selector: #selector(TestObject.noArg)) { (_, _, value: Int, callOriginal) in
       hookCount += 1
-      callOriginal()
+      callOriginal(value)
     }
 
     // then the assertion should be thrown
-    expect(assertionMessage) == "intercept only supports void methods with no args"
+    expect(assertionMessage) == "intercept only supports void methods with one arg"
     expect(getClassName(object)) == originalClassName
 
     // when call the method with arguments
-    object.withArg(2)
+    object.noArg()
 
     // then the hook should not be called
     expect(hookCount) == 0
-    expect(object.argCallCount) == 1
-  }
-
-  func test_selectorWithExistingSingleArgHook_isIgnored() {
-    // given a non-KVO object
-    let object = TestObject()
-    let originalClassName = getClassName(object)
-
-    // seed a single-arg hook for the same selector
-    let state = InstanceMethodInterceptor.state(for: object)
-    var hooks = InstanceMethodInterceptor.HookBlocksWithArg()
-    let token = ValueCancellableToken(value: { _, _, _, _ in } as InstanceMethodInterceptor.InstanceMethodInvokeBlockWithArgAny) { _ in }
-    token.store(in: &hooks)
-    state.hookBlocksBySelectorWithArg[#selector(TestObject.foo)] = hooks
-
-    var hookCount = 0
-    var assertionMessage: String?
-    Assert.setTestAssertionFailureHandler { message, _, _, _, _ in
-      assertionMessage = message
-    }
-    defer {
-      Assert.resetTestAssertionFailureHandler()
-    }
-
-    // when intercept the method with a no-arg hook
-    object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
-      hookCount += 1
-      callOriginal()
-    }
-
-    // then the assertion should be thrown
-    expect(assertionMessage) == "intercept only supports one signature per selector; existing single-arg hook found"
-    expect(getClassName(object)) == originalClassName
-
-    // when call the method
-    object.foo()
-
-    // then the hook should not be called
-    expect(hookCount) == 0
-    expect(object.fooCallCount) == 1
+    expect(object.noArgCallCount) == 1
   }
 
   func test_selectorWithSingleArgument_isIntercepted() {
@@ -429,17 +397,17 @@ class InstanceMethodInterceptorTests: XCTestCase {
     }
 
     // when intercept the method with a return value
-    object.intercept(selector: #selector(TestObject.returnsInt)) { _, _, callOriginal in
+    object.intercept(selector: #selector(TestObject.returnsInt(_:))) { (_, _, value: Int, callOriginal) in
       hookCount += 1
-      callOriginal()
+      callOriginal(value)
     }
 
     // then the assertion should be thrown
-    expect(assertionMessage) == "intercept only supports void methods with no args"
+    expect(assertionMessage) == "intercept only supports void methods with one arg"
     expect(getClassName(object)) == originalClassName
 
     // when call the method
-    _ = object.returnsInt()
+    _ = object.returnsInt(4)
 
     // then the hook should not be called
     expect(hookCount) == 0
@@ -461,8 +429,8 @@ class InstanceMethodInterceptorTests: XCTestCase {
     }
 
     // when intercept a selector that does not exist
-    object.intercept(selector: selector) { _, _, callOriginal in
-      callOriginal()
+    object.intercept(selector: selector) { (_, _, value: Int, callOriginal) in
+      callOriginal(value)
     }
 
     // then the assertion should be thrown
@@ -477,9 +445,9 @@ class InstanceMethodInterceptorTests: XCTestCase {
 
     // when intercept the method but never invoke it
     var hookCount = 0
-    let token = object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    let token = object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       hookCount += 1
-      callOriginal()
+      callOriginal(value)
     }
 
     // then the class should be the dynamic subclass
@@ -492,7 +460,7 @@ class InstanceMethodInterceptorTests: XCTestCase {
     expect(getClassName(object)) == originalClassName
 
     // when call the method
-    object.foo()
+    object.foo(1)
     // then the hook should not be called
     expect(hookCount) == 0
     expect(object.fooCallCount) == 1
@@ -504,8 +472,8 @@ class InstanceMethodInterceptorTests: XCTestCase {
     let originalClassName = getClassName(object)
 
     // when intercept the method
-    let token = object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
-      callOriginal()
+    let token = object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
+      callOriginal(value)
     }
 
     // then the class should be the dynamic subclass
@@ -525,16 +493,16 @@ class InstanceMethodInterceptorTests: XCTestCase {
 
     // when intercept the method
     var hookCount = 0
-    object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       hookCount += 1
-      callOriginal()
+      callOriginal(value)
     }
 
     // remove associated state so invokeHooks sees no state
     objc_removeAssociatedObjects(object)
 
     // when call the method
-    object.foo()
+    object.foo(1)
 
     // then original should be called and hooks should not run
     expect(hookCount) == 0
@@ -544,8 +512,8 @@ class InstanceMethodInterceptorTests: XCTestCase {
   func test_invokeHooks_without_state_on_swizzled_subclass_calls_original() {
     // given a swizzled subclass created by another instance
     let object = TestObject()
-    let subclassToken = object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
-      callOriginal()
+    let subclassToken = object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
+      callOriginal(value)
     }
     let subclassName = getClassName(object)
     guard let subclass = NSClassFromString(subclassName) else {
@@ -558,7 +526,7 @@ class InstanceMethodInterceptorTests: XCTestCase {
     object_setClass(otherObject, subclass)
 
     // then calling the method should invoke the original via the no-state path
-    otherObject.foo()
+    otherObject.foo(1)
     expect(otherObject.fooCallCount) == 1
 
     // cleanup
@@ -571,14 +539,14 @@ class InstanceMethodInterceptorTests: XCTestCase {
 
     // when intercept the method and re-enter the same selector
     var hookCount = 0
-    object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       hookCount += 1
-      object.foo()
-      callOriginal()
+      object.foo(1)
+      callOriginal(value)
     }
 
     // when call the method
-    object.foo()
+    object.foo(1)
 
     // then the hook should run once and original should be called twice
     expect(hookCount) == 1
@@ -602,7 +570,7 @@ class InstanceMethodInterceptorTests: XCTestCase {
     let lock = NSLock()
     var hookCount = 0
 
-    let token = object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    let token = object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       lock.lock()
       hookCount += 1
       let currentCount = hookCount
@@ -616,13 +584,13 @@ class InstanceMethodInterceptorTests: XCTestCase {
       }
       _ = hookRelease.wait(timeout: .now() + 2)
 
-      callOriginal()
+      callOriginal(value)
     }
 
     // First call: enters the hook and blocks.
     group.enter()
     DispatchQueue.global(qos: .userInitiated).async {
-      object.foo()
+      object.foo(1)
       group.leave()
     }
 
@@ -639,7 +607,7 @@ class InstanceMethodInterceptorTests: XCTestCase {
     // Second call: should also run hooks even while the first is in progress.
     group.enter()
     DispatchQueue.global(qos: .userInitiated).async {
-      object.foo()
+      object.foo(1)
       group.leave()
     }
 
@@ -686,9 +654,9 @@ class InstanceMethodInterceptorTests: XCTestCase {
     }
 
     var hookCount = 0
-    let token = object.intercept(selector: #selector(PrefixedTestObject.foo)) { _, _, callOriginal in
+    let token = object.intercept(selector: #selector(PrefixedTestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       hookCount += 1
-      callOriginal()
+      callOriginal(value)
     }
 
     // then the assertion should be thrown
@@ -698,7 +666,7 @@ class InstanceMethodInterceptorTests: XCTestCase {
     expect(getClassName(object)) == originalClassName
 
     // when call the method
-    object.foo()
+    object.foo(1)
     expect(hookCount) == 0
 
     // when cancel the token
@@ -712,9 +680,9 @@ class InstanceMethodInterceptorTests: XCTestCase {
     let baseClassName = getClassName(baseObject)
 
     var baseHookCount = 0
-    let baseToken = baseObject.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    let baseToken = baseObject.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       baseHookCount += 1
-      callOriginal()
+      callOriginal(value)
     }
     expect(getClassName(baseObject)) == "ChouTiIMI_\(baseClassName)"
 
@@ -723,18 +691,18 @@ class InstanceMethodInterceptorTests: XCTestCase {
     let subclassClassName = getClassName(subclassObject)
 
     var subclassHookCount = 0
-    let subclassToken = subclassObject.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    let subclassToken = subclassObject.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       subclassHookCount += 1
-      callOriginal()
+      callOriginal(value)
     }
     expect(getClassName(subclassObject)) == "ChouTiIMI_\(subclassClassName)"
 
     // then each instance should invoke its own hook and original once per call
-    baseObject.foo()
+    baseObject.foo(1)
     expect(baseHookCount) == 1
     expect(baseObject.fooCallCount) == 1
 
-    subclassObject.foo()
+    subclassObject.foo(1)
     expect(subclassHookCount) == 1
     expect(subclassObject.fooCallCount) == 1
     expect(subclassObject.subclassFooCallCount) == 1
@@ -754,14 +722,14 @@ class InstanceMethodInterceptorTests: XCTestCase {
     let originalClassName = getClassName(object)
 
     var hookCount = 0
-    let token = object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    let token = object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       hookCount += 1
-      callOriginal()
+      callOriginal(value)
     }
     expect(getClassName(object)) == "ChouTiIMI_\(originalClassName)"
 
     // when calling the method
-    object.foo()
+    object.foo(1)
 
     // then the hook and subclass implementation should be invoked
     expect(hookCount) == 1
@@ -779,14 +747,14 @@ class InstanceMethodInterceptorTests: XCTestCase {
     let originalClassName = getClassName(object)
 
     var hookCount = 0
-    let token = object.intercept(selector: #selector(TestObjectSelectorSubclass.baz)) { _, _, callOriginal in
+    let token = object.intercept(selector: #selector(TestObjectSelectorSubclass.baz(_:))) { (_, _, value: Int, callOriginal) in
       hookCount += 1
-      callOriginal()
+      callOriginal(value)
     }
     expect(getClassName(object)) == "ChouTiIMI_\(originalClassName)"
 
     // when calling the subclass-only selector
-    object.baz()
+    object.baz(3)
 
     // then the hook and original should run
     expect(hookCount) == 1
@@ -805,23 +773,23 @@ class InstanceMethodInterceptorTests: XCTestCase {
     let className2 = getClassName(object2)
 
     var hookCount1 = 0
-    let token1 = object1.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    let token1 = object1.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       hookCount1 += 1
-      callOriginal()
+      callOriginal(value)
     }
     expect(getClassName(object1)) == "ChouTiIMI_\(className1)"
 
     var hookCount2 = 0
-    let token2 = object2.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    let token2 = object2.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       hookCount2 += 1
-      callOriginal()
+      callOriginal(value)
     }
     expect(getClassName(object2)) == "ChouTiIMI_\(className2)"
     expect(getClassName(object1)) != getClassName(object2)
 
     // when calling the method on each instance
-    object1.foo()
-    object2.foo()
+    object1.foo(1)
+    object2.foo(1)
 
     // then hooks and originals should be called for each instance
     expect(hookCount1) == 1
@@ -852,15 +820,15 @@ class InstanceMethodInterceptorTests: XCTestCase {
 
     // when intercept the method
     var hookCount = 0
-    let token = object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    let token = object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       hookCount += 1
-      callOriginal()
+      callOriginal(value)
     }
     // then the class should be still the KVO class
     expect(getClassName(object)) == "NSKVONotifying_\(originalClassName)"
 
     // when call the method
-    object.foo()
+    object.foo(1)
     // then the hook should be called
     expect(hookCount) == 1
     expect(object.fooCallCount) == 1
@@ -871,7 +839,7 @@ class InstanceMethodInterceptorTests: XCTestCase {
     expect(getClassName(object)) == "NSKVONotifying_\(originalClassName)"
 
     // when call the method again
-    object.foo()
+    object.foo(1)
     // then the hook should not be called
     expect(hookCount) == 1
     expect(object.fooCallCount) == 2
@@ -890,18 +858,18 @@ class InstanceMethodInterceptorTests: XCTestCase {
     _ = observation
 
     var order: [Int] = []
-    object.fooClosure = {
+    object.fooClosure = { _ in
       order.append(1)
     }
 
     // when intercept the method
-    object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
-      callOriginal() // call original first
+    object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
+      callOriginal(value) // call original first
       order.append(2)
     }
 
     // when call the method
-    object.foo()
+    object.foo(1)
     // then the original should be called first
     expect(order) == [1, 2]
   }
@@ -914,18 +882,18 @@ class InstanceMethodInterceptorTests: XCTestCase {
     _ = observation
 
     var order: [Int] = []
-    object.fooClosure = {
+    object.fooClosure = { _ in
       order.append(1)
     }
 
     // when intercept the method
-    object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       order.append(2)
-      callOriginal() // call original last
+      callOriginal(value) // call original last
     }
 
     // when call the method
-    object.foo()
+    object.foo(1)
     // then the original should be called last
     expect(order) == [2, 1]
   }
@@ -938,26 +906,26 @@ class InstanceMethodInterceptorTests: XCTestCase {
     _ = observation
 
     var order: [Int] = []
-    object.fooClosure = {
+    object.fooClosure = { _ in
       order.append(0)
     }
 
     // when intercept the method with multiple hooks
-    object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       order.append(1)
-      callOriginal()
+      callOriginal(value)
     }
-    object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       order.append(2)
-      callOriginal()
+      callOriginal(value)
     }
-    object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       order.append(3)
-      callOriginal()
+      callOriginal(value)
     }
 
     // when call the method
-    object.foo()
+    object.foo(1)
     // then the hooks should be called in the order of the interceptors
     expect(order) == [1, 0, 2, 3]
   }
@@ -970,24 +938,24 @@ class InstanceMethodInterceptorTests: XCTestCase {
     _ = observation
 
     var order: [Int] = []
-    object.fooClosure = {
+    object.fooClosure = { _ in
       order.append(0)
     }
 
     // when intercept the method with multiple hooks
-    object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       order.append(1)
     }
-    object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       order.append(2)
-      callOriginal() // call original in middle
+      callOriginal(value) // call original in middle
     }
-    object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       order.append(3)
     }
 
     // when call the method
-    object.foo()
+    object.foo(1)
     // then the hooks should be called in the order of the interceptors
     expect(order) == [1, 2, 0, 3] // the original method should be called in the middle
   }
@@ -1002,13 +970,13 @@ class InstanceMethodInterceptorTests: XCTestCase {
     expect(getClassName(kvoObject)) == "NSKVONotifying_\(originalClassName)"
 
     var kvoHookCount = 0
-    let kvoToken = kvoObject.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    let kvoToken = kvoObject.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       kvoHookCount += 1
-      callOriginal()
+      callOriginal(value)
     }
     expect(getClassName(kvoObject)) == "NSKVONotifying_\(originalClassName)"
 
-    kvoObject.foo()
+    kvoObject.foo(1)
     expect(kvoHookCount) == 1
     expect(kvoObject.fooCallCount) == 1
 
@@ -1017,19 +985,19 @@ class InstanceMethodInterceptorTests: XCTestCase {
     let plainOriginalClassName = getClassName(plainObject)
 
     var plainHookCount = 0
-    let plainToken = plainObject.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    let plainToken = plainObject.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       plainHookCount += 1
-      callOriginal()
+      callOriginal(value)
     }
     expect(getClassName(plainObject)) == "ChouTiIMI_\(plainOriginalClassName)"
 
     // then both instances should invoke their hooks exactly once per call
-    plainObject.foo()
+    plainObject.foo(1)
     expect(plainHookCount) == 1
     expect(plainObject.fooCallCount) == 1
 
-    kvoObject.foo()
-    plainObject.foo()
+    kvoObject.foo(1)
+    plainObject.foo(1)
     expect(kvoHookCount) == 2
     expect(kvoObject.fooCallCount) == 2
     expect(plainHookCount) == 2
@@ -1056,13 +1024,13 @@ class InstanceMethodInterceptorTests: XCTestCase {
     expect(getClassName(subclassObject)) == "NSKVONotifying_\(subclassOriginalClassName)"
 
     var subclassHookCount = 0
-    let subclassToken = subclassObject.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    let subclassToken = subclassObject.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       subclassHookCount += 1
-      callOriginal()
+      callOriginal(value)
     }
     expect(getClassName(subclassObject)) == "NSKVONotifying_\(subclassOriginalClassName)"
 
-    subclassObject.foo()
+    subclassObject.foo(1)
     expect(subclassHookCount) == 1
     expect(subclassObject.subclassFooCallCount) == 1
     expect(subclassObject.fooCallCount) == 1
@@ -1072,19 +1040,19 @@ class InstanceMethodInterceptorTests: XCTestCase {
     let baseOriginalClassName = getClassName(baseObject)
 
     var baseHookCount = 0
-    let baseToken = baseObject.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    let baseToken = baseObject.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       baseHookCount += 1
-      callOriginal()
+      callOriginal(value)
     }
     expect(getClassName(baseObject)) == "ChouTiIMI_\(baseOriginalClassName)"
 
-    baseObject.foo()
+    baseObject.foo(1)
     expect(baseHookCount) == 1
     expect(baseObject.fooCallCount) == 1
 
     // then both instances still invoke hooks once per call
-    subclassObject.foo()
-    baseObject.foo()
+    subclassObject.foo(1)
+    baseObject.foo(1)
     expect(subclassHookCount) == 2
     expect(subclassObject.subclassFooCallCount) == 2
     expect(subclassObject.fooCallCount) == 2
@@ -1112,13 +1080,13 @@ class InstanceMethodInterceptorTests: XCTestCase {
     expect(getClassName(baseObject)) == "NSKVONotifying_\(baseOriginalClassName)"
 
     var baseHookCount = 0
-    let baseToken = baseObject.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    let baseToken = baseObject.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       baseHookCount += 1
-      callOriginal()
+      callOriginal(value)
     }
     expect(getClassName(baseObject)) == "NSKVONotifying_\(baseOriginalClassName)"
 
-    baseObject.foo()
+    baseObject.foo(1)
     expect(baseHookCount) == 1
     expect(baseObject.fooCallCount) == 1
 
@@ -1127,13 +1095,13 @@ class InstanceMethodInterceptorTests: XCTestCase {
     let subclassOriginalClassName = getClassName(subclassObject)
 
     var subclassHookCount = 0
-    let subclassToken = subclassObject.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    let subclassToken = subclassObject.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       subclassHookCount += 1
-      callOriginal()
+      callOriginal(value)
     }
     expect(getClassName(subclassObject)) == "ChouTiIMI_\(subclassOriginalClassName)"
 
-    subclassObject.foo()
+    subclassObject.foo(1)
     expect(subclassHookCount) == 1
     expect(subclassObject.subclassFooCallCount) == 1
     expect(subclassObject.fooCallCount) == 1
@@ -1161,28 +1129,28 @@ class InstanceMethodInterceptorTests: XCTestCase {
 
     // when intercept the methods
     var fooHooks = 0
-    let fooToken = object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    let fooToken = object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       fooHooks += 1
-      callOriginal()
+      callOriginal(value)
     }
     expect(getClassName(object)) == "NSKVONotifying_\(originalClassName)"
 
     // when intercept the other method
     var barHooks = 0
-    let barToken = object.intercept(selector: #selector(TestObject.bar)) { _, _, callOriginal in
+    let barToken = object.intercept(selector: #selector(TestObject.bar(_:))) { (_, _, value: Int, callOriginal) in
       barHooks += 1
-      callOriginal()
+      callOriginal(value)
     }
     expect(getClassName(object)) == "NSKVONotifying_\(originalClassName)"
 
     // when call the methods
-    object.foo()
+    object.foo(1)
     expect(fooHooks) == 1
     expect(barHooks) == 0
     expect(object.fooCallCount) == 1
     expect(object.barCallCount) == 0
 
-    object.bar()
+    object.bar(2)
     expect(fooHooks) == 1
     expect(barHooks) == 1
     expect(object.fooCallCount) == 1
@@ -1192,7 +1160,7 @@ class InstanceMethodInterceptorTests: XCTestCase {
     fooToken.cancel()
     expect(getClassName(object)) == "NSKVONotifying_\(originalClassName)"
 
-    object.foo()
+    object.foo(1)
     expect(fooHooks) == 1
     expect(barHooks) == 1
     expect(object.fooCallCount) == 2
@@ -1201,7 +1169,7 @@ class InstanceMethodInterceptorTests: XCTestCase {
     barToken.cancel()
     expect(getClassName(object)) == "NSKVONotifying_\(originalClassName)"
 
-    object.bar()
+    object.bar(2)
     expect(fooHooks) == 1
     expect(barHooks) == 1
     expect(object.fooCallCount) == 2
@@ -1212,7 +1180,7 @@ class InstanceMethodInterceptorTests: XCTestCase {
     expect(getClassName(object)) == originalClassName
   }
 
-  func test_KVO_selectorWithArguments_isIgnored() {
+  func test_KVO_selectorWithNoArguments_isIgnored() {
     // given a KVO object
     let object = TestObject()
     let originalClassName = getClassName(object)
@@ -1231,21 +1199,21 @@ class InstanceMethodInterceptorTests: XCTestCase {
     }
 
     // when intercept the method with arguments
-    object.intercept(selector: #selector(TestObject.withArg(_:))) { _, _, callOriginal in
+    object.intercept(selector: #selector(TestObject.noArg)) { (_, _, value: Int, callOriginal) in
       hookCount += 1
-      callOriginal()
+      callOriginal(value)
     }
 
     // then the assertion should be thrown
-    expect(assertionMessage) == "intercept only supports void methods with no args"
+    expect(assertionMessage) == "intercept only supports void methods with one arg"
     expect(getClassName(object)) == "NSKVONotifying_\(originalClassName)"
 
     // when call the method with arguments
-    object.withArg(2)
+    object.noArg()
 
     // then the hook should not be called
     expect(hookCount) == 0
-    expect(object.argCallCount) == 1
+    expect(object.noArgCallCount) == 1
   }
 
   // MARK: - KVO + Intercept
@@ -1257,9 +1225,9 @@ class InstanceMethodInterceptorTests: XCTestCase {
 
     // when intercept the method
     var hookCount = 0
-    let token = object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    let token = object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       hookCount += 1
-      callOriginal()
+      callOriginal(value)
     }
     // then the class should be the dynamic subclass
     expect(getClassName(object)) == "ChouTiIMI_\(originalClassName)"
@@ -1272,7 +1240,7 @@ class InstanceMethodInterceptorTests: XCTestCase {
     expect(getClassName(object)) == "NSKVONotifying_ChouTiIMI_\(originalClassName)"
 
     // when call the method
-    object.foo()
+    object.foo(1)
     expect(hookCount) == 1
     expect(object.fooCallCount) == 1
 
@@ -1281,7 +1249,7 @@ class InstanceMethodInterceptorTests: XCTestCase {
     expect(getClassName(object)) == "ChouTiIMI_\(originalClassName)"
 
     // when call the method again
-    object.foo()
+    object.foo(1)
     expect(hookCount) == 2
     expect(object.fooCallCount) == 2
 
@@ -1291,7 +1259,7 @@ class InstanceMethodInterceptorTests: XCTestCase {
     expect(getClassName(object)) == originalClassName
 
     // when call the method again
-    object.foo()
+    object.foo(1)
     expect(hookCount) == 2
     expect(object.fooCallCount) == 3
   }
@@ -1303,9 +1271,9 @@ class InstanceMethodInterceptorTests: XCTestCase {
 
     // when intercept the method
     var hookCount = 0
-    let token = object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    let token = object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       hookCount += 1
-      callOriginal()
+      callOriginal(value)
     }
     // then the class should be the dynamic subclass
     expect(getClassName(object)) == "ChouTiIMI_\(originalClassName)"
@@ -1318,7 +1286,7 @@ class InstanceMethodInterceptorTests: XCTestCase {
     expect(getClassName(object)) == "NSKVONotifying_ChouTiIMI_\(originalClassName)"
 
     // when call the method
-    object.foo()
+    object.foo(1)
     expect(hookCount) == 1
     expect(object.fooCallCount) == 1
 
@@ -1328,7 +1296,7 @@ class InstanceMethodInterceptorTests: XCTestCase {
     expect(getClassName(object)) == "NSKVONotifying_ChouTiIMI_\(originalClassName)"
 
     // when call the method again
-    object.foo()
+    object.foo(1)
     // then the hook should not be called
     expect(hookCount) == 1
     expect(object.fooCallCount) == 2
@@ -1339,22 +1307,22 @@ class InstanceMethodInterceptorTests: XCTestCase {
     expect(getClassName(object)) == "ChouTiIMI_\(originalClassName)"
 
     // when call the method again
-    object.foo()
+    object.foo(1)
     // then the hook should not be called
     expect(hookCount) == 1
     expect(object.fooCallCount) == 3
 
     // when intercept another method
     hookCount = 0
-    let anotherToken = object.intercept(selector: #selector(TestObject.bar)) { _, _, callOriginal in
+    let anotherToken = object.intercept(selector: #selector(TestObject.bar(_:))) { (_, _, value: Int, callOriginal) in
       hookCount += 1
-      callOriginal()
+      callOriginal(value)
     }
     // then the class should still be the dynamic subclass (not reverted to the original class)
     expect(getClassName(object)) == "ChouTiIMI_\(originalClassName)"
 
     // when call the method
-    object.bar()
+    object.bar(2)
     // then the hook should be called
     expect(hookCount) == 1
     expect(object.barCallCount) == 1
@@ -1365,7 +1333,7 @@ class InstanceMethodInterceptorTests: XCTestCase {
     expect(getClassName(object)) == originalClassName
 
     // when call the method again
-    object.bar()
+    object.bar(2)
     // then the hook should not be called
     expect(hookCount) == 1
     expect(object.barCallCount) == 2
@@ -1383,15 +1351,15 @@ class InstanceMethodInterceptorTests: XCTestCase {
 
     // when intercept the method
     var hookCount = 0
-    let token = object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    let token = object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       hookCount += 1
-      callOriginal()
+      callOriginal(value)
     }
     // then the class should still be the KVO class
     expect(getClassName(object)) == "NSKVONotifying_\(originalClassName)"
 
     // when call the method
-    object.foo()
+    object.foo(1)
     // then the hook should be called
     expect(hookCount) == 1
     expect(object.fooCallCount) == 1
@@ -1402,7 +1370,7 @@ class InstanceMethodInterceptorTests: XCTestCase {
     expect(getClassName(object)) == "NSKVONotifying_\(originalClassName)"
 
     // when call the method again
-    object.foo()
+    object.foo(1)
     // then the hook should not be called
     expect(hookCount) == 1
     expect(object.fooCallCount) == 2
@@ -1426,15 +1394,15 @@ class InstanceMethodInterceptorTests: XCTestCase {
 
     // when intercept the method
     var hookCount = 0
-    let token = object.intercept(selector: #selector(TestObject.foo)) { _, _, callOriginal in
+    let token = object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
       hookCount += 1
-      callOriginal()
+      callOriginal(value)
     }
     // then the class should still be the KVO class
     expect(getClassName(object)) == "NSKVONotifying_\(originalClassName)"
 
     // when call the method
-    object.foo()
+    object.foo(1)
     // then the hook should be called
     expect(hookCount) == 1
     expect(object.fooCallCount) == 1
@@ -1446,7 +1414,7 @@ class InstanceMethodInterceptorTests: XCTestCase {
     expect(getClassName(object)) == originalClassName
 
     // when call the method again
-    object.foo()
+    object.foo(1)
     // then the hook should still be called
     expect(hookCount) == 2
     expect(object.fooCallCount) == 2
@@ -1457,7 +1425,7 @@ class InstanceMethodInterceptorTests: XCTestCase {
     expect(getClassName(object)) == originalClassName
 
     // when call the method again
-    object.foo()
+    object.foo(1)
     // then the hook should not be called
     expect(hookCount) == 2
     expect(object.fooCallCount) == 3
@@ -1465,7 +1433,7 @@ class InstanceMethodInterceptorTests: XCTestCase {
 
   func test_KVO_dealloc_without_unintercept_restores_originalIMP() {
     // capture the original IMP so we can verify it is restored after cleanup.
-    let selector = #selector(TestObject.foo)
+    let selector = #selector(TestObject.foo(_:))
     guard let originalIMP = methodImplementation(TestObject.self, selector) else {
       fail("Failed to get original IMP")
       return
@@ -1480,8 +1448,8 @@ class InstanceMethodInterceptorTests: XCTestCase {
     weak var weakObject2 = object2
     var observation2: NSKeyValueObservation? = object2?.observe(\.value, options: [.new]) { _, _ in }
     _ = observation2
-    let token2 = object2.intercept(selector: selector) { _, _, callOriginal in
-      callOriginal()
+    let token2 = object2.intercept(selector: selector) { (_, _, value: Int, callOriginal) in
+      callOriginal(value)
     }
     tokens.append(token2)
 
@@ -1492,8 +1460,8 @@ class InstanceMethodInterceptorTests: XCTestCase {
       weakObject1 = object1
       let observation1 = object1.observe(\.value, options: [.new]) { _, _ in }
       _ = observation1
-      let token1 = object1.intercept(selector: selector) { _, _, callOriginal in
-        callOriginal()
+      let token1 = object1.intercept(selector: selector) { (_, _, value: Int, callOriginal) in
+        callOriginal(value)
       }
       tokens.append(token1)
     }
