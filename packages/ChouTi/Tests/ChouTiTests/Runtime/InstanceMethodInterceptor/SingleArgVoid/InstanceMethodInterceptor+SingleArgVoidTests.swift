@@ -47,9 +47,14 @@ class InstanceMethodInterceptor_SingleArgVoidTests: XCTestCase {
 
     @objc dynamic var value: Int = 0
 
+    private(set) var boolCallCount = 0
     private(set) var sizeCallCount = 0
     private(set) var rectCallCount = 0
     private(set) var objectCallCount = 0
+
+    @objc dynamic func withBool(_ bool: Bool) {
+      boolCallCount += 1
+    }
 
     @objc dynamic func withSize(_ size: CGSize) {
       sizeCallCount += 1
@@ -70,10 +75,15 @@ class InstanceMethodInterceptor_SingleArgVoidTests: XCTestCase {
     let object = TypeTestObject()
     let originalClassName = getClassName(object)
 
+    var boolHooks = 0
     var sizeHooks = 0
     var rectHooks = 0
     var objectHooks = 0
 
+    let boolToken = object.intercept(selector: #selector(TypeTestObject.withBool(_:))) { (_, _, value: Bool, callOriginal) in
+      boolHooks += 1
+      callOriginal(value)
+    }
     let sizeToken = object.intercept(selector: #selector(TypeTestObject.withSize(_:))) { (_, _, value: CGSize, callOriginal) in
       sizeHooks += 1
       callOriginal(value)
@@ -89,17 +99,21 @@ class InstanceMethodInterceptor_SingleArgVoidTests: XCTestCase {
 
     expect(getClassName(object)) == "ChouTiIMI_\(originalClassName)"
 
+    object.withBool(true)
     object.withSize(CGSize(width: 1, height: 2))
     object.withRect(CGRect(x: 1, y: 2, width: 3, height: 4))
     object.withObject(NSObject())
 
+    expect(boolHooks) == 1
     expect(sizeHooks) == 1
     expect(rectHooks) == 1
     expect(objectHooks) == 1
+    expect(object.boolCallCount) == 1
     expect(object.sizeCallCount) == 1
     expect(object.rectCallCount) == 1
     expect(object.objectCallCount) == 1
 
+    boolToken.cancel()
     sizeToken.cancel()
     rectToken.cancel()
     objectToken.cancel()
@@ -142,9 +156,15 @@ class InstanceMethodInterceptor_SingleArgVoidTests: XCTestCase {
     _ = observation
     expect(getClassName(object)) == "NSKVONotifying_\(originalClassName)"
 
+    var boolHooks = 0
     var sizeHooks = 0
     var rectHooks = 0
     var objectHooks = 0
+
+    let boolToken = object.intercept(selector: #selector(TypeTestObject.withBool(_:))) { (_, _, value: Bool, callOriginal) in
+      boolHooks += 1
+      callOriginal(value)
+    }
 
     let sizeToken = object.intercept(selector: #selector(TypeTestObject.withSize(_:))) { (_, _, value: CGSize, callOriginal) in
       sizeHooks += 1
@@ -161,17 +181,21 @@ class InstanceMethodInterceptor_SingleArgVoidTests: XCTestCase {
 
     expect(getClassName(object)) == "NSKVONotifying_\(originalClassName)"
 
+    object.withBool(true)
     object.withSize(CGSize(width: 1, height: 2))
     object.withRect(CGRect(x: 1, y: 2, width: 3, height: 4))
     object.withObject(NSObject())
 
+    expect(boolHooks) == 1
     expect(sizeHooks) == 1
     expect(rectHooks) == 1
     expect(objectHooks) == 1
+    expect(object.boolCallCount) == 1
     expect(object.sizeCallCount) == 1
     expect(object.rectCallCount) == 1
     expect(object.objectCallCount) == 1
 
+    boolToken.cancel()
     sizeToken.cancel()
     rectToken.cancel()
     objectToken.cancel()

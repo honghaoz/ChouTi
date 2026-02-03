@@ -49,3 +49,5 @@ bash generate_single_arg_void.sh
 ```
 
 This updates the per-type files and the dispatch block in `InstanceMethodInterceptor+SingleArgVoid.swift`.
+
+After adding a new type, update `InstanceMethodInterceptor+SingleArgVoidTests.swift` to add tests for the new type.

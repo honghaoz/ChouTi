@@ -60,6 +60,15 @@ extension InstanceMethodInterceptor {
         swizzleOriginalMethod: swizzleOriginalMethodWithInt
       )
     }
+    if Arg.self == Bool.self {
+      return interceptSingleArg(
+        object,
+        selector: selector,
+        block: erasedBlock,
+        addSubclassOverride: addSubclassOverrideWithBoolIfNeeded,
+        swizzleOriginalMethod: swizzleOriginalMethodWithBool
+      )
+    }
     if Arg.self == CGSize.self {
       return interceptSingleArg(
         object,

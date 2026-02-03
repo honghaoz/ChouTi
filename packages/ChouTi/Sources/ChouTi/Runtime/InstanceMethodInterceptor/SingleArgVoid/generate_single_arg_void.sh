@@ -9,7 +9,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 #   Keep Object:AnyObject last so it acts as a catch-all for all class types.
 #
 # Example: to support CGContext, add "CGContext" before Object:AnyObject.
-VALUE_TYPES=(Int CGSize CGRect)
+VALUE_TYPES=(Int Bool CGSize CGRect)
 OBJECT_TYPES=(Object:AnyObject)
 
 ENTRY_NAME=""
