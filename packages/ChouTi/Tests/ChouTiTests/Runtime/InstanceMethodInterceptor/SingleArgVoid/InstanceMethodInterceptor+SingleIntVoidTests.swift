@@ -1,5 +1,5 @@
 //
-//  InstanceMethodInterceptor+SingleArgVoidTests.swift
+//  InstanceMethodInterceptor+SingleIntVoidTests.swift
 //  ChouTi
 //
 //  Created by Honghao Zhang on 2/1/26.
@@ -36,9 +36,9 @@ import ChouTiTest
 
 @testable import ChouTi
 
-class InstanceMethodInterceptorSingleArgVoidTests: XCTestCase {
+class InstanceMethodInterceptor_SingleIntVoidTests: XCTestCase {
 
-  @objc(ChouTiIMI_PrefixedSingleArgTestObject)
+  @objc(ChouTiIMI_PrefixedSingleIntTestObject)
   final class PrefixedTestObject: NSObject {
 
     @objc dynamic func foo(_ value: Int) {}
@@ -360,6 +360,45 @@ class InstanceMethodInterceptorSingleArgVoidTests: XCTestCase {
     // then the hook should not be called
     expect(hookCount) == 0
     expect(object.noArgCallCount) == 1
+  }
+
+  func test_selectorWithExistingNoArgHook_isIgnored() {
+    // given a non-KVO object
+    let object = TestObject()
+    let originalClassName = getClassName(object)
+
+    // seed a no-arg hook for the same selector
+    let state = InstanceMethodInterceptor.state(for: object)
+    var hooks = InstanceMethodInterceptor.HookBlocks()
+    let token = ValueCancellableToken(value: { _, _, _ in } as InstanceMethodInvokeBlock) { _ in }
+    token.store(in: &hooks)
+    state.hookBlocksBySelector[#selector(TestObject.withArg(_:))] = hooks
+
+    var hookCount = 0
+    var assertionMessage: String?
+    Assert.setTestAssertionFailureHandler { message, _, _, _, _ in
+      assertionMessage = message
+    }
+    defer {
+      Assert.resetTestAssertionFailureHandler()
+    }
+
+    // when intercept the method with a single-arg hook
+    object.intercept(selector: #selector(TestObject.withArg(_:))) { (_, _, value: Int, callOriginal) in
+      hookCount += 1
+      callOriginal(value)
+    }
+
+    // then the assertion should be thrown
+    expect(assertionMessage) == "intercept only supports one signature per selector; existing no-arg hook found"
+    expect(getClassName(object)) == originalClassName
+
+    // when call the method
+    object.withArg(2)
+
+    // then the hook should not be called
+    expect(hookCount) == 0
+    expect(object.argCallCount) == 1
   }
 
   func test_selectorWithSingleArgument_isIntercepted() {

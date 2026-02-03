@@ -34,6 +34,8 @@ import Foundation
 public typealias InstanceMethodInvokeBlock = (_ object: AnyObject, _ selector: Selector, _ callOriginal: @escaping () -> Void) -> Void
 public typealias InstanceMethodInvokeBlockWithArg<Arg> = (_ object: AnyObject, _ selector: Selector, _ arg: Arg, _ callOriginal: @escaping (Arg) -> Void) -> Void
 
+// NOTE: Single-arg void interceptors live under Runtime/InstanceMethodInterceptor/SingleArgVoid.
+
 public extension NSObject {
 
   /// Intercepts a void, no-argument instance method on this object.
@@ -66,7 +68,7 @@ public extension NSObject {
   ///   - block: The block to call when the method is invoked. The block will be called with the object, the selector, the argument, and a callback to call the original method.
   /// - Returns: A cancellable token that can be used to cancel the interception.
   @discardableResult
-  func intercept<Arg>(selector: Selector, block: @escaping InstanceMethodInvokeBlockWithArg<Arg>) -> CancellableToken {
+  func intercept<Arg>(selector: Selector, block: @escaping InstanceMethodInvokeBlockWithArg<Arg>) -> CancellableToken { // swiftformat:disable:this opaqueGenericParameters
     InstanceMethodInterceptor.intercept(self, selector: selector, block: block)
   }
 }
