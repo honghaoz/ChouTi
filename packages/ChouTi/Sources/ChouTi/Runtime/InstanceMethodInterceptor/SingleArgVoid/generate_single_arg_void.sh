@@ -7,10 +7,12 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # - VALUE_TYPES: Swift value types passed by value.
 # - OBJECT_TYPES: object/CFType types. Use Name:SwiftType to customize file/function name.
 #   Keep Object:AnyObject last so it acts as a catch-all for all class types.
+# - OPTIONAL_OBJECT_TYPES: object types that accept nil.
 #
 # Example: to support CGContext, add "CGContext" before Object:AnyObject.
 VALUE_TYPES=(Int Bool CGSize CGRect)
 OBJECT_TYPES=(Object:AnyObject)
+OPTIONAL_OBJECT_TYPES=(OptionalObject:AnyObject?)
 
 ENTRY_NAME=""
 ENTRY_TYPE=""
@@ -97,7 +99,7 @@ extension InstanceMethodInterceptor {
     )
 
     let newImplementation: @convention(block) (AnyObject, ${swift_type}) -> Void = { object, arg in
-      let callOriginal: (Any) -> Void = { value in
+      let callOriginal: (Any?) -> Void = { value in
 ${cast_body}
       }
       invokeHooksWithAnyArg(on: object, selector: selector, arg: arg, callOriginal: callOriginal)
@@ -133,7 +135,7 @@ ${cast_body}
     let originalImplementation = unsafeBitCast(originalIMP, to: VoidMethodWith${name}IMP.self)
 
     let newImplementation: @convention(block) (AnyObject, ${swift_type}) -> Void = { object, arg in
-      let callOriginal: (Any) -> Void = { value in
+      let callOriginal: (Any?) -> Void = { value in
 ${cast_body}
       }
       invokeHooksWithAnyArg(on: object, selector: selector, arg: arg, callOriginal: callOriginal)
@@ -158,10 +160,16 @@ guard_cast_body() {
   local type="$1"
   cat <<EOF
         guard let typedValue = value as? ${type} else {
+          let actualTypeDescription: String
+          if let value {
+            actualTypeDescription = String(describing: type(of: value))
+          } else {
+            actualTypeDescription = "nil"
+          }
           ChouTi.assertFailure("intercept arg type mismatch", metadata: [
             "selector": NSStringFromSelector(selector),
             "expected": String(describing: ${type}.self),
-            "actual": String(describing: type(of: value)),
+            "actual": actualTypeDescription,
           ])
           return
         }
@@ -172,7 +180,46 @@ EOF
 object_cast_body() {
   local type="$1"
   cat <<EOF
-        originalImplementation(object, selector, value as ${type})
+        guard let typedValue = value as? ${type} else {
+          let actualTypeDescription: String
+          if let value {
+            actualTypeDescription = String(describing: type(of: value))
+          } else {
+            actualTypeDescription = "nil"
+          }
+          ChouTi.assertFailure("intercept arg type mismatch", metadata: [
+            "selector": NSStringFromSelector(selector),
+            "expected": String(describing: ${type}.self),
+            "actual": actualTypeDescription,
+          ])
+          return
+        }
+        originalImplementation(object, selector, typedValue)
+EOF
+}
+
+optional_object_cast_body() {
+  local type="$1"
+  cat <<EOF
+        if value == nil {
+          originalImplementation(object, selector, nil)
+          return
+        }
+        guard let typedValue = value as? AnyObject else {
+          let actualTypeDescription: String
+          if let value {
+            actualTypeDescription = String(describing: type(of: value))
+          } else {
+            actualTypeDescription = "nil"
+          }
+          ChouTi.assertFailure("intercept arg type mismatch", metadata: [
+            "selector": NSStringFromSelector(selector),
+            "expected": String(describing: ${type}.self),
+            "actual": actualTypeDescription,
+          ])
+          return
+        }
+        originalImplementation(object, selector, typedValue)
 EOF
 }
 
@@ -253,6 +300,12 @@ done
 for entry in "${OBJECT_TYPES[@]}"; do
   parse_entry "$entry"
   cast_body="$(object_cast_body "$ENTRY_TYPE")"
+  write_file "$ENTRY_NAME" "$ENTRY_TYPE" "$cast_body"
+done
+
+for entry in "${OPTIONAL_OBJECT_TYPES[@]}"; do
+  parse_entry "$entry"
+  cast_body="$(optional_object_cast_body "$ENTRY_TYPE")"
   write_file "$ENTRY_NAME" "$ENTRY_TYPE" "$cast_body"
 done
 

@@ -31,23 +31,115 @@
 import Foundation
 import ObjectiveC
 
+/// Type-erased Optional handling used by the single-arg interceptor.
+///
+/// The interceptor erases arguments to `Any?` for dispatch. When the original
+/// `Arg` is an `Optional<Wrapped>`, we still need to:
+/// - construct `.none` for the correct Optional type
+/// - wrap a non-nil `Any` into `Optional<Wrapped>`
+/// - unwrap the Optional back to `Wrapped` for `callOriginal`
+///
+/// Swift doesn't expose these operations for `Optional` generically, so this
+/// protocol provides a small runtime shim.
+private protocol OptionalProtocol {
+
+  static var wrappedType: Any.Type { get }
+
+  static func makeOptional(from value: Any) -> Any?
+
+  static func makeNil() -> Any
+
+  static func unwrap(_ value: Any) -> Any?
+}
+
+extension Optional: OptionalProtocol {
+
+  static var wrappedType: Any.Type {
+    Wrapped.self
+  }
+
+  static func makeOptional(from value: Any) -> Any? {
+    guard let wrapped = value as? Wrapped else {
+      return nil
+    }
+    return Optional(wrapped)
+  }
+
+  static func makeNil() -> Any {
+    Optional<Wrapped>.none as Any // swiftformat:disable:this typeSugar
+  }
+
+  static func unwrap(_ value: Any) -> Any? {
+    guard let optional = value as? Optional<Wrapped> else { // swiftformat:disable:this typeSugar swiftlint:disable:this syntactic_sugar
+      return nil
+    }
+    switch optional {
+    case .some(let wrapped):
+      return wrapped
+    case .none:
+      return nil
+    }
+  }
+}
+
 extension InstanceMethodInterceptor {
 
   /// Intercepts a void, single-argument instance method on the given object.
   static func intercept<Arg>(_ object: AnyObject, selector: Selector, block: @escaping InstanceMethodInvokeBlockWithArg<Arg>) -> CancellableToken {
     let erasedBlock: InstanceMethodInvokeBlockWithArgAny = { object, selector, arg, callOriginal in
-      guard let typedArg = arg as? Arg else {
-        ChouTi.assertFailure("intercept arg type mismatch", metadata: [
-          "selector": NSStringFromSelector(selector),
-          "expected": String(describing: Arg.self),
-          "actual": String(describing: type(of: arg)),
-        ])
+      let optionalType = Arg.self as? OptionalProtocol.Type
+      let callOriginalTyped: (Arg) -> Void = { value in
+        if let optionalType {
+          callOriginal(optionalType.unwrap(value))
+        } else {
+          callOriginal(value)
+        }
+      }
+
+      if let typedArg = arg as? Arg {
+        block(object, selector, typedArg, callOriginalTyped)
         return
       }
-      let callOriginalTyped: (Arg) -> Void = { value in
-        callOriginal(value)
+
+      if let optionalType {
+        // NOTE:
+        // `arg as? Arg` already succeeds for Optional types (including `nil`), so this
+        // branch is typically unreachable in practice. We keep it as a defensive
+        // fallback in case Swift casting behavior changes in the future.
+        if arg == nil {
+          let typedArg = optionalType.makeNil() as! Arg // swiftlint:disable:this force_cast
+          block(object, selector, typedArg, callOriginalTyped)
+          return
+        }
+
+        if let arg, let optionalValue = optionalType.makeOptional(from: arg) {
+          let typedArg = optionalValue as! Arg // swiftlint:disable:this force_cast
+          block(object, selector, typedArg, callOriginalTyped)
+          return
+        }
       }
-      block(object, selector, typedArg, callOriginalTyped)
+
+      let actualTypeDescription: String
+      if let arg {
+        actualTypeDescription = String(describing: type(of: arg))
+      } else {
+        actualTypeDescription = "nil"
+      }
+      ChouTi.assertFailure("intercept arg type mismatch", metadata: [
+        "selector": NSStringFromSelector(selector),
+        "expected": String(describing: Arg.self),
+        "actual": actualTypeDescription,
+      ])
+    }
+
+    if Arg.self is OptionalProtocol.Type {
+      return interceptSingleArg(
+        object,
+        selector: selector,
+        block: erasedBlock,
+        addSubclassOverride: addSubclassOverrideWithOptionalObjectIfNeeded,
+        swizzleOriginalMethod: swizzleOriginalMethodWithOptionalObject
+      )
     }
 
     // BEGIN GENERATED SINGLE ARG DISPATCH
@@ -239,8 +331,8 @@ extension InstanceMethodInterceptor {
   static func invokeHooksWithAnyArg(
     on object: AnyObject,
     selector: Selector,
-    arg: Any,
-    callOriginal: @escaping (Any) -> Void
+    arg: Any?,
+    callOriginal: @escaping (Any?) -> Void
   ) {
     guard let state = objc_getAssociatedObject(object, &AssociateKey.state) as? State else {
       callOriginal(arg)
@@ -258,7 +350,7 @@ extension InstanceMethodInterceptor {
     }
 
     var didCallOriginal = false
-    let callOriginalOnce: (Any) -> Void = { value in
+    let callOriginalOnce: (Any?) -> Void = { value in
       guard didCallOriginal == false else {
         return
       }

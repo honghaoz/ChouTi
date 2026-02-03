@@ -105,7 +105,7 @@ public extension NSObject {
 ///   which may break other mechanisms that also modify the same method on the original class.
 enum InstanceMethodInterceptor {
 
-  typealias InstanceMethodInvokeBlockWithArgAny = (_ object: AnyObject, _ selector: Selector, _ arg: Any, _ callOriginal: @escaping (Any) -> Void) -> Void
+  typealias InstanceMethodInvokeBlockWithArgAny = (_ object: AnyObject, _ selector: Selector, _ arg: Any?, _ callOriginal: @escaping (Any?) -> Void) -> Void
 
   typealias HookBlocks = OrderedDictionary<ObjectIdentifier, ValueCancellableToken<InstanceMethodInvokeBlock>>
   typealias HookBlocksWithArg = OrderedDictionary<ObjectIdentifier, ValueCancellableToken<InstanceMethodInvokeBlockWithArgAny>>

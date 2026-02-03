@@ -51,6 +51,8 @@ class InstanceMethodInterceptor_SingleArgVoidTests: XCTestCase {
     private(set) var sizeCallCount = 0
     private(set) var rectCallCount = 0
     private(set) var objectCallCount = 0
+    private(set) var optionalObjectCallCount = 0
+    private(set) var optionalNumberCallCount = 0
 
     @objc dynamic func withBool(_ bool: Bool) {
       boolCallCount += 1
@@ -66,6 +68,14 @@ class InstanceMethodInterceptor_SingleArgVoidTests: XCTestCase {
 
     @objc dynamic func withObject(_ object: NSObject) {
       objectCallCount += 1
+    }
+
+    @objc dynamic func withOptionalObject(_ object: NSObject?) {
+      optionalObjectCallCount += 1
+    }
+
+    @objc dynamic func withOptionalNumber(_ number: NSNumber?) {
+      optionalNumberCallCount += 1
     }
   }
 
@@ -139,6 +149,72 @@ class InstanceMethodInterceptor_SingleArgVoidTests: XCTestCase {
     expect(getClassName(object)) == originalClassName
   }
 
+  func test_singleArg_optionalObject_isIntercepted_nonKVO() {
+    let object = TypeTestObject()
+    let originalClassName = getClassName(object)
+
+    var optionalObjectHooks = 0
+    var receivedValues: [NSObject?] = []
+    let objectValue = NSObject()
+
+    let token = object.intercept(selector: #selector(TypeTestObject.withOptionalObject(_:))) { (_, _, value: NSObject?, callOriginal) in
+      optionalObjectHooks += 1
+      receivedValues.append(value)
+      callOriginal(value)
+    }
+
+    expect(getClassName(object)) == "ChouTiIMI_\(originalClassName)"
+
+    object.withOptionalObject(nil)
+    object.withOptionalObject(objectValue)
+
+    expect(optionalObjectHooks) == 2
+    expect(object.optionalObjectCallCount) == 2
+    expect(receivedValues.count) == 2
+    expect(receivedValues[0]) == nil
+    if let secondValue = receivedValues[1] {
+      expect(secondValue === objectValue) == true
+    } else {
+      fail("Expected non-nil value for optional object")
+    }
+
+    token.cancel()
+    expect(getClassName(object)) == originalClassName
+  }
+
+  func test_singleArg_optionalNumber_isIntercepted_nonKVO() {
+    let object = TypeTestObject()
+    let originalClassName = getClassName(object)
+
+    var optionalNumberHooks = 0
+    var receivedValues: [NSNumber?] = []
+    let numberValue = NSNumber(value: true)
+
+    let token = object.intercept(selector: #selector(TypeTestObject.withOptionalNumber(_:))) { (_, _, value: NSNumber?, callOriginal) in
+      optionalNumberHooks += 1
+      receivedValues.append(value)
+      callOriginal(value)
+    }
+
+    expect(getClassName(object)) == "ChouTiIMI_\(originalClassName)"
+
+    object.withOptionalNumber(nil)
+    object.withOptionalNumber(numberValue)
+
+    expect(optionalNumberHooks) == 2
+    expect(object.optionalNumberCallCount) == 2
+    expect(receivedValues.count) == 2
+    expect(receivedValues[0]) == nil
+    if let secondValue = receivedValues[1] {
+      expect(secondValue === numberValue) == true
+    } else {
+      fail("Expected non-nil value for optional number")
+    }
+
+    token.cancel()
+    expect(getClassName(object)) == originalClassName
+  }
+
   func test_singleArg_unsupportedType_isIgnored() {
     let object = TypeTestObject()
     let originalClassName = getClassName(object)
@@ -164,7 +240,6 @@ class InstanceMethodInterceptor_SingleArgVoidTests: XCTestCase {
     expect(hookCount) == 0
     expect(object.sizeCallCount) == 1
   }
-
 
   func test_singleArg_typeMismatch_triggersAssertion_nonKVO() {
     let cases: [MismatchCase] = [
@@ -285,6 +360,46 @@ class InstanceMethodInterceptor_SingleArgVoidTests: XCTestCase {
     }
   }
 
+  func test_singleArg_optionalObject_utilityPaths_areCovered() {
+    let object = TypeTestObject()
+    let selector = #selector(TypeTestObject.withOptionalObject(_:))
+
+    var receivedValues: [NSObject?] = []
+    var originalValues: [Any?] = []
+    let objectValue = NSObject()
+
+    let token = object.intercept(selector: selector) { (_, _, value: NSObject?, callOriginal) in
+      receivedValues.append(value)
+      callOriginal(value)
+    }
+
+    InstanceMethodInterceptor.invokeHooksWithAnyArg(on: object, selector: selector, arg: nil) { value in
+      originalValues.append(value)
+    }
+
+    InstanceMethodInterceptor.invokeHooksWithAnyArg(on: object, selector: selector, arg: objectValue) { value in
+      originalValues.append(value)
+    }
+
+    expect(receivedValues.count) == 2
+    expect(receivedValues[0]) == nil
+    if let secondValue = receivedValues[1] {
+      expect(secondValue === objectValue) == true
+    } else {
+      fail("Expected non-nil value for optional object")
+    }
+
+    expect(originalValues.count) == 2
+    expect(originalValues[0]) == nil
+    if let secondValue = originalValues[1] as? NSObject {
+      expect(secondValue === objectValue) == true
+    } else {
+      fail("Expected non-nil value for original object")
+    }
+
+    token.cancel()
+  }
+
   // MARK: - KVO
 
   func test_singleArg_types_areIntercepted_KVO() {
@@ -339,6 +454,78 @@ class InstanceMethodInterceptor_SingleArgVoidTests: XCTestCase {
     rectToken.cancel()
     objectToken.cancel()
 
+    observation.invalidate()
+    expect(getClassName(object)) == originalClassName
+  }
+
+  func test_singleArg_optionalObject_isIntercepted_KVO() {
+    let object = TypeTestObject()
+    let originalClassName = getClassName(object)
+
+    let observation = object.observe(\.value, options: [.new]) { _, _ in }
+    _ = observation
+    expect(getClassName(object)) == "NSKVONotifying_\(originalClassName)"
+
+    var optionalObjectHooks = 0
+    var receivedValues: [NSObject?] = []
+    let objectValue = NSObject()
+
+    let token = object.intercept(selector: #selector(TypeTestObject.withOptionalObject(_:))) { (_, _, value: NSObject?, callOriginal) in
+      optionalObjectHooks += 1
+      receivedValues.append(value)
+      callOriginal(value)
+    }
+
+    object.withOptionalObject(nil)
+    object.withOptionalObject(objectValue)
+
+    expect(optionalObjectHooks) == 2
+    expect(object.optionalObjectCallCount) == 2
+    expect(receivedValues.count) == 2
+    expect(receivedValues[0]) == nil
+    if let secondValue = receivedValues[1] {
+      expect(secondValue === objectValue) == true
+    } else {
+      fail("Expected non-nil value for optional object")
+    }
+
+    token.cancel()
+    observation.invalidate()
+    expect(getClassName(object)) == originalClassName
+  }
+
+  func test_singleArg_optionalNumber_isIntercepted_KVO() {
+    let object = TypeTestObject()
+    let originalClassName = getClassName(object)
+
+    let observation = object.observe(\.value, options: [.new]) { _, _ in }
+    _ = observation
+    expect(getClassName(object)) == "NSKVONotifying_\(originalClassName)"
+
+    var optionalNumberHooks = 0
+    var receivedValues: [NSNumber?] = []
+    let numberValue = NSNumber(value: true)
+
+    let token = object.intercept(selector: #selector(TypeTestObject.withOptionalNumber(_:))) { (_, _, value: NSNumber?, callOriginal) in
+      optionalNumberHooks += 1
+      receivedValues.append(value)
+      callOriginal(value)
+    }
+
+    object.withOptionalNumber(nil)
+    object.withOptionalNumber(numberValue)
+
+    expect(optionalNumberHooks) == 2
+    expect(object.optionalNumberCallCount) == 2
+    expect(receivedValues.count) == 2
+    expect(receivedValues[0]) == nil
+    if let secondValue = receivedValues[1] {
+      expect(secondValue === numberValue) == true
+    } else {
+      fail("Expected non-nil value for optional number")
+    }
+
+    token.cancel()
     observation.invalidate()
     expect(getClassName(object)) == originalClassName
   }

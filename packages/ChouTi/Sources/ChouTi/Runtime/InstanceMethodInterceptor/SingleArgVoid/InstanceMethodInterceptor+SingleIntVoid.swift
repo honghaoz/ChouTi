@@ -62,12 +62,18 @@ extension InstanceMethodInterceptor {
     )
 
     let newImplementation: @convention(block) (AnyObject, Int) -> Void = { object, arg in
-      let callOriginal: (Any) -> Void = { value in
+      let callOriginal: (Any?) -> Void = { value in
         guard let typedValue = value as? Int else {
+          let actualTypeDescription: String
+          if let value {
+            actualTypeDescription = String(describing: type(of: value))
+          } else {
+            actualTypeDescription = "nil"
+          }
           ChouTi.assertFailure("intercept arg type mismatch", metadata: [
             "selector": NSStringFromSelector(selector),
             "expected": String(describing: Int.self),
-            "actual": String(describing: type(of: value)),
+            "actual": actualTypeDescription,
           ])
           return
         }
@@ -106,12 +112,18 @@ extension InstanceMethodInterceptor {
     let originalImplementation = unsafeBitCast(originalIMP, to: VoidMethodWithIntIMP.self)
 
     let newImplementation: @convention(block) (AnyObject, Int) -> Void = { object, arg in
-      let callOriginal: (Any) -> Void = { value in
+      let callOriginal: (Any?) -> Void = { value in
         guard let typedValue = value as? Int else {
+          let actualTypeDescription: String
+          if let value {
+            actualTypeDescription = String(describing: type(of: value))
+          } else {
+            actualTypeDescription = "nil"
+          }
           ChouTi.assertFailure("intercept arg type mismatch", metadata: [
             "selector": NSStringFromSelector(selector),
             "expected": String(describing: Int.self),
-            "actual": String(describing: type(of: value)),
+            "actual": actualTypeDescription,
           ])
           return
         }

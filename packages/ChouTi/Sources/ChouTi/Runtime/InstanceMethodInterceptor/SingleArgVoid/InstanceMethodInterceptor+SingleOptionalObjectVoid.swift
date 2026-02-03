@@ -1,5 +1,5 @@
 //
-//  InstanceMethodInterceptor+SingleObjectVoid.swift
+//  InstanceMethodInterceptor+SingleOptionalObjectVoid.swift
 //  ChouTi
 //
 //  Copyright © 2020 Honghao Zhang.
@@ -34,9 +34,9 @@ import ObjectiveC
 
 extension InstanceMethodInterceptor {
 
-  private typealias VoidMethodWithObjectIMP = @convention(c) (AnyObject, Selector, AnyObject) -> Void
+  private typealias VoidMethodWithOptionalObjectIMP = @convention(c) (AnyObject, Selector, AnyObject?) -> Void
 
-  static func addSubclassOverrideWithObjectIfNeeded(
+  static func addSubclassOverrideWithOptionalObjectIfNeeded(
     subclass: AnyClass,
     originalClass: AnyClass,
     selector: Selector
@@ -58,11 +58,15 @@ extension InstanceMethodInterceptor {
 
     let originalImplementation = unsafeBitCast(
       class_getMethodImplementation(originalClass, selector),
-      to: VoidMethodWithObjectIMP.self
+      to: VoidMethodWithOptionalObjectIMP.self
     )
 
-    let newImplementation: @convention(block) (AnyObject, AnyObject) -> Void = { object, arg in
+    let newImplementation: @convention(block) (AnyObject, AnyObject?) -> Void = { object, arg in
       let callOriginal: (Any?) -> Void = { value in
+        if value == nil {
+          originalImplementation(object, selector, nil)
+          return
+        }
         guard let typedValue = value as? AnyObject else {
           let actualTypeDescription: String
           if let value {
@@ -72,7 +76,7 @@ extension InstanceMethodInterceptor {
           }
           ChouTi.assertFailure("intercept arg type mismatch", metadata: [
             "selector": NSStringFromSelector(selector),
-            "expected": String(describing: AnyObject.self),
+            "expected": String(describing: AnyObject?.self),
             "actual": actualTypeDescription,
           ])
           return
@@ -89,7 +93,7 @@ extension InstanceMethodInterceptor {
   }
 
   /// Swizzles the original class method (single argument) when KVO has already swizzled the instance.
-  static func swizzleOriginalMethodWithObject(
+  static func swizzleOriginalMethodWithOptionalObject(
     originalClass: AnyClass,
     selector: Selector
   ) {
@@ -109,10 +113,14 @@ extension InstanceMethodInterceptor {
     }
 
     let originalIMP = method_getImplementation(originalMethod)
-    let originalImplementation = unsafeBitCast(originalIMP, to: VoidMethodWithObjectIMP.self)
+    let originalImplementation = unsafeBitCast(originalIMP, to: VoidMethodWithOptionalObjectIMP.self)
 
-    let newImplementation: @convention(block) (AnyObject, AnyObject) -> Void = { object, arg in
+    let newImplementation: @convention(block) (AnyObject, AnyObject?) -> Void = { object, arg in
       let callOriginal: (Any?) -> Void = { value in
+        if value == nil {
+          originalImplementation(object, selector, nil)
+          return
+        }
         guard let typedValue = value as? AnyObject else {
           let actualTypeDescription: String
           if let value {
@@ -122,7 +130,7 @@ extension InstanceMethodInterceptor {
           }
           ChouTi.assertFailure("intercept arg type mismatch", metadata: [
             "selector": NSStringFromSelector(selector),
-            "expected": String(describing: AnyObject.self),
+            "expected": String(describing: AnyObject?.self),
             "actual": actualTypeDescription,
           ])
           return
