@@ -91,6 +91,18 @@ class InstanceMethodInterceptor_SingleIntVoidTests: XCTestCase {
     }
   }
 
+  private func installMismatchedHook(on object: TestObject, selector: Selector, wrongValue: Any) {
+    let state = InstanceMethodInterceptor.state(for: object)
+    var hooks = InstanceMethodInterceptor.HookBlocksWithArg()
+    let token = ValueCancellableToken(
+      value: { _, _, _, callOriginal in
+        callOriginal(wrongValue)
+      } as InstanceMethodInterceptor.InstanceMethodInvokeBlockWithArgAny
+    ) { _ in }
+    token.store(in: &hooks)
+    state.hookBlocksBySelectorWithArg[selector] = hooks
+  }
+
   final class TestObjectSubclass: TestObject {
 
     private(set) var subclassFooCallCount = 0
@@ -1521,6 +1533,51 @@ class InstanceMethodInterceptor_SingleIntVoidTests: XCTestCase {
     if let restoredIMP = methodImplementation(TestObject.self, selector) {
       expect(restoredIMP) == originalIMP
     }
+  }
+
+  // MARK: - Edge Cases
+
+  func test_singleArg_typeMismatch_triggersAssertion_nonKVO() {
+    let object = TestObject()
+    var assertionMessage: String?
+    Assert.setTestAssertionFailureHandler { message, _, _, _, _ in
+      assertionMessage = message
+    }
+
+    let token = object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
+      callOriginal(value)
+    }
+
+    installMismatchedHook(on: object, selector: #selector(TestObject.foo(_:)), wrongValue: "wrong")
+    object.foo(1)
+
+    expect(assertionMessage) == "intercept arg type mismatch"
+    token.cancel()
+    Assert.resetTestAssertionFailureHandler()
+  }
+
+  func test_singleArg_typeMismatch_triggersAssertion_KVO() {
+    let object = TestObject()
+    var assertionMessage: String?
+    Assert.setTestAssertionFailureHandler { message, _, _, _, _ in
+      assertionMessage = message
+    }
+
+    let observation = object.observe(\.value, options: [.new]) { _, _ in }
+    _ = observation
+
+    let token = object.intercept(selector: #selector(TestObject.foo(_:))) { (_, _, value: Int, callOriginal) in
+      callOriginal(value)
+    }
+
+    installMismatchedHook(on: object, selector: #selector(TestObject.foo(_:)), wrongValue: "wrong")
+    object.foo(1)
+
+    expect(assertionMessage) == "intercept arg type mismatch"
+
+    token.cancel()
+    observation.invalidate()
+    Assert.resetTestAssertionFailureHandler()
   }
 }
 

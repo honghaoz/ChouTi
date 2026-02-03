@@ -43,7 +43,7 @@ You are an expert iOS/macOS developer with a passion for writing clean, maintain
 ## Testing Guidelines
 - Testing framework: **ChouTiTest** (use `expect`, `fail`, etc.).
 - Avoid `XCTFail()`; prefer `fail()` from ChouTiTest. If there's no available ChouTiTest helper, recommend adding one.
-- Test file naming: `*Tests.swift`. Test files should match the source file name, with `Tests` suffix, and located in the same mirrored directory as the source file.
+- Test file naming: `*Tests.swift`. Test files should match the source file name, with `Tests` suffix, and located in the same mirrored directory as the source file. For example, `Foo+Extensions.swift` should have a corresponding `Foo+ExtensionsTests.swift`.
 - Test methods start with `test_`.
 - Example targeted run:
   - `swift test --filter InstanceMethodInterceptorTests.test_example`

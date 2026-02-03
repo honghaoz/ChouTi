@@ -69,6 +69,25 @@ class InstanceMethodInterceptor_SingleArgVoidTests: XCTestCase {
     }
   }
 
+  private struct MismatchCase {
+    let selector: Selector
+    let intercept: (TypeTestObject) -> CancellableToken
+    let invoke: (TypeTestObject) -> Void
+    let wrongValue: Any
+  }
+
+  private func installMismatchedHook(on object: TypeTestObject, selector: Selector, wrongValue: Any) {
+    let state = InstanceMethodInterceptor.state(for: object)
+    var hooks = InstanceMethodInterceptor.HookBlocksWithArg()
+    let token = ValueCancellableToken(
+      value: { _, _, _, callOriginal in
+        callOriginal(wrongValue)
+      } as InstanceMethodInterceptor.InstanceMethodInvokeBlockWithArgAny
+    ) { _ in }
+    token.store(in: &hooks)
+    state.hookBlocksBySelectorWithArg[selector] = hooks
+  }
+
   // MARK: - Non-KVO
 
   func test_singleArg_types_areIntercepted_nonKVO() {
@@ -144,6 +163,126 @@ class InstanceMethodInterceptor_SingleArgVoidTests: XCTestCase {
     object.withSize(CGSize(width: 1, height: 2))
     expect(hookCount) == 0
     expect(object.sizeCallCount) == 1
+  }
+
+
+  func test_singleArg_typeMismatch_triggersAssertion_nonKVO() {
+    let cases: [MismatchCase] = [
+      MismatchCase(
+        selector: #selector(TypeTestObject.withBool(_:)),
+        intercept: { object in
+          object.intercept(selector: #selector(TypeTestObject.withBool(_:))) { (_, _, value: Bool, callOriginal) in
+            callOriginal(value)
+          }
+        },
+        invoke: { object in
+          object.withBool(true)
+        },
+        wrongValue: 1
+      ),
+      MismatchCase(
+        selector: #selector(TypeTestObject.withSize(_:)),
+        intercept: { object in
+          object.intercept(selector: #selector(TypeTestObject.withSize(_:))) { (_, _, value: CGSize, callOriginal) in
+            callOriginal(value)
+          }
+        },
+        invoke: { object in
+          object.withSize(CGSize(width: 1, height: 2))
+        },
+        wrongValue: 1
+      ),
+      MismatchCase(
+        selector: #selector(TypeTestObject.withRect(_:)),
+        intercept: { object in
+          object.intercept(selector: #selector(TypeTestObject.withRect(_:))) { (_, _, value: CGRect, callOriginal) in
+            callOriginal(value)
+          }
+        },
+        invoke: { object in
+          object.withRect(CGRect(x: 1, y: 2, width: 3, height: 4))
+        },
+        wrongValue: 1
+      ),
+    ]
+
+    for testCase in cases {
+      let object = TypeTestObject()
+      var assertionMessage: String?
+      Assert.setTestAssertionFailureHandler { message, _, _, _, _ in
+        assertionMessage = message
+      }
+
+      let token = testCase.intercept(object)
+      installMismatchedHook(on: object, selector: testCase.selector, wrongValue: testCase.wrongValue)
+      testCase.invoke(object)
+
+      expect(assertionMessage) == "intercept arg type mismatch"
+      token.cancel()
+      Assert.resetTestAssertionFailureHandler()
+    }
+  }
+
+  func test_singleArg_typeMismatch_triggersAssertion_KVO() {
+    let cases: [MismatchCase] = [
+      MismatchCase(
+        selector: #selector(TypeTestObject.withBool(_:)),
+        intercept: { object in
+          object.intercept(selector: #selector(TypeTestObject.withBool(_:))) { (_, _, value: Bool, callOriginal) in
+            callOriginal(value)
+          }
+        },
+        invoke: { object in
+          object.withBool(true)
+        },
+        wrongValue: 1
+      ),
+      MismatchCase(
+        selector: #selector(TypeTestObject.withSize(_:)),
+        intercept: { object in
+          object.intercept(selector: #selector(TypeTestObject.withSize(_:))) { (_, _, value: CGSize, callOriginal) in
+            callOriginal(value)
+          }
+        },
+        invoke: { object in
+          object.withSize(CGSize(width: 1, height: 2))
+        },
+        wrongValue: 1
+      ),
+      MismatchCase(
+        selector: #selector(TypeTestObject.withRect(_:)),
+        intercept: { object in
+          object.intercept(selector: #selector(TypeTestObject.withRect(_:))) { (_, _, value: CGRect, callOriginal) in
+            callOriginal(value)
+          }
+        },
+        invoke: { object in
+          object.withRect(CGRect(x: 1, y: 2, width: 3, height: 4))
+        },
+        wrongValue: 1
+      ),
+    ]
+
+    for testCase in cases {
+      let object = TypeTestObject()
+      var assertionMessage: String?
+      Assert.setTestAssertionFailureHandler { message, _, _, _, _ in
+        assertionMessage = message
+      }
+
+      let observation = object.observe(\.value, options: [.new]) { _, _ in }
+      _ = observation
+
+      let token = testCase.intercept(object)
+      installMismatchedHook(on: object, selector: testCase.selector, wrongValue: testCase.wrongValue)
+      testCase.invoke(object)
+
+      expect(assertionMessage) == "intercept arg type mismatch"
+
+      token.cancel()
+      observation.invalidate()
+      Assert.resetTestAssertionFailureHandler()
+    }
   }
 
   // MARK: - KVO
