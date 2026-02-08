@@ -32,6 +32,7 @@ import ChouTiTest
 import XCTest
 
 import Foundation
+import QuartzCore
 
 class ExpectEventuallyTests: XCTestCase {
 
@@ -170,5 +171,27 @@ class ExpectEventuallyTests: XCTestCase {
       }
       expect(calculate()).toEventuallyNot(beNil())
     }
+  }
+
+  func test_eventually_optionalValue() {
+    let value: Int? = 1
+    expect(value).toEventually(beEqual(to: 1))
+
+    let layer = CALayer()
+    expect(layer.backgroundColor).toEventually(beEqual(to: nil))
+    expect(layer.backgroundColor).toEventuallyNot(beEqual(to: CGColor(red: 1, green: 1, blue: 1, alpha: 1)))
+
+    let backgroundColor = CGColor(red: 1, green: 1, blue: 1, alpha: 1)
+    layer.backgroundColor = backgroundColor
+    expect(layer.backgroundColor).toEventually(beEqual(to: backgroundColor))
+    expect(layer.backgroundColor).toEventuallyNot(beEqual(to: CGColor(red: 0, green: 1, blue: 1, alpha: 1)))
+    expect(layer.backgroundColor).toEventuallyNot(beEqual(to: nil))
+    expect(layer.backgroundColor).to(beEqual(to: backgroundColor))
+    expect(layer.backgroundColor) == backgroundColor
+
+    try expect(layer.backgroundColor.unwrap()).toEventually(beEqual(to: backgroundColor))
+    try expect(layer.backgroundColor.unwrap()).toEventuallyNot(beEqual(to: CGColor(red: 0, green: 1, blue: 1, alpha: 1)))
+    try expect(layer.backgroundColor.unwrap()).toEventuallyNot(beNil())
+    try expect(layer.backgroundColor.unwrap()).to(beEqual(to: backgroundColor))
   }
 }

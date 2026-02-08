@@ -57,6 +57,8 @@ class ExpectTests: XCTestCase {
     expect(1) == 1
     expect(1) != 2
     expect((beEqual(to: 1) as BeEqualExpectation<Int>).description) == "be equal to \"1\""
+    expect((beEqual(to: Optional(1)) as BeEqualExpectation<Int?>).description) == "be equal to \"1\""
+    expect((beEqual(to: nil as Int?) as BeEqualExpectation<Int?>).description) == "be equal to \"nil\""
   }
 
   func testBeApproximatelyEqual() {

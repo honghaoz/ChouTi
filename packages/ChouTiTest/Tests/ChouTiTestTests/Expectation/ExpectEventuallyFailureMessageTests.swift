@@ -103,6 +103,15 @@ class ExpectEventuallyFailureMessageTests: FailureCapturingTestCase {
       assertFailure(expectedMessage: expectedMessage)
     }
     do {
+      func calculate() -> Int? {
+        return 1
+      }
+
+      expect(calculate()).toEventuallyNot(beEqual(to: 1), timeout: 0.05)
+      let expectedMessage = "failed - expect \"1\" to not be equal to \"1\" eventually"
+      assertFailure(expectedMessage: expectedMessage)
+    }
+    do {
       expect(nil).toEventuallyNot(beEqual(to: nil as Int?), timeout: 0.05)
       let expectedMessage = #"failed - expect "nil" to not be equal to "nil" eventually"#
       assertFailure(expectedMessage: expectedMessage)

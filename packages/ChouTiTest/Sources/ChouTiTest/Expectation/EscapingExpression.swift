@@ -72,6 +72,29 @@ public struct EscapingExpression<T> {
     _toEventually(expectationEvaluate: expectation.evaluate, expectationDescription: { expectation.description }, interval: interval, timeout: timeout)
   }
 
+  /// Evaluate an optional expression with a regular (non-optional) expectation repeatedly until the expectation is satisfied or timeout.
+  ///
+  /// The optional value will be automatically unwrapped. If the value is `nil`, the expectation is treated as not met for that iteration.
+  ///
+  /// - Parameters:
+  ///   - expectation: The regular expectation to evaluate against the unwrapped value.
+  ///   - interval: The repeating interval to evaluate the expression. Default is 0.01 seconds.
+  ///   - timeout: The timeout to stop evaluating the expression. Default is 3 seconds.
+  public func toEventually<Wrapped>(_ expectation: some Expectation<Wrapped, Never>, interval: TimeInterval = 0.01, timeout: TimeInterval = 3) where T == Wrapped? {
+    _toEventually(
+      expectationEvaluate: { actualValue in
+        guard let actualValue else {
+          return false
+        }
+
+        return expectation.evaluate(actualValue)
+      },
+      expectationDescription: { expectation.description },
+      interval: interval,
+      timeout: timeout
+    )
+  }
+
   /// The internal implementation of `toEventually` for both `Expectation` and `OptionalExpectation`.
   private func _toEventually(expectationEvaluate: @escaping (T) -> Bool, expectationDescription: () -> String, interval: TimeInterval, timeout: TimeInterval) {
     guard interval > 0 else {
@@ -234,6 +257,29 @@ public struct EscapingExpression<T> {
   ///   - timeout: The timeout to stop evaluating the expression. Default is 3 seconds.
   public func toEventuallyNot(_ expectation: some OptionalExpectation<T, Never>, interval: TimeInterval = 0.01, timeout: TimeInterval = 3) {
     _toEventuallyNot(expectationEvaluate: expectation.evaluate, expectationDescription: { expectation.description }, interval: interval, timeout: timeout)
+  }
+
+  /// Evaluate an optional expression with a regular (non-optional) expectation repeatedly until the expectation is **not** satisfied or timeout.
+  ///
+  /// The optional value will be automatically unwrapped. If the value is `nil`, it is treated as "not meeting" the expectation for that iteration.
+  ///
+  /// - Parameters:
+  ///   - expectation: The regular expectation to evaluate against the unwrapped value.
+  ///   - interval: The repeating interval to evaluate the expression. Default is 0.01 seconds.
+  ///   - timeout: The timeout to stop evaluating the expression. Default is 3 seconds.
+  public func toEventuallyNot<Wrapped>(_ expectation: some Expectation<Wrapped, Never>, interval: TimeInterval = 0.01, timeout: TimeInterval = 3) where T == Wrapped? {
+    _toEventuallyNot(
+      expectationEvaluate: { actualValue in
+        guard let actualValue else {
+          return false
+        }
+
+        return expectation.evaluate(actualValue)
+      },
+      expectationDescription: { expectation.description },
+      interval: interval,
+      timeout: timeout
+    )
   }
 
   /// The internal implementation of `toEventuallyNot` for both `Expectation` and `OptionalExpectation`.
