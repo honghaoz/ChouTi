@@ -76,3 +76,33 @@ You are an expert iOS/macOS developer with a passion for writing clean, maintain
 Add short, actionable rules here when a pattern repeats.
 
 - TODO: Add lessons and conventions here (remove this placeholder when done)
+
+## Cursor Cloud specific instructions
+
+### Environment overview
+
+This is a pure Swift framework for Apple platforms (macOS/iOS/tvOS/visionOS/watchOS). The Cursor Cloud VM runs Ubuntu 24.04 (x86_64), so Apple-only frameworks (Combine, QuartzCore, AppKit, UIKit) are unavailable. This constrains what can be done on the VM:
+
+- **Linting works fully**: `make lint` and `make format` run SwiftFormat 0.59.1 and SwiftLint 0.63.2 (Linux binaries in `bin/`).
+- **Building and testing do NOT work**: `swift build` and `swift test` fail because the source code imports Apple-only frameworks without Linux `#if canImport()` guards. This is by design — the project targets Apple platforms only.
+
+### What you CAN do on this VM
+
+- Run `make lint` to check code style (SwiftFormat + SwiftLint).
+- Run `make format` to auto-fix formatting issues.
+- Read, search, and edit Swift source files.
+- Validate Swift syntax via the Swift 6.0.3 toolchain (e.g. `swift -parse` on individual files that don't import Apple frameworks).
+
+### What you CANNOT do on this VM
+
+- `swift build` / `swift test` / `make build` — these require macOS + Xcode.
+- Build or run playground projects — these require Xcode.
+- Run the full test suite — tests depend on Apple-only frameworks.
+
+### Linting tool setup
+
+The `bin/swiftformat` and `bin/swiftlint` binaries are gitignored. The update script downloads the correct Linux versions automatically. Versions are pinned in `bin/.versions`.
+
+### Key gotcha
+
+The `scripts/lint.sh` script requires `bc` (for timing). The update script installs it.
