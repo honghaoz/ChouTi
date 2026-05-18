@@ -1477,7 +1477,7 @@ class InstanceMethodInterceptorTests: XCTestCase {
     // create the second instance first and keep it alive to ensure the swizzle stays active
     // after the first instance deallocates.
     var object2: TestObject! = TestObject()
-    weak var weakObject2 = object2
+    weak let weakObject2 = object2
     var observation2: NSKeyValueObservation? = object2?.observe(\.value, options: [.new]) { _, _ in }
     _ = observation2
     let token2 = object2.intercept(selector: selector) { _, _, callOriginal in

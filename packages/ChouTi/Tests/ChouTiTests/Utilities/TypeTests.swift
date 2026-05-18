@@ -151,7 +151,9 @@ class TypeNameTests: XCTestCase {
       defer: true
     )
     let closeButton = window.standardWindowButton(.closeButton)
-    expect(getClassName(closeButton)) == "_NSThemeCloseWidget"
+    // macOS 15 returns "_NSThemeCloseWidget"
+    // macOS 26 returns "NSKVONotifying__NSThemeCloseWidget"
+    expect(["_NSThemeCloseWidget", "NSKVONotifying__NSThemeCloseWidget"].contains(getClassName(closeButton))) == true
     #endif
   }
 }

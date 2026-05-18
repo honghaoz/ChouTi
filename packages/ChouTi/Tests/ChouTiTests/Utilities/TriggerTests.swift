@@ -196,7 +196,7 @@ class TriggerTests: XCTestCase {
 
   func testSubscribeToUpstreamTrigger() {
     var upstreamTrigger: Trigger<Int>! = Trigger<Int>()
-    weak var weakUpstreamTrigger: Trigger<Int>? = upstreamTrigger
+    weak let weakUpstreamTrigger: Trigger<Int>? = upstreamTrigger
 
     let trigger = Trigger<Int>()
     var reactedNumber: Int?

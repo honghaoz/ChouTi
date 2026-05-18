@@ -914,9 +914,9 @@ final class LinkedListTests: XCTestCase {
 
   func testNodesAreReleasedAfterRemoveAll() {
     let list = LinkedList<Int>([1, 2, 3])
-    weak var weakNode0: LinkedListNode<Int>? = list.node(at: 0)
-    weak var weakNode1: LinkedListNode<Int>? = list.node(at: 1)
-    weak var weakNode2: LinkedListNode<Int>? = list.node(at: 2)
+    weak let weakNode0: LinkedListNode<Int>? = list.node(at: 0)
+    weak let weakNode1: LinkedListNode<Int>? = list.node(at: 1)
+    weak let weakNode2: LinkedListNode<Int>? = list.node(at: 2)
 
     expect(weakNode0) != nil
     expect(weakNode1) != nil

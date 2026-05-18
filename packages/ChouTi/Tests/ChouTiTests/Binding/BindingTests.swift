@@ -412,11 +412,11 @@ class BindingTests: XCTestCase {
   func test_bindingStorage_reset() {
     let store = BindingStorage()
 
-    weak var weakBinding: (any BindingType)? = Binding(1).store(in: store)
+    weak let weakBinding: (any BindingType)? = Binding(1).store(in: store)
     expect(weakBinding) != nil
-    weak var weakAnyBinding: (any BindingType)? = Binding(2).eraseToAnyBinding().store(in: store)
+    weak let weakAnyBinding: (any BindingType)? = Binding(2).eraseToAnyBinding().store(in: store)
     expect(weakAnyBinding) != nil
-    weak var weakMappedBinding: (any BindingType)? = Binding(1).map { "\($0)" }.store(in: store)
+    weak let weakMappedBinding: (any BindingType)? = Binding(1).map { "\($0)" }.store(in: store)
     expect(weakMappedBinding) != nil
 
     expect(store.contains(weakBinding!)) == true // swiftlint:disable:this force_unwrapping
@@ -430,11 +430,11 @@ class BindingTests: XCTestCase {
   func test_bindingStorage_release() {
     var store: BindingStorage! = BindingStorage()
 
-    weak var weakBinding: (any BindingType)? = Binding(1).store(in: store)
+    weak let weakBinding: (any BindingType)? = Binding(1).store(in: store)
     expect(weakBinding) != nil
-    weak var weakAnyBinding: (any BindingType)? = Binding(2).eraseToAnyBinding().store(in: store)
+    weak let weakAnyBinding: (any BindingType)? = Binding(2).eraseToAnyBinding().store(in: store)
     expect(weakAnyBinding) != nil
-    weak var weakMappedBinding: (any BindingType)? = Binding(1).map { "\($0)" }.store(in: store)
+    weak let weakMappedBinding: (any BindingType)? = Binding(1).map { "\($0)" }.store(in: store)
     expect(weakMappedBinding) != nil
 
     store = nil
@@ -446,11 +446,11 @@ class BindingTests: XCTestCase {
   func test_bindingStorage_remove() {
     let store = BindingStorage()
 
-    weak var weakBinding: (any BindingType)? = Binding(1).store(in: store)
+    weak let weakBinding: (any BindingType)? = Binding(1).store(in: store)
     expect(weakBinding) != nil
-    weak var weakAnyBinding: (any BindingType)? = Binding(2).eraseToAnyBinding().store(in: store)
+    weak let weakAnyBinding: (any BindingType)? = Binding(2).eraseToAnyBinding().store(in: store)
     expect(weakAnyBinding) != nil
-    weak var weakMappedBinding: (any BindingType)? = Binding(1).map { "\($0)" }.store(in: store)
+    weak let weakMappedBinding: (any BindingType)? = Binding(1).map { "\($0)" }.store(in: store)
     expect(weakMappedBinding) != nil
 
     store.remove(weakBinding!) // swiftlint:disable:this force_unwrapping
@@ -476,7 +476,7 @@ class BindingTests: XCTestCase {
   func test_bindingStorage_store_with_key() {
     let store = BindingStorage()
 
-    weak var weakBinding: (any BindingType)? = Binding(1).store(in: store)
+    weak let weakBinding: (any BindingType)? = Binding(1).store(in: store)
     expect(weakBinding) != nil
 
     store.store(weakBinding!, for: "key") // swiftlint:disable:this force_unwrapping
@@ -538,7 +538,7 @@ class BindingTests: XCTestCase {
 
     var observation: BindingObservation! = binding.observe { value, cancel in }
     observation.store(in: storage)
-    weak var weakObservation: BindingObservation? = observation
+    weak let weakObservation: BindingObservation? = observation
     observation = nil
 
     expect(binding.test_registered_observations.count) == 1
@@ -675,7 +675,7 @@ class BindingTests: XCTestCase {
     binding = Binding<Bool>(true)
     let sourceBinding = Binding<Int>(1)
     var mappedBinding: (some BindingType<Bool>)? = sourceBinding.map { $0 % 2 == 0 }
-    weak var mappedBindingWeak: (some BindingType<Bool>)? = mappedBinding
+    weak let mappedBindingWeak: (some BindingType<Bool>)? = mappedBinding
     let storage = BindingObservationStorage()
     binding.subscribe(to: mappedBinding!).store(in: storage) // swiftlint:disable:this force_unwrapping
 
@@ -856,7 +856,7 @@ class BindingTests: XCTestCase {
   func test_map_mappedBindingIsNotRetained() {
     binding = Binding(true)
 
-    weak var weakBinding = binding.map { value in
+    weak let weakBinding = binding.map { value in
       value ? "yes" : "no"
     }
     expect(weakBinding) == nil
@@ -1067,7 +1067,7 @@ class BindingTests: XCTestCase {
 
   func test_removeDuplicates_releaseUpstream() {
     var upstream: Binding<Int>? = Binding<Int>(1)
-    weak var upstreamWeak: Binding<Int>? = upstream
+    weak let upstreamWeak: Binding<Int>? = upstream
 
     expect(upstream!.test_registered_observations.count) == 0 // swiftlint:disable:this force_unwrapping
 
@@ -1458,10 +1458,10 @@ class BindingTests: XCTestCase {
 
   func test_combine_releaseUpstream1() {
     binding = Binding(true)
-    weak var weakBinding: Binding<Bool>? = binding
+    weak let weakBinding: Binding<Bool>? = binding
     let binding2 = Binding("123")
     var combinedBinding: (some BindingType<(Bool, String)>)? = binding.combine(with: binding2)
-    weak var weakCombinedBinding: AnyObject? = combinedBinding
+    weak let weakCombinedBinding: AnyObject? = combinedBinding
 
     expect(binding.test_registered_observations.count) == 1
     expect(binding2.test_registered_observations.count) == 1
@@ -1494,9 +1494,9 @@ class BindingTests: XCTestCase {
 
   func test_combine_releaseUpstream2() {
     binding = Binding(true)
-    weak var weakBinding: Binding<Bool>? = binding
+    weak let weakBinding: Binding<Bool>? = binding
     var binding2: Binding<String>! = Binding("123")
-    weak var weakBinding2: Binding<String>? = binding2
+    weak let weakBinding2: Binding<String>? = binding2
     var combinedBinding: (some BindingType<(Bool, String)>)? = binding.combine(with: binding2)
 
     expect(binding.test_registered_observations.count) == 1
@@ -1618,8 +1618,8 @@ class BindingTests: XCTestCase {
     var u1: Binding<Int>! = Binding<Int>(1)
     var u2: Binding<Int>! = Binding<Int>(2)
 
-    weak var u1Weak: Binding<Int>? = u1
-    weak var u2Weak: Binding<Int>? = u2
+    weak let u1Weak: Binding<Int>? = u1
+    weak let u2Weak: Binding<Int>? = u2
 
     var combined: AnyBinding<(Int, Int)>?
 
@@ -1659,9 +1659,9 @@ class BindingTests: XCTestCase {
     var u2: Binding<Int>! = Binding<Int>(2)
     var u3: Binding<Int>! = Binding<Int>(3)
 
-    weak var u1Weak: Binding<Int>? = u1
-    weak var u2Weak: Binding<Int>? = u2
-    weak var u3Weak: Binding<Int>? = u3
+    weak let u1Weak: Binding<Int>? = u1
+    weak let u2Weak: Binding<Int>? = u2
+    weak let u3Weak: Binding<Int>? = u3
 
     var combined: AnyBinding<(Int, Int, Int)>?
 
@@ -1708,10 +1708,10 @@ class BindingTests: XCTestCase {
     var u3: Binding<Int>! = Binding<Int>(3)
     var u4: Binding<Int>! = Binding<Int>(4)
 
-    weak var u1Weak: Binding<Int>? = u1
-    weak var u2Weak: Binding<Int>? = u2
-    weak var u3Weak: Binding<Int>? = u3
-    weak var u4Weak: Binding<Int>? = u4
+    weak let u1Weak: Binding<Int>? = u1
+    weak let u2Weak: Binding<Int>? = u2
+    weak let u3Weak: Binding<Int>? = u3
+    weak let u4Weak: Binding<Int>? = u4
 
     var combined: AnyBinding<(Int, Int, Int, Int)>?
 
@@ -1765,11 +1765,11 @@ class BindingTests: XCTestCase {
     var u4: Binding<Int>! = Binding<Int>(4)
     var u5: Binding<Int>! = Binding<Int>(5)
 
-    weak var u1Weak: Binding<Int>? = u1
-    weak var u2Weak: Binding<Int>? = u2
-    weak var u3Weak: Binding<Int>? = u3
-    weak var u4Weak: Binding<Int>? = u4
-    weak var u5Weak: Binding<Int>? = u5
+    weak let u1Weak: Binding<Int>? = u1
+    weak let u2Weak: Binding<Int>? = u2
+    weak let u3Weak: Binding<Int>? = u3
+    weak let u4Weak: Binding<Int>? = u4
+    weak let u5Weak: Binding<Int>? = u5
 
     var combined: AnyBinding<(Int, Int, Int, Int, Int)>?
 
@@ -1936,7 +1936,7 @@ class BindingTests: XCTestCase {
   func test_observation_storage_cancel_to_release() {
     let binding = Binding("1")
     var observation: BindingObservation! = binding.observe { _ in }
-    weak var weakObservation: BindingObservation! = observation
+    weak let weakObservation: BindingObservation! = observation
 
     let storage = BindingObservationStorage()
     storage.store(observation)
@@ -1956,7 +1956,7 @@ class BindingTests: XCTestCase {
   func test_observation_binding_cancel_to_release() {
     let binding = Binding("1")
     var observation: BindingObservation! = binding.observe { _ in }
-    weak var weakObservation: BindingObservation! = observation
+    weak let weakObservation: BindingObservation! = observation
 
     bindingObservationStorage.store(observation)
 

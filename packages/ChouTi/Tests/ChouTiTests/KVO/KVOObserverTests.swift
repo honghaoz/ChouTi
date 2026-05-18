@@ -46,7 +46,7 @@ class KVOObserverTests: XCTestCase {
 
   func test_objectIsWeaklyRetained() {
     person = Person(name: "Ryan", age: 20)
-    weak var weakPersonRef: Person? = person
+    weak let weakPersonRef: Person? = person
 
     observer = KVOObserver(object: person, keyPath: "name") { _, _, _ in }
 
