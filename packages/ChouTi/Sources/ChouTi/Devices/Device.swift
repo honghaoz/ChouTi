@@ -161,7 +161,7 @@ public enum Device {
     }
 
     // if known models doesn't contain the model identifier, try to fetch from the Device.json file
-    let deviceJSONURL = URL(string: "https://raw.githubusercontent.com/honghaoz/ChouTi/refs/heads/master/packages/ChouTi/Sources/ChouTi/Devices/Device.json")! // swiftlint:disable:this force_unwrapping
+    let deviceJSONURL = URL(string: "https://raw.githubusercontent.com/honghaoz/ChouTi/refs/heads/master/packages/ChouTi/Sources/ChouTi/Devices/Device.json")!
     do {
       let deviceJSON = try JSONSerialization.jsonObject(with: Data(contentsOf: deviceJSONURL), options: []) as? [String: Any]
       let macWithNotchSet: Set<String> = Set(deviceJSON?["macWithNotch"] as? [String] ?? [])
