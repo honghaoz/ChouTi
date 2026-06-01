@@ -33,53 +33,106 @@ import ChouTiTest
 
 class MeasureTests: XCTestCase {
 
-  func test_measure() {
-    let objectAllocationTime = ChouTiTest.measure(repeat: 100) {
-      _ = NSObject()
-    }
-    let layerAllocationTime = ChouTiTest.measure(repeat: 100) {
-      _ = CALayer()
-    }
-    print("object allocation time: \(objectAllocationTime)")
-    print("layer allocation time: \(layerAllocationTime)")
-    expect(layerAllocationTime) > objectAllocationTime
+  private enum TestError: Error {
+    case expectedFailure
   }
 
-  func test_measure_throws() throws {
-    func makeObject() throws -> NSObject {
-      return NSObject()
-    }
-    func makeLayer() throws -> CALayer {
-      return CALayer()
+  func test_measure_runsBlockDefaultOnce() {
+    var count = 0
+
+    let elapsedTime = ChouTiTest.measure {
+      count += 1
     }
 
-    let objectAllocationTime = try ChouTiTest.measure(repeat: 100) {
-      _ = try makeObject()
-    }
-    let layerAllocationTime = try ChouTiTest.measure(repeat: 100) {
-      _ = try makeLayer()
-    }
-    print("object allocation time: \(objectAllocationTime)")
-    print("layer allocation time: \(layerAllocationTime)")
-    expect(layerAllocationTime) > objectAllocationTime
+    expect(count) == 1
+    expect(elapsedTime) >= 0
   }
 
-  func test_measure_async() async throws {
-    func makeObject() async throws -> NSObject {
-      return NSObject()
-    }
-    func makeLayer() async throws -> CALayer {
-      return CALayer()
+  func test_measure_runsBlockForRepeatCount() {
+    let repeatCount = 5
+    var iterations: [Int] = []
+
+    let elapsedTime = ChouTiTest.measure(repeat: repeatCount) {
+      iterations.append(iterations.count)
     }
 
-    let objectAllocationTime = try await ChouTiTest.measure(repeat: 100) {
-      _ = try await makeObject()
+    expect(iterations) == Array(0 ..< repeatCount)
+    expect(elapsedTime) >= 0
+  }
+
+  func test_measure_withZeroRepeat_doesNotRunBlock() {
+    var count = 0
+
+    let elapsedTime = ChouTiTest.measure(repeat: 0) {
+      count += 1
     }
-    let layerAllocationTime = try await ChouTiTest.measure(repeat: 100) {
-      _ = try await makeLayer()
+
+    expect(count) == 0
+    expect(elapsedTime) >= 0
+  }
+
+  func test_measure_throwing_runsBlockForRepeatCount() throws {
+    let repeatCount = 5
+    var count = 0
+    func doWork() throws {
+      count += 1
     }
-    print("object allocation time: \(objectAllocationTime)")
-    print("layer allocation time: \(layerAllocationTime)")
-    expect(layerAllocationTime) > objectAllocationTime
+
+    let elapsedTime = try ChouTiTest.measure(repeat: repeatCount) {
+      try doWork()
+    }
+
+    expect(count) == repeatCount
+    expect(elapsedTime) >= 0
+  }
+
+  func test_measure_throwing_rethrowsErrorAndStopsRunningBlock() {
+    var count = 0
+
+    do {
+      _ = try ChouTiTest.measure(repeat: 5) {
+        count += 1
+        if count == 3 {
+          throw TestError.expectedFailure
+        }
+      }
+      fail("Expected measure to rethrow the block error.")
+    } catch TestError.expectedFailure {
+      expect(count) == 3
+    } catch {
+      fail("Expected TestError.expectedFailure, got \(error).")
+    }
+  }
+
+  func test_measure_async_runsBlockForRepeatCount() async {
+    let repeatCount = 5
+    var count = 0
+
+    let elapsedTime = await ChouTiTest.measure(repeat: repeatCount) {
+      count += 1
+      await Task.yield()
+    }
+
+    expect(count) == repeatCount
+    expect(elapsedTime) >= 0
+  }
+
+  func test_measure_async_rethrowsErrorAndStopsRunningBlock() async {
+    var count = 0
+
+    do {
+      _ = try await ChouTiTest.measure(repeat: 5) {
+        count += 1
+        if count == 3 {
+          throw TestError.expectedFailure
+        }
+        await Task.yield()
+      }
+      fail("Expected measure to rethrow the block error.")
+    } catch TestError.expectedFailure {
+      expect(count) == 3
+    } catch {
+      fail("Expected TestError.expectedFailure, got \(error).")
+    }
   }
 }

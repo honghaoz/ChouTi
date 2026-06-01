@@ -222,7 +222,7 @@ private extension DeviceTests {
 
   private static func cleanDateString(_ dateString: String) -> String {
     // Remove HTML entities and extra whitespace
-    if #available(iOS 16.0, *) {
+    if #available(iOS 16.0, tvOS 16.0, watchOS 9.0, *) {
       return dateString
         .replacing("&nbsp;", with: " ")
         .replacing("&amp;", with: "&")
