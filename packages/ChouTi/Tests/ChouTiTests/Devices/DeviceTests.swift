@@ -222,10 +222,17 @@ private extension DeviceTests {
 
   private static func cleanDateString(_ dateString: String) -> String {
     // Remove HTML entities and extra whitespace
-    return dateString
-      .replacingOccurrences(of: "&nbsp;", with: " ")
-      .replacingOccurrences(of: "&amp;", with: "&")
-      .trimmingCharacters(in: .whitespacesAndNewlines)
+    if #available(iOS 16.0, *) {
+      return dateString
+        .replacing("&nbsp;", with: " ")
+        .replacing("&amp;", with: "&")
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+    } else {
+      return dateString
+        .replacingOccurrences(of: "&nbsp;", with: " ")
+        .replacingOccurrences(of: "&amp;", with: "&")
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
   }
 
   private static func parseDate(from dateString: String) -> Date? {
