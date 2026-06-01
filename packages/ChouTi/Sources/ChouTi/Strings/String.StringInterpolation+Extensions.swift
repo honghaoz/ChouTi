@@ -30,6 +30,7 @@
 
 import Foundation
 
+#if compiler(<6.3)
 public extension String.StringInterpolation {
 
   /// Provides convenient string interpolation for `Optional` values.
@@ -65,3 +66,4 @@ public extension String.StringInterpolation {
     }
   }
 }
+#endif
