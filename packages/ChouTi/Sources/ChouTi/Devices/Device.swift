@@ -186,7 +186,7 @@ public enum Device {
       do {
         let systemAttributes = try FileManager.default.attributesOfFileSystem(forPath: NSHomeDirectory() as String)
         let freeSpace = (systemAttributes[FileAttributeKey.systemFreeSize] as? NSNumber)?.int64Value
-        return freeSpace.assert() ?? 0
+        return freeSpace.assertNotNil() ?? 0
       } catch {
         ChouTi.assertFailure("failed to get free disk space", metadata: ["error": "\(error)"])
         return 0
@@ -199,7 +199,7 @@ public enum Device {
       let freeSpace = try URL(fileURLWithPath: NSHomeDirectory() as String)
         .resourceValues(forKeys: [URLResourceKey.volumeAvailableCapacityForImportantUsageKey])
         .volumeAvailableCapacityForImportantUsage
-      return freeSpace.assert() ?? 0
+      return freeSpace.assertNotNil() ?? 0
     } catch {
       return getAvailableSpace()
     }

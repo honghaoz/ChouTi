@@ -259,7 +259,7 @@ private final class PrivateDelayTask: DelayTaskType {
     } else {
       if let leeway {
         taskLock.lock()
-        timer = DispatchTimer.delayTimer(after: delayedSeconds, isStrict: leeway.isStrict, leeway: leeway, queue: queue, block: { [weak workItem] in workItem.assert("workItem should not be nil when executing")?.perform() })
+        timer = DispatchTimer.delayTimer(after: delayedSeconds, isStrict: leeway.isStrict, leeway: leeway, queue: queue, block: { [weak workItem] in workItem.assertNotNil("workItem should not be nil when executing")?.perform() })
         taskLock.unlock()
       } else {
         onQueueAsync(queue: queue, delay: delayedSeconds, execute: workItem)

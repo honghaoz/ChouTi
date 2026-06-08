@@ -33,20 +33,28 @@ import Foundation
 public extension Optional {
 
   /// Access optional value with assertion failure if the value is `nil`.
+  ///
+  /// On failure, the expected wrapped type is automatically added to the metadata under the `"type"` key
+  /// (unless the caller already provides a `"type"` key), making the generic default message more actionable.
+  ///
   /// - Parameters:
   ///   - assertionMessage: The message to show when assertion fails.
   ///   - metadata: Metadata for the assertion failure.
   /// - Returns: The unwrapped value.
   @inlinable
-  func assert(_ assertionMessage: @autoclosure () -> String = "Unexpected nil value",
-              metadata: @autoclosure () -> OrderedDictionary<String, String> = [:],
-              file: StaticString = #fileID,
-              line: UInt = #line,
-              function: StaticString = #function) -> Wrapped?
+  func assertNotNil(_ assertionMessage: @autoclosure () -> String = "Unexpected nil value",
+                    metadata: @autoclosure () -> OrderedDictionary<String, String> = [:],
+                    file: StaticString = #fileID,
+                    line: UInt = #line,
+                    function: StaticString = #function) -> Wrapped?
   {
     #if DEBUG
     guard let unwrapped = self else {
-      ChouTi.assertFailure(assertionMessage(), metadata: metadata(), file: file, line: line, function: function)
+      var metadata = metadata()
+      if metadata["type"] == nil {
+        metadata["type"] = "\(Wrapped.self)"
+      }
+      ChouTi.assertFailure(assertionMessage(), metadata: metadata, file: file, line: line, function: function)
       return self
     }
     return unwrapped

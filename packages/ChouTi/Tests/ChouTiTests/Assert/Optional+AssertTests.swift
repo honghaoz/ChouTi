@@ -36,17 +36,19 @@ class Optional_AssertTests: XCTestCase {
 
   func test_valid() {
     let number: Int? = 2
-    expect(number.assert() ?? 1) == 2
+    expect(number.assertNotNil() ?? 1) == 2
   }
 
   func test_nil() {
     do {
       Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
         expect(message) == "Unexpected nil value"
+        // the wrapped type is added automatically
+        expect(metadata) == ["type": "Int"]
       }
 
       let nilNumber: Int? = nil
-      expect(nilNumber.assert() ?? 1) == 1
+      expect(nilNumber.assertNotNil() ?? 1) == 1
 
       Assert.resetTestAssertionFailureHandler()
     }
@@ -55,11 +57,23 @@ class Optional_AssertTests: XCTestCase {
       // with metadata
       Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
         expect(message) == "Unexpected nil value"
-        expect(metadata) == ["key": "value"]
+        expect(metadata) == ["key": "value", "type": "Int"]
       }
 
       let nilNumber: Int? = nil
-      expect(nilNumber.assert(metadata: ["key": "value"]) ?? 1) == 1
+      expect(nilNumber.assertNotNil(metadata: ["key": "value"]) ?? 1) == 1
+
+      Assert.resetTestAssertionFailureHandler()
+    }
+
+    do {
+      // a caller-provided "type" key is not overwritten
+      Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
+        expect(metadata) == ["type": "custom"]
+      }
+
+      let nilNumber: Int? = nil
+      expect(nilNumber.assertNotNil(metadata: ["type": "custom"]) ?? 1) == 1
 
       Assert.resetTestAssertionFailureHandler()
     }

@@ -195,7 +195,7 @@ public extension Logger {
           //   fileHandle.synchronizeFile() // synchronize()
           // }
 
-          self.assert()?.logFileSize = try {
+          self.assertNotNil()?.logFileSize = try {
             if #available(OSX 10.15.4, iOS 13.4, tvOS 13.4, watchOS 6.2, *) {
               return try fileHandle.offset()
             } else {
@@ -204,7 +204,7 @@ public extension Logger {
           }()
 
           fileHandle.closeFile()
-          try self.assert()?.trimLinesIfNecessary()
+          try self.assertNotNil()?.trimLinesIfNecessary()
         } catch {
           ChouTi.assertFailure("error while write log file", metadata: ["error": "\(error)"])
         }

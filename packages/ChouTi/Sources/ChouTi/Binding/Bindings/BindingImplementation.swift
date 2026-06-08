@@ -78,7 +78,7 @@ final class BindingImplementation<T> {
     }
 
     registeredObservations.values.forEach { box in
-      box.object.assert()?.invoke(with: value)
+      box.object.assertNotNil()?.invoke(with: value)
     }
 
     subject.send(value)
