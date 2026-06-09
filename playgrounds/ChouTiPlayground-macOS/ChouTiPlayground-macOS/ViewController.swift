@@ -44,7 +44,7 @@ class ViewController: NSViewController {
 
     self.view.wantsLayer = true
 
-    layerBoundsObserver = view.layer.assert("layer is nil")?.observe("bounds") { [weak self] (object, old: CGRect, new: CGRect) in
+    layerBoundsObserver = view.layer.assertNotNil("layer is nil")?.observe("bounds") { [weak self] (object, old: CGRect, new: CGRect) in
       print("layer bounds changed: \(old) -> \(new)")
       self?.updateTextField()
     }
