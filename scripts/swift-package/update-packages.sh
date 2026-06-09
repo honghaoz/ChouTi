@@ -232,6 +232,61 @@ with open(dest, 'w') as f:
 PY
 }
 
+write_empty_package_resolved() {
+    local dest="$1"
+    local origin_hash="$2"
+
+    mkdir -p "$(dirname "$dest")"
+    if [ -n "$origin_hash" ]; then
+        cat > "$dest" <<EOF
+{
+  "originHash" : "$origin_hash",
+  "pins" : [
+
+  ],
+  "version" : 3
+}
+EOF
+    else
+        cat > "$dest" <<'EOF'
+{
+  "pins" : [
+
+  ],
+  "version" : 2
+}
+EOF
+    fi
+}
+
+package_resolved_has_pins() {
+    local package_resolved_path="$1"
+
+    if [ ! -f "$package_resolved_path" ]; then
+        return 1
+    fi
+
+    if command -v jq &> /dev/null; then
+        jq -e '(.pins // []) | length > 0' "$package_resolved_path" >/dev/null 2>&1
+        return $?
+    fi
+
+    if command -v python3 &> /dev/null; then
+        python3 - "$package_resolved_path" <<'PY'
+import json, sys
+try:
+    with open(sys.argv[1]) as f:
+        data = json.load(f)
+    sys.exit(0 if len(data.get("pins") or []) > 0 else 1)
+except Exception:
+    sys.exit(1)
+PY
+        return $?
+    fi
+
+    grep -q '"identity"' "$package_resolved_path"
+}
+
 # Function to update Xcode project packages
 update_xcode_project() {
     local project_path="$1"
@@ -245,10 +300,11 @@ update_xcode_project() {
 
     print_info "Updating Xcode project packages..."
 
-    # Back up the committed Package.resolved instead of deleting it outright, and remember its originHash.
-    # `xcodebuild -resolvePackageDependencies` does not always rewrite the canonical Package.resolved (for projects that
-    # reference local Swift packages by folder it resolves only into DerivedData), which would otherwise leave the
-    # committed pin file deleted. We restore or regenerate it below.
+    # Back up the committed Package.resolved and remember its originHash.
+    # `xcodebuild -resolvePackageDependencies` preserves existing pins when the
+    # file is present, but can write into a local package's Package.resolved when
+    # the file is missing. Seed this project's own Package.resolved with an empty
+    # valid file so Xcode updates the intended artifact.
     local backup=""
     local origin_hash=""
     if [ -f "$package_resolved_path" ]; then
@@ -258,8 +314,9 @@ update_xcode_project() {
         if command -v python3 &> /dev/null; then
             origin_hash=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1])).get('originHash',''))" "$backup" 2>/dev/null)
         fi
-        rm "$package_resolved_path"
     fi
+    print_info "Resetting $package_resolved_path for package update..."
+    write_empty_package_resolved "$package_resolved_path" "$origin_hash"
 
     # Clean derived data
     clean_derived_data "$project_path"
@@ -286,21 +343,29 @@ update_xcode_project() {
 
     if [ "$resolved" != true ]; then
         # Restore the backup so a failed resolve never leaves pins deleted.
-        [ -n "$backup" ] && cp "$backup" "$package_resolved_path"
+        if [ -n "$backup" ]; then
+            cp "$backup" "$package_resolved_path"
+        else
+            # no backup file, means there's no Package.resolved before, remove the empty generated file
+            rm -f "$package_resolved_path"
+        fi
         rm -f "$backup"
         print_error "Failed to resolve package dependencies after $max_attempts attempts"
         return 1
     fi
 
-    # If xcodebuild didn't write the canonical pin file, rebuild it from the resolved DerivedData state so the committed
-    # file matches what Xcode would produce.
-    # Fall back to restoring the backup if regeneration isn't possible.
-    if [ ! -f "$package_resolved_path" ]; then
+    # If xcodebuild didn't populate the seeded canonical pin file, rebuild it from
+    # the resolved DerivedData state so the committed file matches what Xcode
+    # resolved. Fall back to restoring the backup if regeneration isn't possible.
+    if [ ! -f "$package_resolved_path" ] || ! package_resolved_has_pins "$package_resolved_path"; then
         if regenerate_package_resolved "$project_path" "$package_resolved_path" "$origin_hash"; then
             print_info "Regenerated $package_resolved_path from resolved dependencies."
         elif [ -n "$backup" ]; then
             cp "$backup" "$package_resolved_path"
-            print_warning "Could not regenerate Package.resolved; restored existing pins (open in Xcode to update)."
+            print_warning "Could not update Package.resolved, restored existing Package.resolved (Open in Xcode to manually update)."
+        else
+            rm -f "$package_resolved_path"
+            print_warning "Package.resolved still has no pins after resolution; removed the empty generated file."
         fi
     fi
     rm -f "$backup"
@@ -334,13 +399,11 @@ update_xcworkspace() {
 
     # The package-level Package.resolved path
     local package_level_resolved="$workspace_dir/Package.resolved"
-
-    # Force update by removing Package.resolved
+    local package_level_backup=""
     if [ -f "$package_level_resolved" ]; then
-        print_info "Removing $package_level_resolved..."
-        rm "$package_level_resolved"
-    else
-        print_info "$package_level_resolved not found"
+        package_level_backup="$(mktemp)"
+        cp "$package_level_resolved" "$package_level_backup"
+        print_info "Backed up $package_level_resolved to $package_level_backup"
     fi
 
     # Run the update command to fetch latest versions
@@ -352,8 +415,14 @@ update_xcworkspace() {
         cp "$package_level_resolved" "$workspace_package_resolved"
         # print_success "Package update completed"
         cd "$original_dir"
+        rm -f "$package_level_backup"
         return 0
     else
+        if [ -n "$package_level_backup" ]; then
+            cp "$package_level_backup" "$package_level_resolved"
+            rm -f "$package_level_backup"
+        fi
+        cd "$original_dir"
         print_error "Failed to resolve package dependencies"
         return 1
     fi
@@ -376,10 +445,10 @@ update_swift_package() {
     local original_dir=$(pwd)
     cd "$project_path"
 
-    # Force update by removing Package.resolved
+    local backup=""
     if [ -f "$package_resolved_path" ]; then
-        print_info "Removing $package_resolved_path..."
-        rm "$package_resolved_path"
+        backup="$(mktemp)"
+        cp "$package_resolved_path" "$backup"
     fi
 
     # Run the update command to fetch latest versions
@@ -392,8 +461,14 @@ update_swift_package() {
         #     print_success "No Package.resolved found - This package may only have local path dependencies"
         # fi
         cd "$original_dir"
+        rm -f "$backup"
         return 0
     else
+        if [ -n "$backup" ]; then
+            cp "$backup" "$package_resolved_path"
+            rm -f "$backup"
+        fi
+        cd "$original_dir"
         print_error "Failed to resolve package dependencies"
         return 1
     fi
