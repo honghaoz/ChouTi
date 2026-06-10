@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 # define colors
 safe_tput() { [ -n "$TERM" ] && [ "$TERM" != "dumb" ] && tput "$@" || echo ""; }
@@ -70,7 +70,7 @@ while [[ "$#" -gt 0 ]]; do
     shift # past option
     shift # past value
     # consume all remaining arguments
-    while [[ "$1" != "--"* ]] && [[ "$#" -gt 0 ]]; do
+    while [[ "$#" -gt 0 ]] && [[ "$1" != "--"* ]]; do
       # arguments should be in [macOS iOS tvOS visionOS watchOS]
       if [[ "$1" != "macOS" ]] && [[ "$1" != "iOS" ]]&& [[ "$1" != "tvOS" ]] && [[ "$1" != "visionOS" ]] && [[ "$1" != "watchOS" ]]; then
         echo "🛑 Invalid OS: $1" >&2

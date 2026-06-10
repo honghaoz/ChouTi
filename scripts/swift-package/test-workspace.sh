@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 # define colors
 safe_tput() { [ -n "$TERM" ] && [ "$TERM" != "dumb" ] && tput "$@" || echo ""; }
@@ -59,7 +59,7 @@ while [[ "$#" -gt 0 ]]; do
     shift # past option
     shift # past value
     # consume all remaining arguments
-    while [[ "$1" != "--"* ]] && [[ "$#" -gt 0 ]]; do
+    while [[ "$#" -gt 0 ]] && [[ "$1" != "--"* ]]; do
       # arguments should be in [macOS iOS tvOS visionOS watchOS]
       if [[ "$1" != "macOS" ]] && [[ "$1" != "iOS" ]] && [[ "$1" != "tvOS" ]] && [[ "$1" != "visionOS" ]] && [[ "$1" != "watchOS" ]]; then
         echo "🛑 Invalid OS: $1" >&2
@@ -274,9 +274,9 @@ wait_for_simulator_boot() {
   local DEVICE_UDID=$1
   local MAX_WAIT=30  # Maximum 30 seconds
   local ELAPSED=0
-  
+
   echo "⏳ Waiting for simulator to boot..."
-  
+
   while [ $ELAPSED -lt $MAX_WAIT ]; do
     BOOT_STATUS=$(xcrun simctl list devices | grep "$DEVICE_UDID" | grep -o "(Booted)" || echo "")
     if [ -n "$BOOT_STATUS" ]; then
@@ -286,7 +286,7 @@ wait_for_simulator_boot() {
     sleep 1
     ELAPSED=$((ELAPSED + 1))
   done
-  
+
   echo "⚠️  Simulator boot timeout after ${MAX_WAIT}s, continuing anyway..."
   return 1
 }
@@ -294,29 +294,29 @@ wait_for_simulator_boot() {
 # Helper function to set CI environment variables in simulator
 setup_simulator_env_vars() {
   local DEVICE_UDID=$1
-  
+
   # Determine which CI env vars to set
   local CI_VALUE="${CI:-false}"
   local CONTINUOUS_INTEGRATION_VALUE="${CONTINUOUS_INTEGRATION:-false}"
   local GITHUB_ACTIONS_VALUE="${GITHUB_ACTIONS:-false}"
-  
+
   # For local testing when CI vars aren't set, uncomment to override:
   # CI_VALUE="true"
   # CONTINUOUS_INTEGRATION_VALUE="true"
   # GITHUB_ACTIONS_VALUE="true"
-  
+
   if [ "$CI_VALUE" != "false" ] || [ "$CONTINUOUS_INTEGRATION_VALUE" != "false" ] || [ "$GITHUB_ACTIONS_VALUE" != "false" ]; then
     echo "🔧 Setting CI environment variables on simulator..."
     echo "  CI=$CI_VALUE"
     echo "  CONTINUOUS_INTEGRATION=$CONTINUOUS_INTEGRATION_VALUE"
     echo "  GITHUB_ACTIONS=$GITHUB_ACTIONS_VALUE"
-    
+
     # Set environment variables using launchctl in the simulator
     # These will be inherited by all processes including test runners
     xcrun simctl spawn "$DEVICE_UDID" launchctl setenv CI "$CI_VALUE"
     xcrun simctl spawn "$DEVICE_UDID" launchctl setenv CONTINUOUS_INTEGRATION "$CONTINUOUS_INTEGRATION_VALUE"
     xcrun simctl spawn "$DEVICE_UDID" launchctl setenv GITHUB_ACTIONS "$GITHUB_ACTIONS_VALUE"
-    
+
     echo "✅ Environment variables set"
     echo ""
   fi
@@ -325,7 +325,7 @@ setup_simulator_env_vars() {
 # Helper function to clean up CI environment variables from simulator
 cleanup_simulator_env_vars() {
   local DEVICE_UDID=$1
-  
+
   echo "🧹 Cleaning up CI environment variables..."
   xcrun simctl spawn "$DEVICE_UDID" launchctl unsetenv CI 2>/dev/null || true
   xcrun simctl spawn "$DEVICE_UDID" launchctl unsetenv CONTINUOUS_INTEGRATION 2>/dev/null || true
@@ -344,27 +344,27 @@ if [[ "$OS" == *"iOS"* ]]; then
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME,OS=$SIMULATOR_OS"
   echo ""
   echo "➡️  Running tests for ${CYAN}iOS${RESET} on ${CYAN}$DESTINATION${RESET}..."
-  
+
   # Boot the simulator and set environment variables
   # Extract UDID from xcodebuild destinations (which includes OS version)
   DEVICE_UDID=$(echo "$DESTINATIONS" | grep "name:$SIMULATOR_NAME" | grep "OS:$SIMULATOR_OS" | grep -v "variant:Designed" | head -n 1 | grep -Eo 'id:[0-9A-Fa-f]{8}-([0-9A-Fa-f]{4}-){3}[0-9A-Fa-f]{12}' | sed 's/id://')
-  
+
   if [ -n "$DEVICE_UDID" ]; then
     echo "📱 Device UDID: $DEVICE_UDID"
     echo "🚀 Booting simulator..."
-    xcrun simctl boot "$DEVICE_UDID" 2>/dev/null || true  # ignore if already booted    
+    xcrun simctl boot "$DEVICE_UDID" 2>/dev/null || true  # ignore if already booted
     wait_for_simulator_boot "$DEVICE_UDID"
     setup_simulator_env_vars "$DEVICE_UDID"
   else
     echo "⚠️  Could not find device UDID for $SIMULATOR_NAME ($SIMULATOR_OS)"
   fi
-  
+
   if [ "$BEAUTIFY" = true ]; then
     set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -test-iterations 3 -retry-tests-on-failure | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
   else
     set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -test-iterations 3 -retry-tests-on-failure || ERROR_CODE=$?
   fi
-  
+
   # Clean up environment variables
   if [ -n "$DEVICE_UDID" ]; then
     echo ""
@@ -384,11 +384,11 @@ if [[ "$OS" == *"tvOS"* ]]; then
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME,OS=$SIMULATOR_OS"
   echo ""
   echo "➡️  Running tests for ${CYAN}tvOS${RESET} on ${CYAN}$DESTINATION${RESET}..."
-  
+
   # Boot the simulator and set environment variables
   # Extract UDID from xcodebuild destinations (which includes OS version)
   DEVICE_UDID=$(echo "$DESTINATIONS" | grep "name:$SIMULATOR_NAME" | grep "OS:$SIMULATOR_OS" | grep -v "variant:Designed" | head -n 1 | grep -Eo 'id:[0-9A-Fa-f]{8}-([0-9A-Fa-f]{4}-){3}[0-9A-Fa-f]{12}' | sed 's/id://')
-  
+
   if [ -n "$DEVICE_UDID" ]; then
     echo "📱 Device UDID: $DEVICE_UDID"
     echo "🚀 Booting simulator..."
@@ -398,13 +398,13 @@ if [[ "$OS" == *"tvOS"* ]]; then
   else
     echo "⚠️  Could not find device UDID for $SIMULATOR_NAME ($SIMULATOR_OS)"
   fi
-  
+
   if [ "$BEAUTIFY" = true ]; then
     set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -test-iterations 3 -retry-tests-on-failure | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
   else
     set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -test-iterations 3 -retry-tests-on-failure || ERROR_CODE=$?
   fi
-  
+
   # Clean up environment variables
   if [ -n "$DEVICE_UDID" ]; then
     echo ""
@@ -427,11 +427,11 @@ if [[ "$OS" == *"visionOS"* ]]; then
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME,OS=$SIMULATOR_OS"
   echo ""
   echo "➡️  Running tests for ${CYAN}visionOS${RESET} on ${CYAN}$DESTINATION${RESET}..."
-  
+
   # Boot the simulator and set environment variables
   # Extract UDID from xcodebuild destinations (which includes OS version)
   DEVICE_UDID=$(echo "$DESTINATIONS" | grep "name:$SIMULATOR_NAME" | grep "OS:$SIMULATOR_OS" | grep -v "variant:Designed" | head -n 1 | grep -Eo 'id:[0-9A-Fa-f]{8}-([0-9A-Fa-f]{4}-){3}[0-9A-Fa-f]{12}' | sed 's/id://')
-  
+
   if [ -n "$DEVICE_UDID" ]; then
     echo "📱 Device UDID: $DEVICE_UDID"
     echo "🚀 Booting simulator..."
@@ -441,13 +441,13 @@ if [[ "$OS" == *"visionOS"* ]]; then
   else
     echo "⚠️  Could not find device UDID for $SIMULATOR_NAME ($SIMULATOR_OS)"
   fi
-  
+
   if [ "$BEAUTIFY" = true ]; then
     set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -test-iterations 3 -retry-tests-on-failure | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
   else
     set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -test-iterations 3 -retry-tests-on-failure || ERROR_CODE=$?
   fi
-  
+
   # Clean up environment variables
   if [ -n "$DEVICE_UDID" ]; then
     echo ""
@@ -467,11 +467,11 @@ if [[ "$OS" == *"watchOS"* ]]; then
   DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME,OS=$SIMULATOR_OS"
   echo ""
   echo "➡️  Running tests for ${CYAN}watchOS${RESET} on ${CYAN}$DESTINATION${RESET}..."
-  
+
   # Boot the simulator and set environment variables
   # Extract UDID from xcodebuild destinations (which includes OS version)
   DEVICE_UDID=$(echo "$DESTINATIONS" | grep "name:$SIMULATOR_NAME" | grep "OS:$SIMULATOR_OS" | grep -v "variant:Designed" | head -n 1 | grep -Eo 'id:[0-9A-Fa-f]{8}-([0-9A-Fa-f]{4}-){3}[0-9A-Fa-f]{12}' | sed 's/id://')
-  
+
   if [ -n "$DEVICE_UDID" ]; then
     echo "📱 Device UDID: $DEVICE_UDID"
     echo "🚀 Booting simulator..."
@@ -481,13 +481,13 @@ if [[ "$OS" == *"watchOS"* ]]; then
   else
     echo "⚠️  Could not find device UDID for $SIMULATOR_NAME ($SIMULATOR_OS)"
   fi
-  
+
   if [ "$BEAUTIFY" = true ]; then
     set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -test-iterations 3 -retry-tests-on-failure | "$REPO_ROOT"/bin/xcbeautify || ERROR_CODE=$?
   else
     set -o pipefail && xcodebuild test -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" -test-iterations 3 -retry-tests-on-failure || ERROR_CODE=$?
   fi
-  
+
   # Clean up environment variables
   if [ -n "$DEVICE_UDID" ]; then
     echo ""
