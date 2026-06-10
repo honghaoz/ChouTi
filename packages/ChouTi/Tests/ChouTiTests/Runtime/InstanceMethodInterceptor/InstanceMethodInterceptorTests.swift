@@ -1515,6 +1515,164 @@ class InstanceMethodInterceptorTests: XCTestCase {
       expect(restoredIMP) == originalIMP
     }
   }
+
+  // MARK: - Concurrency / Thread-Safety
+
+  /// Creates `count` distinct runtime subclasses of `TestObject`, each with a unique name.
+  ///
+  /// Intercepting the same selector on instances of *distinct* classes produces distinct
+  /// `(subclass, selector)` keys, so each one passes the per-key dedup guard and reaches
+  /// `subclassMethodIMPs.append` for the first time — which is exactly the path the race is on.
+  private func makeDistinctTestSubclasses(_ count: Int) -> [NSObject.Type] {
+    var classes: [NSObject.Type] = []
+    classes.reserveCapacity(count)
+    for index in 0 ..< count {
+      let name = "ChouTiIMITest_RaceSub_\(index)_\(UUID().uuidString.prefix(8))"
+      guard let cls = objc_allocateClassPair(TestObject.self, name, 0) else {
+        continue
+      }
+      objc_registerClassPair(cls)
+      if let type = cls as? NSObject.Type {
+        classes.append(type)
+      }
+    }
+    return classes
+  }
+
+  func test_concurrent_intercept_distinctSubclasses_subclassMethodIMPs_isThreadSafe() {
+    // Reveals the unguarded data race on `subclassMethodIMPs`: when distinct `(subclass, selector)`
+    // pairs are intercepted concurrently, each passes the per-key dedup guard and reaches
+    // `subclassMethodIMPs.append`, which (before the fix) mutated a shared Array with no lock.
+    //
+    // Run under `swift test --sanitize=thread` to catch the race deterministically, without TSan this
+    // still exercises the path and asserts every interception worked.
+    let classes = makeDistinctTestSubclasses(64)
+    expect(classes.count) == 64
+
+    let selector = #selector(TestObject.foo)
+    let lock = NSLock()
+    var totalHookCalls = 0
+
+    DispatchQueue.concurrentPerform(iterations: classes.count) { index in
+      let object = classes[index].init()
+      let token = object.intercept(selector: selector) { _, _, callOriginal in
+        lock.lock()
+        totalHookCalls += 1
+        lock.unlock()
+        callOriginal()
+      }
+      (object as? TestObject)?.foo()
+      token.cancel()
+    }
+
+    // every concurrent interception fired exactly once
+    expect(totalHookCalls) == classes.count
+  }
+
+  func test_concurrent_KVO_intercept_cancel_restoresOriginalIMP() {
+    // Exercises the KVO swizzle/restore transaction under concurrency. Before the single-lock fix,
+    // `swizzle + increment` and `decrement + restore` were not atomic across the per-collection locks,
+    // leaving a TOCTOU window that could skip a needed swizzle or restore/leak the wrong IMP.
+    //
+    // This is a *logical* race (each collection was individually locked, so there is no unsynchronized
+    // memory access for ThreadSanitizer to flag). The most observable invariant is that once every
+    // interception on a class/selector is cancelled, the original IMP is fully restored. Pre-fix this
+    // would occasionally be left swizzled; post-fix it is deterministic.
+    let selector = #selector(TestObject.foo)
+    let originalIMP = methodImplementation(TestObject.self, selector)
+
+    for _ in 0 ..< 30 {
+      // keep both the objects and their observations alive for the whole round, so the cancel path
+      // (not deallocation) drives the refcount down to zero.
+      let pairs: [(TestObject, NSKeyValueObservation)] = (0 ..< 16).map { _ in
+        let object = TestObject()
+        let observation = object.observe(\.value, options: [.new]) { _, _ in }
+        return (object, observation)
+      }
+
+      let tokensLock = NSLock()
+      var tokens: [CancellableToken] = []
+
+      let interceptGroup = DispatchGroup()
+      for (object, _) in pairs {
+        interceptGroup.enter()
+        DispatchQueue.global().async {
+          let token = object.intercept(selector: selector) { _, _, callOriginal in
+            callOriginal()
+          }
+          tokensLock.lock()
+          tokens.append(token)
+          tokensLock.unlock()
+          interceptGroup.leave()
+        }
+      }
+      if interceptGroup.wait(timeout: .now() + 10) == .timedOut {
+        fail("Timed out waiting for concurrent interceptions")
+        return
+      }
+
+      let cancelGroup = DispatchGroup()
+      for token in tokens {
+        cancelGroup.enter()
+        DispatchQueue.global().async {
+          token.cancel()
+          cancelGroup.leave()
+        }
+      }
+      if cancelGroup.wait(timeout: .now() + 10) == .timedOut {
+        fail("Timed out waiting for concurrent cancellations")
+        return
+      }
+
+      for (_, observation) in pairs {
+        observation.invalidate()
+      }
+
+      // once every interception is cancelled, the original class method must be fully restored.
+      expect(methodImplementation(TestObject.self, selector)) == originalIMP
+    }
+  }
+
+  func test_KVO_restoration_clobbersExternalSwizzle_documentsKnownLimitation() {
+    // Documents a known limitation (inherent to any refcounted, non-chaining install/uninstall):
+    // the KVO-path restore uses `method_setImplementation(originalMethod, savedOriginalIMP)`, which is
+    // not chain-safe. If another swizzler replaces the same original-class method *after* we installed
+    // ours, cancelling our interception restores our saved IMP and clobbers theirs.
+    //
+    // This test pins that behavior so any future move to chaining semantics is a conscious, reviewed change.
+    let selector = #selector(TestObject.foo)
+    let trueOriginalIMP = methodImplementation(TestObject.self, selector)
+
+    let object = TestObject()
+    let originalClassName = getClassName(object)
+    let observation = object.observe(\.value, options: [.new]) { _, _ in }
+    _ = observation
+    expect(getClassName(object)) == "NSKVONotifying_\(originalClassName)"
+
+    // intercept -> swizzles the original class method (TestObject.foo)
+    let token = object.intercept(selector: selector) { _, _, callOriginal in
+      callOriginal()
+    }
+    expect(methodImplementation(TestObject.self, selector)) != trueOriginalIMP
+
+    // simulate another library swizzling the same original-class method *after* us.
+    let externalBlock: @convention(block) (AnyObject) -> Void = { _ in }
+    let externalIMP = imp_implementationWithBlock(externalBlock)
+    guard let method = class_getInstanceMethod(TestObject.self, selector) else {
+      fail("Failed to get method")
+      return
+    }
+    method_setImplementation(method, externalIMP)
+    expect(methodImplementation(TestObject.self, selector)) == externalIMP
+
+    // cancel -> refcount hits zero -> we restore OUR saved original IMP, clobbering the external one.
+    token.cancel()
+    observation.invalidate()
+
+    let restoredIMP = methodImplementation(TestObject.self, selector)
+    expect(restoredIMP) == trueOriginalIMP // we restored the original we captured
+    expect(restoredIMP) != externalIMP // the external swizzle was clobbered (the documented limitation)
+  }
 }
 
 private func methodImplementation(_ cls: AnyClass, _ selector: Selector) -> IMP? {

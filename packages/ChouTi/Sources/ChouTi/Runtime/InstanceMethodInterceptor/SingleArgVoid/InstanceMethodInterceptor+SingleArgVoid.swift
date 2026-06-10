@@ -271,7 +271,6 @@ extension InstanceMethodInterceptor {
 
     if isKVOClass {
       // KVO already isa-swizzled this instance, patch the original method instead.
-      swizzleOriginalMethod(originalClass, selector)
       state.kvoSwizzledSelectors.insert(selector)
 
       if state.kvoDeallocationTokens[selector] == nil {
@@ -283,7 +282,12 @@ extension InstanceMethodInterceptor {
         }
       }
 
+      // Atomic transaction: install the original-method swizzle (once) and bump the KVO refcount together, so a
+      // concurrent intercept/cancel on the same class/selector can never observe a half-applied state. See `kvoSwizzleLock`.
+      kvoSwizzleLock.lock()
+      swizzleOriginalMethod(originalClass, selector)
       incrementKVOCallbackCount(for: originalClass, selector: selector)
+      kvoSwizzleLock.unlock()
     } else {
       // Non-KVO class, isa-swizzle to a dynamic subclass.
       let subclass: AnyClass = ensureSubclass(for: originalClass)

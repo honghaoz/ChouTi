@@ -214,7 +214,6 @@ enum InstanceMethodInterceptor {
 
     if isKVOClass {
       // KVO already isa-swizzled this instance, patch the original method instead.
-      swizzleOriginalMethod(originalClass: originalClass, selector: selector)
       state.kvoSwizzledSelectors.insert(selector)
 
       if state.kvoDeallocationTokens[selector] == nil {
@@ -232,7 +231,12 @@ enum InstanceMethodInterceptor {
         }
       }
 
+      // atomic transaction: install the original-method swizzle (once) and bump the KVO refcount together, so a
+      // concurrent intercept/cancel on the same class/selector can never observe a half-applied state. See `kvoSwizzleLock`.
+      kvoSwizzleLock.lock()
+      swizzleOriginalMethod(originalClass: originalClass, selector: selector)
       incrementKVOCallbackCount(for: originalClass, selector: selector)
+      kvoSwizzleLock.unlock()
     } else {
       // Non-KVO class, isa-swizzle to a dynamic subclass.
       let subclass: AnyClass = ensureSubclass(for: originalClass)
@@ -403,8 +407,9 @@ enum InstanceMethodInterceptor {
   static var subclassSelectorOverrides: Set<String> = []
   static let subclassSelectorOverridesLock = NSLock()
 
-  /// Keeps IMPs alive for dynamically added subclass methods.
+  /// Keeps IMPs alive for dynamically added subclass methods. Guarded by `subclassMethodIMPsLock`.
   static var subclassMethodIMPs: [IMP] = []
+  static let subclassMethodIMPsLock = NSLock()
 
   private static func addSubclassOverrideIfNeeded(subclass: AnyClass, originalClass: AnyClass, selector: Selector) {
     let key = "\(NSStringFromClass(subclass))|\(NSStringFromSelector(selector))"
@@ -437,7 +442,10 @@ enum InstanceMethodInterceptor {
     let methodTypeEncoding = method_getTypeEncoding(originalMethod)
     let newIMP = imp_implementationWithBlock(newImplementation)
     class_addMethod(subclass, selector, newIMP, methodTypeEncoding)
+
+    subclassMethodIMPsLock.lock()
     subclassMethodIMPs.append(newIMP)
+    subclassMethodIMPsLock.unlock()
   }
 
   /// Restores the original class if this instance is currently using our dynamic subclass.
@@ -473,21 +481,32 @@ enum InstanceMethodInterceptor {
   /// We use reference counting to track how many instances are using each original class/selector pair.
   /// When the reference count reaches zero, we restore the original method.
 
-  /// Stores swizzled IMPs to keep them alive for KVO-class method replacement.
+  /// A single lock guarding the entire KVO original-method swizzle transaction.
+  ///
+  /// All of `swizzledMethodIMPs`, `swizzledMethodOriginalIMPs`, `swizzledMethods`, and `kvoInstanceCallbackCounts`
+  /// are guarded by this one lock so that "swizzle + increment" and "decrement + restore" each happen as a single
+  /// atomic transaction. Using one lock instead of one per collection closes the TOCTOU window where a concurrent
+  /// intercept/cancel on the same class/selector could otherwise double-swizzle, skip a needed swizzle, or restore
+  /// the wrong original IMP.
+  ///
+  /// A caller performing a transaction must hold this lock across the whole unit of work:
+  /// - `intercept` (and `interceptSingleArg`) hold it across `swizzleOriginalMethod` + `incrementKVOCallbackCount`.
+  /// - `decrementKVOCallbackCount` holds it across the decrement + restore.
+  ///
+  /// `swizzleOriginalMethod` and `incrementKVOCallbackCount` therefore do not lock internally, they assume it is held.
+  static let kvoSwizzleLock = NSLock()
+
+  /// Stores swizzled IMPs to keep them alive for KVO-class method replacement. Guarded by `kvoSwizzleLock`.
   static var swizzledMethodIMPs: [String: IMP] = [:]
-  static let swizzledMethodIMPsLock = NSLock()
 
-  /// Stores original IMPs for restoration.
+  /// Stores original IMPs for restoration. Guarded by `kvoSwizzleLock`.
   static var swizzledMethodOriginalIMPs: [String: IMP] = [:]
-  static let swizzledMethodOriginalIMPsLock = NSLock()
 
-  /// Tracks which original class/selector pairs are currently swizzled.
+  /// Tracks which original class/selector pairs are currently swizzled. Guarded by `kvoSwizzleLock`.
   static var swizzledMethods: Set<String> = []
-  static let swizzledMethodsLock = NSLock()
 
-  /// Tracks how many KVO instances are using each original class/selector pair.
+  /// Tracks how many KVO instances are using each original class/selector pair. Guarded by `kvoSwizzleLock`.
   static var kvoInstanceCallbackCounts: [String: Int] = [:]
-  static let kvoInstanceCallbackCountsLock = NSLock()
 
   /// Combines class + selector into a stable dictionary key.
   static func methodKey(originalClass: AnyClass, selector: Selector) -> String {
@@ -495,16 +514,15 @@ enum InstanceMethodInterceptor {
   }
 
   /// Swizzles the original class method when KVO has already swizzled the instance.
+  ///
+  /// - Important: The caller must hold `kvoSwizzleLock` for the whole swizzle + increment transaction. This function
+  ///   does not lock, it reads and mutates the swizzle bookkeeping under the caller's lock.
   private static func swizzleOriginalMethod(originalClass: AnyClass, selector: Selector) {
     let key = methodKey(originalClass: originalClass, selector: selector)
 
-    swizzledMethodsLock.lock()
     if swizzledMethods.contains(key) {
-      swizzledMethodsLock.unlock()
       return
     }
-    swizzledMethods.insert(key)
-    swizzledMethodsLock.unlock()
 
     guard let originalMethod = class_getInstanceMethod(originalClass, selector) else {
       ChouTi.assertFailure("Failed to get method for original class swizzling") // impossible
@@ -524,66 +542,52 @@ enum InstanceMethodInterceptor {
     let newIMP = imp_implementationWithBlock(newImplementation)
     method_setImplementation(originalMethod, newIMP)
 
-    swizzledMethodOriginalIMPsLock.lock()
     swizzledMethodOriginalIMPs[key] = originalIMP
-    swizzledMethodOriginalIMPsLock.unlock()
-
-    swizzledMethodIMPsLock.lock()
     swizzledMethodIMPs[key] = newIMP
-    swizzledMethodIMPsLock.unlock()
+    swizzledMethods.insert(key)
   }
 
   /// Increment KVO usage count for an original class/selector pair.
+  ///
+  /// - Important: The caller must hold `kvoSwizzleLock`, this runs as part of the swizzle + increment transaction.
   static func incrementKVOCallbackCount(for originalClass: AnyClass, selector: Selector) {
     let key = methodKey(originalClass: originalClass, selector: selector)
-    kvoInstanceCallbackCountsLock.lock()
     kvoInstanceCallbackCounts[key, default: 0] += 1
-    kvoInstanceCallbackCountsLock.unlock()
   }
 
   /// Decrement KVO usage count and restore the original method when it reaches zero.
+  ///
+  /// Acquires `kvoSwizzleLock` for the whole decrement + restore so it is atomic with respect to the
+  /// swizzle + increment transaction in `intercept` / `interceptSingleArg`.
   static func decrementKVOCallbackCount(for originalClass: AnyClass, selector: Selector) {
     let key = methodKey(originalClass: originalClass, selector: selector)
 
-    kvoInstanceCallbackCountsLock.lock()
-    let count = kvoInstanceCallbackCounts[key, default: 0] - 1
-    if count <= 0 {
-      kvoInstanceCallbackCounts.removeValue(forKey: key)
-    } else {
-      kvoInstanceCallbackCounts[key] = count
+    kvoSwizzleLock.lock()
+    defer {
+      kvoSwizzleLock.unlock()
     }
-    kvoInstanceCallbackCountsLock.unlock()
 
+    let count = kvoInstanceCallbackCounts[key, default: 0] - 1
     guard count <= 0 else {
+      kvoInstanceCallbackCounts[key] = count
       return
     }
+    kvoInstanceCallbackCounts.removeValue(forKey: key)
 
     guard let originalMethod = class_getInstanceMethod(originalClass, selector) else {
       ChouTi.assertFailure("Failed to get method for restoration") // impossible
       return
     }
 
-    swizzledMethodOriginalIMPsLock.lock()
-    let originalIMP = swizzledMethodOriginalIMPs[key]
-    swizzledMethodOriginalIMPsLock.unlock()
-
-    if let originalIMP {
+    if let originalIMP = swizzledMethodOriginalIMPs[key] {
       method_setImplementation(originalMethod, originalIMP)
     } else {
       ChouTi.assertFailure("Failed to find original IMP for restoration") // impossible
     }
 
-    swizzledMethodsLock.lock()
     swizzledMethods.remove(key)
-    swizzledMethodsLock.unlock()
-
-    swizzledMethodIMPsLock.lock()
     swizzledMethodIMPs.removeValue(forKey: key)
-    swizzledMethodIMPsLock.unlock()
-
-    swizzledMethodOriginalIMPsLock.lock()
     swizzledMethodOriginalIMPs.removeValue(forKey: key)
-    swizzledMethodOriginalIMPsLock.unlock()
   }
 
   // MARK: - Method Signature Validation

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -108,23 +109,25 @@ ${cast_body}
     let methodTypeEncoding = method_getTypeEncoding(originalMethod)
     let newIMP = imp_implementationWithBlock(newImplementation)
     class_addMethod(subclass, selector, newIMP, methodTypeEncoding)
+
+    subclassMethodIMPsLock.lock()
     subclassMethodIMPs.append(newIMP)
+    subclassMethodIMPsLock.unlock()
   }
 
   /// Swizzles the original class method (single argument) when KVO has already swizzled the instance.
+  ///
+  /// - Important: The caller must hold \`kvoSwizzleLock\` for the whole swizzle + increment transaction. This function
+  ///   does not lock, it reads and mutates the swizzle bookkeeping under the caller's lock.
   static func swizzleOriginalMethodWith${name}(
     originalClass: AnyClass,
     selector: Selector
   ) {
     let key = methodKey(originalClass: originalClass, selector: selector)
 
-    swizzledMethodsLock.lock()
     if swizzledMethods.contains(key) {
-      swizzledMethodsLock.unlock()
       return
     }
-    swizzledMethods.insert(key)
-    swizzledMethodsLock.unlock()
 
     guard let originalMethod = class_getInstanceMethod(originalClass, selector) else {
       ChouTi.assertFailure("Failed to get method for original class swizzling") // impossible
@@ -144,13 +147,9 @@ ${cast_body}
     let newIMP = imp_implementationWithBlock(newImplementation)
     method_setImplementation(originalMethod, newIMP)
 
-    swizzledMethodOriginalIMPsLock.lock()
     swizzledMethodOriginalIMPs[key] = originalIMP
-    swizzledMethodOriginalIMPsLock.unlock()
-
-    swizzledMethodIMPsLock.lock()
     swizzledMethodIMPs[key] = newIMP
-    swizzledMethodIMPsLock.unlock()
+    swizzledMethods.insert(key)
   }
 }
 EOF
@@ -310,3 +309,5 @@ for entry in "${OPTIONAL_OBJECT_TYPES[@]}"; do
 done
 
 update_dispatch_block
+
+echo "Done"
