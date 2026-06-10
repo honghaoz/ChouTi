@@ -640,7 +640,7 @@ class InstanceMethodInterceptor_SingleIntVoidTests: XCTestCase {
 
     // First call: enters the hook and blocks.
     group.enter()
-    DispatchQueue.global(qos: .userInitiated).async {
+    DispatchQueue.global(qos: .default).async {
       object.foo(1)
       group.leave()
     }
@@ -657,7 +657,7 @@ class InstanceMethodInterceptor_SingleIntVoidTests: XCTestCase {
 
     // Second call: should also run hooks even while the first is in progress.
     group.enter()
-    DispatchQueue.global(qos: .userInitiated).async {
+    DispatchQueue.global(qos: .default).async {
       object.foo(1)
       group.leave()
     }
