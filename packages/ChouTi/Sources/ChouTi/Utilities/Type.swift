@@ -51,13 +51,15 @@ public func typeName(_ type: Any.Type) -> String {
 }
 
 /// Get class name.
+///
+/// This is the *real* `isa` name (not `-class`).
+///
 /// - Parameter any: An instance.
 /// - Returns: Class name.
 @inlinable
 @inline(__always)
 public func getClassName(_ any: Any?) -> String {
   String(cString: object_getClassName(any))
-  // String(describing: instance)
 }
 
 // MARK: - Check type's type

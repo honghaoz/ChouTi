@@ -156,7 +156,59 @@ class TypeNameTests: XCTestCase {
     expect(["_NSThemeCloseWidget", "NSKVONotifying__NSThemeCloseWidget"].contains(getClassName(closeButton))) == true
     #endif
   }
+
+  func testClassName_isaSwizzling() {
+    // `getClassName` reads the *real* isa, so it sees through isa-swizzling, while
+    // `typeName` reports the static Swift type and is immune to it.
+
+    // KVO
+    do {
+      let model = KVOModel()
+
+      // before observation, the real isa matches the declared class.
+      expect(getClassName(model)) == "ChouTiTestKVOModel"
+      expect(typeName(model)) == "KVOModel"
+
+      // observing isa-swizzles the instance into a dynamic `NSKVONotifying_` subclass.
+      let observation = model.observe(\.value, options: []) { _, _ in }
+      defer { observation.invalidate() }
+
+      // `getClassName` reveals the real, swizzled isa
+      expect(getClassName(model)) == "NSKVONotifying_ChouTiTestKVOModel"
+      // `typeName` (static Swift type) is unaffected.
+      expect(typeName(model)) == "KVOModel"
+    }
+
+    // manual isa-swizzling via `object_setClass`
+    do {
+      let object = IsaBase()
+      expect(getClassName(object)) == "ChouTiTestIsaBase"
+
+      // swap the isa to a layout-compatible subclass.
+      object_setClass(object, IsaSubclass.self)
+
+      // `getClassName` reports the new, real isa
+      expect(getClassName(object)) == "ChouTiTestIsaSubclass"
+      // `typeName` still reports the original static Swift type.
+      expect(typeName(object)) == "IsaBase"
+    }
+  }
 }
+
+// MARK: - isa-swizzling test helpers
+
+// Stable Objective-C runtime names (via `@objc(...)`) so the swizzled class names are deterministic.
+
+@objc(ChouTiTestKVOModel)
+private class KVOModel: NSObject {
+  @objc dynamic var value: Int = 0
+}
+
+@objc(ChouTiTestIsaBase)
+private class IsaBase: NSObject {}
+
+@objc(ChouTiTestIsaSubclass)
+private class IsaSubclass: IsaBase {}
 
 private protocol FooType {}
 extension Int: FooType {}
