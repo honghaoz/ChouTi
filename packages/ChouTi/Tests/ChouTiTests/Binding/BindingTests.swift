@@ -894,7 +894,7 @@ class BindingTests: XCTestCase {
     upstreamStrong = Binding<Int>(1)
     upstreamWeak = upstreamStrong
 
-    var mapped: (some BindingType<String>)? = upstreamWeak?.map(String.init)
+    var mapped: (some BindingType<String>)? = upstreamWeak?.map { String($0) }
     _ = mapped
 
     expect(upstreamWeak) != nil
