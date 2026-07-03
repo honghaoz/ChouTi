@@ -2217,8 +2217,9 @@ class BindingTests: XCTestCase {
 
     queue.sync {
       binding.value = 2
+
+      expect(received) == nil
     }
-    expect(received) == nil
 
     wait(for: [expectation], timeout: 0.5)
   }
