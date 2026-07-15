@@ -129,8 +129,8 @@ private extension DeviceTests {
   }
 
   private static func checkMacNotchModelsUpdateAsync() async {
-    let MacBookProURL = URL(string: "https://support.apple.com/en-us/108052")!
-    let MacBookAirURL = URL(string: "https://support.apple.com/en-us/102869")!
+    let MacBookProURL = URL(string: "https://support.apple.com/en-us/108052")! // swiftlint:disable:this force_unwrapping
+    let MacBookAirURL = URL(string: "https://support.apple.com/en-us/102869")! // swiftlint:disable:this force_unwrapping
 
     do {
       for url in [MacBookProURL, MacBookAirURL] {
