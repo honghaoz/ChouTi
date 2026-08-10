@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## [0.0.11](https://github.com/honghaoz/ChouTi/releases/tag/0.0.11) (2026-08-09)
+
+- Framework `ChouTi`:
+  - Added `InstanceMethodInterceptor` with `NSObject.intercept(selector:block:)` to intercept instance methods, supporting void methods with no argument or a single argument.
+  - Added `MemoryWarningPublishing` protocol.
+  - Added binding loop detection to `Binding`.
+  - Renamed `Optional.assert(...)` to `Optional.assertNotNil(...)`, with the expected type included in the assertion metadata.
+  - Renamed `Array.chunked(_:acceptPartialResult:)` to `Array.chunked(by:acceptPartialResult:)`.
+  - Updated `Device.hasNotch` to include new MacBook models.
+  - Fixed optional string interpolation on Swift 6.3.
+
+- Framework `ChouTiTest`:
+  - Added support for regular expectations on optional expressions, e.g. `expect(optionalValue).to(beEmpty())`.
+  - Added support for `beNil()` in `toEventually` and `toEventuallyNot` expectations.
+  - Added support for throwing error expectations in `toEventually` and `toEventuallyNot` expectations.
+  - Added support for optional values in eventually expectations.
+
 ## [0.0.10](https://github.com/honghaoz/ChouTi/releases/tag/0.0.10) (2026-01-04)
 
 - Framework `ChouTi`:
