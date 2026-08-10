@@ -162,18 +162,24 @@ cd "$PROJECT_DIR" || exit 1
 # https://stackoverflow.com/a/79035750/3164091
 echo "Update Package..."
 
+# remove Package.resolved before any xcodebuild invocation.
+#
+# `xcodebuild -showBuildSettings` (used below to locate derived data) resolves packages and
+# seeds the package repository cache. If Package.resolved is still present at that point, the
+# cache is seeded with only the pinned (potentially old) package versions, and the later
+# pin-less resolution can reuse that stale listing instead of fetching the latest release.
+# This caused release CI to build playgrounds against the previous ChouTi release.
+PACKAGE_RESOLVED="$PROJECT/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
+if [ -f "$PACKAGE_RESOLVED" ]; then
+  echo "Remove Package.resolved: $PACKAGE_RESOLVED..."
+  rm -f "$PACKAGE_RESOLVED"
+fi
+
 # remove derived data
 DERIVED_DATA_PATH=$(xcodebuild -showBuildSettings | grep -m 1 BUILD_DIR | grep -oE "\/.*" | sed 's|/Build/Products||')
 if [ -d "$DERIVED_DATA_PATH" ]; then
   echo "Remove derived data: $DERIVED_DATA_PATH..."
   rm -rf "$DERIVED_DATA_PATH"
-fi
-
-# remove Package.resolved
-PACKAGE_RESOLVED="$PROJECT/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
-if [ -f "$PACKAGE_RESOLVED" ]; then
-  echo "Remove Package.resolved: $PACKAGE_RESOLVED..."
-  rm -f "$PACKAGE_RESOLVED"
 fi
 # == Update Package [END] ==
 
@@ -246,9 +252,12 @@ fi
 
 # For watchOS
 if [[ "$OS" == *"watchOS"* ]]; then
-  SIMULATOR_NAME=$(echo "$DEVICES" | grep "Apple Watch" | head -n 1 | sed 's/[[:space:]]*([[:xdigit:]-]\{36\}).*$//' | xargs)
+  # select the simulator by UDID instead of name: the same watch model can exist for multiple
+  # watchOS runtimes (standalone and paired to different iPhones), and a name-only destination
+  # can fail with "multiple devices matched the request".
+  SIMULATOR_ID=$(echo "$DEVICES" | grep "Apple Watch" | head -n 1 | grep -Eo '[[:xdigit:]]{8}(-[[:xdigit:]]{4}){3}-[[:xdigit:]]{12}' | head -n 1)
   PLATFORM="watchOS Simulator"
-  DESTINATION="platform=$PLATFORM,name=$SIMULATOR_NAME"
+  DESTINATION="platform=$PLATFORM,id=$SIMULATOR_ID"
   # DESTINATION="generic/platform=watchOS"
   echo ""
   echo "➡️  Building for ${CYAN}watchOS ($CONFIGURATION)${RESET} on ${CYAN}$DESTINATION${RESET}..."
