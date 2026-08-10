@@ -1,3 +1,5 @@
+# This workflow is used to test the packages on all platforms.
+
 name: test
 on:
   push:
@@ -16,7 +18,14 @@ on:
     # │ │ │ │ ┌───────────── day of the week (0 - 6 or SUN-SAT)
     # │ │ │ │ │
     # * * * * *
-    - cron: "0 14 * * *" # every day at 14:00 UTC (6:00 PST, 7:00 PDT)
+    # build and format run at 14:00 UTC, so tests use a later window to avoid competing for macOS runners.
+    - cron: "15 14 * * *" # every day at 14:15 UTC (6:15 PST, 7:15 PDT)
+
+concurrency:
+  # newer commits cancel older in-flight CI on the same ref.
+  # scoping the group by event keeps push runs from cancelling scheduled runs (and vice versa).
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
 env:
   TERM: xterm-256color
@@ -29,6 +38,11 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
+      - name: Cache CI artifacts
+        uses: ./.github/actions/cache
+        with:
+          kind: test-macOS
+          xcode-version: ${{ vars.XCODE_VERSION }}
       - name: Bootstrap
         uses: ./.github/actions/bootstrap
       # ChouTi
@@ -69,11 +83,21 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
+      - name: Cache CI artifacts
+        uses: ./.github/actions/cache
+        with:
+          kind: test-${{ matrix.platform }}
+          xcode-version: ${{ vars.XCODE_VERSION }}
       - name: Bootstrap
         uses: ./.github/actions/bootstrap
-      # - name: Download visionOS simulator
-      #   if: matrix.platform == 'visionOS'
-      #   run: xcodebuild -downloadPlatform visionOS
-      - name: Test package "ChouTi" on ${{ matrix.platform }}
-        if: success() || failure()
-        run: make test-${{ matrix.platform }} -C packages/ChouTi
+
+      # Phases are separate steps for per-phase timing. The simulator boots at
+      # the start of the Test step, after the build: boot and compile are both
+      # CPU-heavy, so on few-core CI runners running them serially is faster
+      # than overlapping them.
+      - name: Pick simulator
+        run: make test-ci OS=${{ matrix.platform }} PHASE=pick -C packages/ChouTi
+      - name: Build for testing
+        run: make test-ci OS=${{ matrix.platform }} PHASE=build -C packages/ChouTi
+      - name: Test
+        run: make test-ci OS=${{ matrix.platform }} PHASE=test -C packages/ChouTi

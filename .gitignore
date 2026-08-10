@@ -44,6 +44,9 @@ DerivedData/
 timeline.xctimeline
 playground.xcworkspace
 
+## Custom derived data
+**/.derived-data/
+
 # ===== Swift Package Manager =====
 #
 # Add this line if you want to avoid checking in source code from Swift Package Manager dependencies.
@@ -102,6 +105,7 @@ vendor
 .env
 
 # ===== Binaries =====
+bin/jq
 bin/swiftformat
 bin/swiftlint
 bin/xcbeautify
