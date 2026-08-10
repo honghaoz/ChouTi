@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# Strip Cursor agent co-author trailers injected into commit messages.
+# See https://forum.cursor.com/t/commit-attribution-opt-out-ignored/164034
+sed -i '' '/cursoragent@cursor\.com/d' "$1"

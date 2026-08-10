@@ -33,22 +33,23 @@ function write-hook-script-content() {
   fi
 
   # 2) write the hook script content
-  COMMAND_CONTENT="\$(git rev-parse --show-toplevel)/scripts/git/git-hooks/$HOOK_NAME"
+  # forward the hook arguments, hooks like prepare-commit-msg need them
+  COMMAND_CONTENT="\$(git rev-parse --show-toplevel)/scripts/git/git-hooks/$HOOK_NAME \"\$@\""
 
-  # use -x to make sure the whole line is matched
-  # https://stackoverflow.com/a/69022922/3164091
-  if [[ ! -z $(grep -x "$COMMAND_CONTENT" "$HOOK_SCRIPT") ]]; then
+  # match by the hook script path so older installed lines (without argument
+  # forwarding) are not duplicated
+  if [[ ! -z $(grep -F "/scripts/git/git-hooks/$HOOK_NAME" "$HOOK_SCRIPT") ]]; then
     echo "✅ ${CYAN}$HOOK_NAME${RESET} is already installed."
   else
     echo "" >> "$HOOK_SCRIPT"
     echo "# [$TAG] $HOOK_NAME" >> "$HOOK_SCRIPT"
-    echo $COMMAND_CONTENT >> "$HOOK_SCRIPT"
+    echo "$COMMAND_CONTENT" >> "$HOOK_SCRIPT"
     echo "✅ ${CYAN}$HOOK_NAME${RESET} is installed."
   fi
 }
 
 # declare a string array of all the hooks we want to install
-declare -a HOOK_NAMES=("pre-commit" "post-checkout" "post-merge")
+declare -a HOOK_NAMES=("pre-commit" "post-checkout" "post-merge" "prepare-commit-msg")
 
 # read the array values with space
 for HOOK_NAME in "${HOOK_NAMES[@]}"; do
