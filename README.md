@@ -85,6 +85,13 @@ class SomeTests: XCTestCase {
     expect(expression).to(beIdentical(to: object))
     expect(expression) === object
 
+    // metatypes (exact type identity)
+    expect(Int.self) == Int.self
+    expect(Int.self) != String.self
+    expect(Int.self).to(beType(Int.self))
+    expect(object_getClass(object)) == NSObject.self
+    expect(nil as Any.Type?) == nil
+
     // nil
     expect(expression).to(beNil())
     expect(expression) == nil

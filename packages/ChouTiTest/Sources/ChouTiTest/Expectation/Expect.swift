@@ -64,6 +64,46 @@ public func expect<T>(_ expression: @autoclosure () throws -> T?, _ description:
   }
 }
 
+/// Make an expression for comparing metatypes by exact type identity.
+///
+/// Concrete and existential metatypes are erased to `Any.Type` so different types can be compared.
+/// For example, `expect(Int.self) != String.self` or `expect(type).to(beType(Int.self))`.
+///
+/// - Parameters:
+///   - expression: A metatype expression to be evaluated.
+///   - description: A human readable description of the expression.
+///   - file: The file where the failure occurs. Defaults to the caller's file.
+///   - line: The line number where the failure occurs. Defaults to the caller's line.
+/// - Returns: A metatype expression.
+public func expect(_ expression: @autoclosure () throws -> Any.Type, _ description: @autoclosure @escaping () -> String? = nil, file: StaticString = #filePath, line: UInt = #line) -> Expression<Any.Type> {
+  do {
+    let value = try expression()
+    return Expression(value: { value }, thrownError: nil, description: description, file: file, line: line)
+  } catch {
+    return Expression(value: { fatalError("unexpected") }, thrownError: error, description: description, file: file, line: line) // swiftlint:disable:this fatal_error
+  }
+}
+
+/// Make an expression for comparing optional metatypes by exact type identity.
+///
+/// Supports optional concrete metatypes, `Any.Type?`, and `AnyClass?`, including values from `object_getClass(_:)`.
+/// For example, `expect(type) == Int.self` or `expect(type) == nil`.
+///
+/// - Parameters:
+///   - expression: An optional metatype expression to be evaluated.
+///   - description: A human readable description of the expression.
+///   - file: The file where the failure occurs. Defaults to the caller's file.
+///   - line: The line number where the failure occurs. Defaults to the caller's line.
+/// - Returns: An optional metatype expression.
+public func expect(_ expression: @autoclosure () throws -> Any.Type?, _ description: @autoclosure @escaping () -> String? = nil, file: StaticString = #filePath, line: UInt = #line) -> OptionalExpression<Any.Type> {
+  do {
+    let value = try expression()
+    return OptionalExpression(value: { value }, thrownError: nil, description: description, file: file, line: line)
+  } catch {
+    return OptionalExpression(value: { fatalError("unexpected") }, thrownError: error, description: description, file: file, line: line) // swiftlint:disable:this fatal_error
+  }
+}
+
 /// Make an expression to be used to evaluate by an expectation.
 /// - Parameters:
 ///   - expression: An expression to be evaluated.
