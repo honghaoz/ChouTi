@@ -177,13 +177,49 @@ class ExpectEventuallyTests: XCTestCase {
     var object: NSObject? = NSObject()
     weak let weakObject = object
 
-    // releases the object after the first evaluation, which runs right away and sees the object alive, so the release
-    // is only seen if the expectation doesn't keep the evaluated object
+    // releases the object after the first evaluation, which runs right away and sees the object alive, so the wait sees
+    // the release only if it doesn't keep the evaluated object into the next evaluation
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
       object = nil
     }
 
     expect(weakObject).toEventually(beNil())
+  }
+
+  func test_eventually_passingWait_doesNotFormatTheValue() {
+    final class Value: CustomStringConvertible {
+      var descriptionCount = 0
+
+      var description: String {
+        descriptionCount += 1
+        return "Value"
+      }
+    }
+
+    // the value fails the first two evaluations, and a wait that passes doesn't need its description for a failure
+    // message
+    do {
+      let value = Value()
+      var count = 0
+      func calculate() -> Value? {
+        count += 1
+        return count == 3 ? nil : value
+      }
+
+      expect(calculate()).toEventually(beNil())
+      expect(value.descriptionCount) == 0
+    }
+    do {
+      let value = Value()
+      var count = 0
+      func calculate() -> Value {
+        count += 1
+        return count == 3 ? Value() : value
+      }
+
+      expect(calculate()).toEventuallyNot(beIdentical(to: value))
+      expect(value.descriptionCount) == 0
+    }
   }
 
   func test_eventually_optionalValue() {
