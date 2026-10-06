@@ -324,6 +324,25 @@ class ExpectEventuallyFailureMessageTests: FailureCapturingTestCase {
     }
   }
 
+  func test_eventually_timeout_stopsEvaluatingTheExpression() {
+    var evaluationCount = 0
+    func calculate() -> Int {
+      evaluationCount += 1
+      // takes 10 ms, so that the evaluations come later than every 10 ms
+      let end = DispatchTime.now() + 0.01
+      while DispatchTime.now() < end {}
+      return 1
+    }
+
+    expect(calculate()).toEventually(beEqual(to: 2), timeout: 0.1)
+    let evaluationCountAtTimeout = evaluationCount
+    wait(timeout: 0.3)
+
+    // a failure here replaces the timeout's failure as the last one, so the `assertFailure` below reports it
+    expect(evaluationCount, "evaluation count after the timeout") == evaluationCountAtTimeout
+    assertFailure(expectedMessage: #"failed - expect "1" to be equal to "2" eventually"#)
+  }
+
   // MARK: - Throw Error
 
   func testEventuallyThrowAnError() {
