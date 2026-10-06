@@ -110,6 +110,9 @@ public struct EscapingExpression<T> {
     var lastValue: T?
     var thrownError: Error?
     repeating(interval: interval, timeout: timeout, queue: .main) { _ in
+      // releases the last value before evaluating the expression again, since keeping it into the evaluation would keep
+      // alive an object that the expression waits to be released
+      lastValue = nil
       do {
         let value = try expression()
         if expectationEvaluate(value) {
@@ -297,6 +300,9 @@ public struct EscapingExpression<T> {
     var lastValue: T?
     var thrownError: Error?
     repeating(interval: interval, timeout: timeout, queue: .main) { _ in
+      // releases the last value before evaluating the expression again, since keeping it into the evaluation would keep
+      // alive an object that the expression waits to be released
+      lastValue = nil
       do {
         let value = try expression()
         if !expectationEvaluate(value) {
