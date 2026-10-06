@@ -33,10 +33,9 @@ import Foundation
 /// Repeats a block of code at a specified interval on a specified queue.
 /// - Parameters:
 ///   - interval: The interval at which to repeat the block.
-///   - timeout: The maximum time to repeat the block.
+///   - timeout: The maximum time to repeat the block, from the time of this call.
 ///   - queue: The queue on which to repeat the block.
 ///   - block: The block to repeat. It should return `true` to stop the repeating task.
-/// - Returns: A token that can be used to stop the repeating task.
 func repeating(interval: TimeInterval,
                timeout: TimeInterval = .greatestFiniteMagnitude,
                queue: DispatchQueue = .main,
@@ -46,10 +45,13 @@ func repeating(interval: TimeInterval,
     return
   }
 
+  // stops at a deadline instead of counting invocations, since each invocation comes later than `interval` after the
+  // previous one, so a count would keep invoking the block after the timeout
+  let deadline = DispatchTime.now() + timeout
   var loopCount = 0
 
   func invoke() {
-    if Double(loopCount) * interval > timeout {
+    if DispatchTime.now() > deadline {
       return
     }
     if block(loopCount) {

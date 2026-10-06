@@ -36,7 +36,7 @@ class RepeatingTests: XCTestCase {
   func testRepeating() {
     let expectation = XCTestExpectation()
     var count = 0
-    repeating(interval: 0.01, timeout: 0.05, queue: .main) { _ in
+    repeating(interval: 0.01, timeout: 0.1, queue: .main) { _ in
       count += 1
       if count == 3 {
         expectation.fulfill()
@@ -45,6 +45,23 @@ class RepeatingTests: XCTestCase {
       return false
     }
     wait(for: [expectation], timeout: 0.1)
+  }
+
+  func test_repeating_stopsAtTheTimeout_whenInvocationsRunLate() {
+    // each invocation takes 10 ms, so invocations start at least 20 ms apart and at most 8 of them start within the
+    // 150 ms timeout, while counting invocations as if they came every 10 ms would allow 16
+    var invocationCount = 0
+    repeating(interval: 0.01, timeout: 0.15, queue: .main) { _ in
+      invocationCount += 1
+      let end = DispatchTime.now() + 0.01
+      while DispatchTime.now() < end {}
+      return false
+    }
+
+    wait(timeout: 0.4)
+
+    expect(invocationCount) > 0
+    expect(invocationCount) <= 8
   }
 
   func testRepeating_invalidInterval() {
