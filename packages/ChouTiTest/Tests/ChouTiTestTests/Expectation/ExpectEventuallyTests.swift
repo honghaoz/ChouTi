@@ -173,6 +173,19 @@ class ExpectEventuallyTests: XCTestCase {
     }
   }
 
+  func test_eventually_beNil_objectReleasedDuringTheWait() {
+    var object: NSObject? = NSObject()
+    weak let weakObject = object
+
+    // releases the object after the first evaluation, which runs right away and sees the object alive, so the release
+    // is only seen if the expectation doesn't keep the evaluated object
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+      object = nil
+    }
+
+    expect(weakObject).toEventually(beNil())
+  }
+
   func test_eventually_optionalValue() {
     let value: Int? = 1
     expect(value).toEventually(beEqual(to: 1))

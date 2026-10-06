@@ -107,7 +107,9 @@ public struct EscapingExpression<T> {
     }
 
     let testExpectation = XCTestExpectation()
-    var lastValue: T?
+    // keeps the description of the last value instead of the value, since keeping the value would keep an object alive
+    // for the rest of the wait, such as an object that the expression waits to be released
+    var lastValueDescription: String?
     var thrownError: Error?
     repeating(interval: interval, timeout: timeout, queue: .main) { _ in
       do {
@@ -117,7 +119,7 @@ public struct EscapingExpression<T> {
           return true
         }
 
-        lastValue = value
+        lastValueDescription = formatValue(value)
         return false
       } catch {
         thrownError = error
@@ -140,7 +142,7 @@ public struct EscapingExpression<T> {
     case .completed:
       break
     case .timedOut:
-      let formattedValue = formatValue(lastValue)
+      let formattedValue = lastValueDescription ?? "nil" // impossible as the lastValueDescription is always non-nil since repeating interval is always less than timeout, so when the timeout is reached, the lastValueDescription is always non-nil
       if let description = description() {
         XCTFail("expect \"\(description)\" (\"\(formattedValue)\") to \(expectationDescription()) eventually", file: file, line: line)
       } else {
@@ -294,7 +296,9 @@ public struct EscapingExpression<T> {
     }
 
     let testExpectation = XCTestExpectation()
-    var lastValue: T?
+    // keeps the description of the last value instead of the value, since keeping the value would keep an object alive
+    // for the rest of the wait
+    var lastValueDescription: String?
     var thrownError: Error?
     repeating(interval: interval, timeout: timeout, queue: .main) { _ in
       do {
@@ -304,7 +308,7 @@ public struct EscapingExpression<T> {
           return true
         }
 
-        lastValue = value
+        lastValueDescription = formatValue(value)
         return false
       } catch {
         thrownError = error
@@ -327,7 +331,7 @@ public struct EscapingExpression<T> {
     case .completed:
       break
     case .timedOut:
-      let formattedValue = formatValue(lastValue)
+      let formattedValue = lastValueDescription ?? "nil" // impossible as the lastValueDescription is always non-nil since repeating interval is always less than timeout, so when the timeout is reached, the lastValueDescription is always non-nil
       if let description = description() {
         XCTFail("expect \"\(description)\" (\"\(formattedValue)\") to not \(expectationDescription()) eventually", file: file, line: line)
       } else {
@@ -415,11 +419,7 @@ public struct EscapingExpression<T> {
   // MARK: - Helper
 
   /// Helper function to format a value for display, unwrapping nested optionals.
-  private func formatValue(_ value: T?) -> String {
-    guard let value = value else {
-      return "nil" // impossible as the lastValue is always non-nil since repeating interval is always less than timeout, so when the timeout is reached, the lastValue is always non-nil
-    }
-
+  private func formatValue(_ value: T) -> String {
     // check if the value is an optional using Mirror
     let mirror = Mirror(reflecting: value)
     if mirror.displayStyle == .optional {
