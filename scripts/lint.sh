@@ -75,7 +75,8 @@ function measure_end() {
 }
 # ===------ Measure time taken [END] ------===
 
-REPO_ROOT=$(git rev-parse --show-toplevel)
+# git hooks in a linked worktree export GIT_DIR, which makes `--show-toplevel` return the current directory
+REPO_ROOT=$(unset GIT_DIR; git rev-parse --show-toplevel)
 cd "$REPO_ROOT" || exit 1
 
 CONFIG_PATH="$REPO_ROOT/configs"

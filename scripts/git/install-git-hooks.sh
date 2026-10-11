@@ -13,17 +13,15 @@ CYAN=$(safe_tput setaf 6)
 RESET=$(safe_tput sgr0)
 
 TAG="ChouTi"
-GIT_DIR=$(git rev-parse --git-dir)
+# not `--git-dir`: git reads a linked worktree's hooks from the common directory
+HOOKS_DIR=$(git rev-parse --git-path hooks)
 
-cd "$GIT_DIR" || exit 1
-
-if [[ ! -d "hooks" ]]; then
-  mkdir hooks
-fi
+mkdir -p "$HOOKS_DIR"
+cd "$HOOKS_DIR" || exit 1
 
 function write-hook-script-content() {
   HOOK_NAME="$1"
-  HOOK_SCRIPT="./hooks/$HOOK_NAME"
+  HOOK_SCRIPT="./$HOOK_NAME"
 
   # 1) prepare empty hook script file if needed
   if ! [[ -f "$HOOK_SCRIPT" || -L "$HOOK_SCRIPT" ]]; then

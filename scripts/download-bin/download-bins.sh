@@ -19,7 +19,8 @@ RESET=$(safe_tput sgr0)
 
 # define variables
 CURRENT_DIR=$(pwd)
-REPO_ROOT=$(git rev-parse --show-toplevel)
+# git hooks in a linked worktree export GIT_DIR, which makes `--show-toplevel` return the current directory
+REPO_ROOT=$(unset GIT_DIR; git rev-parse --show-toplevel)
 BIN_DIR="$REPO_ROOT/bin"
 
 print_help() {
