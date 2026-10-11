@@ -82,6 +82,11 @@ class SomeTests: XCTestCase {
     expect(expression).to(beApproximatelyEqual(to: 2, within: 1e-6))
     expect(expression).toNot(beApproximatelyEqual(to: 2, within: 1e-6))
 
+    // range
+    expect(expression).to(beWithin(1 ... 10))
+    expect(expression).to(beBetween(10, and: 1))
+    expect(expression).to(beBetween(10, and: 1, within: 1e-6))
+
     // identical
     expect(expression).to(beIdentical(to: object))
     expect(expression) === object
