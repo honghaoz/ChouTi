@@ -67,6 +67,27 @@ public func beWithin<T>(_ range: Range<T>) -> BeWithinExpectation<Range<T>> {
   BeWithinExpectation(range: range)
 }
 
+/// An expectation that the actual value is between two bounds, including the bounds.
+///
+/// No value is between a NaN bound and another bound.
+public struct BeBetweenExpectation<T: Comparable>: Expectation {
+
+  public typealias ThrownErrorType = Never
+
+  // the bounds are not stored as a `ClosedRange`, whose initializer traps for NaN or inverted bounds
+
+  fileprivate let lowerBound: T
+  fileprivate let upperBound: T
+
+  public func evaluate(_ actualValue: T) -> Bool {
+    lowerBound <= actualValue && actualValue <= upperBound
+  }
+
+  public var description: String {
+    "be within \"\(lowerBound)...\(upperBound)\""
+  }
+}
+
 /// Make an expectation that the actual value is between two bounds, including the bounds.
 ///
 /// The bounds can be in either order. For example, `expect(value).to(beBetween(later, and: earlier))`.
@@ -75,8 +96,10 @@ public func beWithin<T>(_ range: Range<T>) -> BeWithinExpectation<Range<T>> {
 ///   - bound: One bound of the expected range.
 ///   - otherBound: The other bound of the expected range.
 /// - Returns: An expectation.
-public func beBetween<T: Comparable>(_ bound: T, and otherBound: T) -> BeWithinExpectation<ClosedRange<T>> {
-  BeWithinExpectation(range: min(bound, otherBound) ... max(bound, otherBound))
+public func beBetween<T: Comparable>(_ bound: T, and otherBound: T) -> BeBetweenExpectation<T> {
+  // not `min(_:_:)` and `max(_:_:)`, which drop a NaN bound in one argument order
+  let (lowerBound, upperBound) = otherBound < bound ? (otherBound, bound) : (bound, otherBound)
+  return BeBetweenExpectation(lowerBound: lowerBound, upperBound: upperBound)
 }
 
 /// Make an expectation that the actual value is between two bounds, including the bounds and a tolerance beyond them.
@@ -86,8 +109,10 @@ public func beBetween<T: Comparable>(_ bound: T, and otherBound: T) -> BeWithinE
 /// - Parameters:
 ///   - bound: One bound of the expected range.
 ///   - otherBound: The other bound of the expected range.
-///   - tolerance: The absolute tolerance to extend the expected range beyond both bounds.
+///   - tolerance: The absolute tolerance to extend the expected range beyond both bounds. The sign is ignored.
 /// - Returns: An expectation.
-public func beBetween<T: FloatingPoint>(_ bound: T, and otherBound: T, within tolerance: T) -> BeWithinExpectation<ClosedRange<T>> {
-  BeWithinExpectation(range: (min(bound, otherBound) - tolerance) ... (max(bound, otherBound) + tolerance))
+public func beBetween<T: FloatingPoint>(_ bound: T, and otherBound: T, within tolerance: T) -> BeBetweenExpectation<T> {
+  let bounds = beBetween(bound, and: otherBound)
+  let tolerance = Swift.abs(tolerance)
+  return BeBetweenExpectation(lowerBound: bounds.lowerBound - tolerance, upperBound: bounds.upperBound + tolerance)
 }

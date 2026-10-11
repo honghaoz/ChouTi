@@ -74,6 +74,21 @@ class Expectation_BeWithinTests: XCTestCase {
     expect(beBetween(2.0, and: 1.0, within: 0.5).description) == #"be within "0.5...2.5""#
   }
 
+  func test_beBetween_nan() {
+    expect(1.0).toNot(beBetween(1.0, and: .nan))
+    expect(1.0).toNot(beBetween(.nan, and: 1.0))
+    expect(1.0).toNot(beBetween(1.0, and: .nan, within: 0.5))
+    expect(Double.nan).toNot(beBetween(0.0, and: 1.0))
+    expect(beBetween(1.0, and: .nan).description) == #"be within "1.0...nan""#
+    expect(beBetween(.nan, and: 1.0).description) == #"be within "nan...1.0""#
+  }
+
+  func test_beBetween_withTolerance_negativeOrNaN() {
+    expect(0.5).to(beBetween(1.0, and: 2.0, within: -0.5))
+    expect(beBetween(1.0, and: 2.0, within: -1.0).description) == #"be within "0.0...3.0""#
+    expect(1.5).toNot(beBetween(1.0, and: 2.0, within: .nan))
+  }
+
   func test_optionalAndEventually() {
     let value: Int? = 2
     let nilValue: Int? = nil
@@ -107,5 +122,8 @@ class Expectation_BeWithinFailureMessageTests: FailureCapturingTestCase {
 
     expect(3.0, "shown").to(beBetween(2.0, and: 1.0, within: 0.5))
     assertFailure(expectedMessage: #"failed - expect "shown" ("3.0") to be within "0.5...2.5""#)
+
+    expect(1.0).to(beBetween(1.0, and: .nan))
+    assertFailure(expectedMessage: #"failed - expect "1.0" to be within "1.0...nan""#)
   }
 }
