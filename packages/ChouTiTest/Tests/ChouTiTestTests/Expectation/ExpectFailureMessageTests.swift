@@ -61,6 +61,23 @@ class ExpectFailureMessageTests: FailureCapturingTestCase {
     assertFailure(expectedMessage: expectedMessage)
   }
 
+  func test_expectThat() {
+    expect(that: false)
+    assertFailure(expectedMessage: #"failed - expect "false" to be "true""#)
+
+    expect(that: 1 == 2, "one equals two")
+    assertFailure(expectedMessage: #"failed - expect "one equals two" ("false") to be "true""#)
+  }
+
+  func test_expectThat_throws() {
+    func isValid() throws -> Bool {
+      throw NSError(domain: "test", code: 1, userInfo: nil)
+    }
+
+    expect(that: try isValid())
+    assertFailure(expectedMessage: #"failed - expect not to throw error: "Error Domain=test Code=1 "(null)"""#)
+  }
+
   func testEqual() {
     do {
       let expectedMessage = "failed - expect \"1\" to be equal to \"2\""

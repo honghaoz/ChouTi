@@ -51,6 +51,31 @@ class ExpectTests: XCTestCase {
     expect(beFalse().description) == "be \"false\""
   }
 
+  func test_expectThat() {
+    expect(that: true)
+    expect(that: 1 == 1)
+    expect(that: !false)
+    expect(that: [1, 2].contains(1), "array contains 1")
+  }
+
+  func test_expectThat_evaluatesOnceAndDescriptionLazily() {
+    var evaluationCount = 0
+    var descriptionCount = 0
+    func isValid() -> Bool {
+      evaluationCount += 1
+      return true
+    }
+    func makeDescription() -> String {
+      descriptionCount += 1
+      return "is valid"
+    }
+
+    expect(that: isValid(), makeDescription())
+
+    expect(evaluationCount) == 1
+    expect(descriptionCount) == 0
+  }
+
   func testBeEqual() {
     expect(1).to(beEqual(to: 1))
     expect(1).toNot(beEqual(to: 2))
