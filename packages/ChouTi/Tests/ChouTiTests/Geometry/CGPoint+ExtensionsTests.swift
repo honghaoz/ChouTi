@@ -115,6 +115,9 @@ class CGPoint_ExtensionsTests: XCTestCase {
     let p1 = CGPoint(187.33333333333331, 135.66666666666666)
     let p2 = CGPoint(187.66666666666666, 135.66666666666666)
     expect(p1.isApproximatelyEqual(to: p2, absoluteTolerance: absoluteTolerance)) == true
+
+    let infinitePoint = CGPoint(x: .infinity, y: -.infinity)
+    expect(that: infinitePoint.isApproximatelyEqual(to: infinitePoint, absoluteTolerance: 0))
   }
 
   func testHashable() {

@@ -40,4 +40,21 @@ class FloatingPoint_ApproximateEqualityTests: XCTestCase {
     expect(0.1.isApproximatelyEqual(to: 0.101, absoluteTolerance: 1e-5)) == false
     expect(0.1.isApproximatelyEqual(to: 0.101, absoluteTolerance: 1e-1)) == true
   }
+
+  func test_infinity() {
+    expect(that: Double.infinity.isApproximatelyEqual(to: .infinity, absoluteTolerance: 0))
+    expect(that: Double.infinity.isApproximatelyEqual(to: .infinity, absoluteTolerance: 1))
+    expect(that: (-Double.infinity).isApproximatelyEqual(to: -.infinity, absoluteTolerance: 0))
+    expect(that: Float.infinity.isApproximatelyEqual(to: .infinity, absoluteTolerance: 0))
+
+    expect(Double.infinity.isApproximatelyEqual(to: -.infinity, absoluteTolerance: 1)) == false
+    expect(Double.infinity.isApproximatelyEqual(to: .greatestFiniteMagnitude, absoluteTolerance: 1)) == false
+    expect(1.0.isApproximatelyEqual(to: .infinity, absoluteTolerance: 1)) == false
+  }
+
+  func test_nan() {
+    expect(Double.nan.isApproximatelyEqual(to: .nan, absoluteTolerance: 1)) == false
+    expect(Double.nan.isApproximatelyEqual(to: 0, absoluteTolerance: 1)) == false
+    expect(0.0.isApproximatelyEqual(to: .nan, absoluteTolerance: 1)) == false
+  }
 }

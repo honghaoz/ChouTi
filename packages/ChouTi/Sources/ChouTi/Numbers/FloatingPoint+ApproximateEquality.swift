@@ -34,12 +34,16 @@ public extension FloatingPoint {
 
   /// Returns true if self and other are approximately equal.
   ///
+  /// Equal values are approximately equal with any tolerance, including equal infinities.
+  /// NaN is not approximately equal to any value, including itself.
+  ///
   /// - Parameters:
   ///   - other: The value to compare with `self`.
   ///   - absoluteTolerance: The absolute tolerance value.
   /// - Returns: `true` if `self` and `other` are approximately equal; otherwise, `false`.
   func isApproximatelyEqual(to other: Self, absoluteTolerance: Self) -> Bool {
-    Swift.abs(self - other) <= absoluteTolerance
+    // the equality check is needed for equal infinities, whose difference is NaN
+    self == other || Swift.abs(self - other) <= absoluteTolerance
   }
 }
 
