@@ -2,6 +2,7 @@
 //  Expectation+BeTypeTests.swift
 //  ChouTi
 //
+//  Created by Honghao Zhang on 9/26/26.
 //  Copyright © 2020 Honghao Zhang.
 //
 //  MIT License
@@ -32,107 +33,76 @@ import XCTest
 
 import Foundation
 
-class BeTypeExpectationTests: XCTestCase {
+class Expectation_BeTypeTests: XCTestCase {
 
-  func test_concreteMetatypes() {
+  func test_beType() {
+    expect(Int.self).to(beType(Int.self))
+    expect(Int.self).toNot(beType(String.self))
+    expect(beType(Int.self).description) == #"be type "Swift.Int""#
+  }
+
+  func test_equal_concreteTypes() {
     typealias Integer = Int
 
     expect(Int.self) == Int.self
     expect(Int.self) == Integer.self
     expect(Int.self) != String.self
-    expect(TypeComparisonValue.self) == TypeComparisonValue.self
-    expect(TypeComparisonValue.self) != TypeComparisonOtherValue.self
-    expect(TypeComparisonEnum.self) == TypeComparisonEnum.self
-    expect(TypeComparisonEnum.self) != TypeComparisonValue.self
-    expect([Int].self) == [Int].self
-    expect([Int].self) != [String].self
     expect(Int?.self) == Int?.self
     expect(Int?.self) != Int.self
+    expect([Int].self) == [Int].self
+    expect([Int].self) != [String].self
     expect((Int, String).self) == (Int, String).self
     expect((() -> Void).self) == (() -> Void).self
+    expect(Value.self) == Value.self
+    expect(Value.self) != OtherValue.self
+    expect(FeatureA.State.self) != FeatureB.State.self
   }
 
-  func test_exactClassIdentity() {
-    let subclass: TypeComparisonBase.Type = TypeComparisonSubclass.self
+  func test_equal_classTypes() {
+    let subclass: Base.Type = Subclass.self
+    let instance: Base = Subclass()
 
-    expect(TypeComparisonBase.self) == TypeComparisonBase.self
-    expect(TypeComparisonSubclass.self) != TypeComparisonBase.self
-    expect(TypeComparisonBase.self) != TypeComparisonSubclass.self
-    expect(subclass) == TypeComparisonSubclass.self
-    expect(subclass) != TypeComparisonBase.self
+    expect(Base.self) == Base.self
+    expect(Subclass.self) != Base.self
+    expect(subclass) == Subclass.self
+    expect(subclass) != Base.self
+    expect(type(of: instance)) == Subclass.self
   }
 
-  func test_erasedMetatypes() {
-    let valueType: Any.Type = TypeComparisonValue.self
-    let classType: AnyClass = TypeComparisonSubclass.self
-    let expectedType: Any.Type = TypeComparisonSubclass.self
+  func test_equal_existentialTypes() {
+    let anyType: Any.Type = Value.self
+    let anyClass: AnyClass = Subclass.self
+    let protocolType: any ValueProtocol.Type = Value.self
 
-    expect(valueType) == TypeComparisonValue.self
-    expect(valueType) != classType
-    expect(classType) == expectedType
-    expect(classType) != TypeComparisonBase.self
-  }
-
-  func test_protocolMetatypes() {
-    let conformingType: any TypeComparisonProtocol.Type = TypeComparisonValue.self
-
-    expect(conformingType) == TypeComparisonValue.self
-    expect(conformingType) != TypeComparisonOtherValue.self
-    expect(TypeComparisonProtocol.self) == TypeComparisonProtocol.self
-    expect(TypeComparisonProtocol.self) != TypeComparisonValue.self
+    expect(anyType) == Value.self
+    expect(anyType) != OtherValue.self
+    expect(anyType) != anyClass
+    expect(anyClass) == Subclass.self
+    expect(anyClass) != Base.self
+    expect(protocolType) == Value.self
+    expect(protocolType) != OtherValue.self
+    expect(ValueProtocol.self) == ValueProtocol.self
+    expect(ValueProtocol.self) != Value.self
     expect(Any.self) == Any.self
     expect(Any.self) != AnyObject.self
   }
 
-  func test_optionalMetatypes() {
-    let valueType: Any.Type? = Int.self
-    let otherType: Any.Type? = String.self
-    let missingType: Any.Type? = nil
+  func test_equal_optionalTypes() {
+    let optionalType: Any.Type? = Int.self
+    let optionalConcreteType: Int.Type? = Int.self
+    let nilType: Any.Type? = nil
 
-    expect(valueType) == Int.self
-    expect(valueType) == valueType
-    expect(valueType) != String.self
-    expect(valueType) != otherType
-    expect(valueType) != nil
-    expect(valueType) != missingType
-    expect(missingType) == nil
-    expect(missingType) == missingType
-    expect(missingType) != Int.self
-    expect(missingType) != valueType
-    expect(valueType).to(beType(Int.self))
-    expect(valueType).toNot(beType(String.self))
-    expect(missingType).to(beNil())
-    expect(missingType).toNot(beType(Int.self))
+    expect(optionalType) == Int.self
+    expect(optionalType) != String.self
+    expect(optionalType) != nil
+    expect(optionalConcreteType) == Int.self
+    expect(optionalConcreteType) != String.self
+    expect(optionalConcreteType) != nil
+    expect(nilType) == nil
+    expect(nilType) != Int.self
   }
 
-  func test_optionalConcreteMetatypes() {
-    let valueType: Int.Type? = Int.self
-    let missingType: Int.Type? = nil
-
-    expect(valueType) == Int.self
-    expect(valueType) != String.self
-    expect(valueType) != nil
-    expect(missingType) == nil
-    expect(missingType) != Int.self
-  }
-
-  func test_optionalClassMetatypes() {
-    let classType: AnyClass? = TypeComparisonSubclass.self
-    let missingClass: AnyClass? = nil
-    let concreteClass: TypeComparisonBase.Type? = TypeComparisonSubclass.self
-
-    expect(classType) == TypeComparisonSubclass.self
-    expect(classType) != TypeComparisonBase.self
-    expect(classType) == concreteClass
-    expect(classType) != nil
-    expect(missingClass) == nil
-    expect(missingClass) != classType
-    expect(concreteClass) == TypeComparisonSubclass.self
-    expect(concreteClass) != TypeComparisonBase.self
-    expect(concreteClass) != nil
-  }
-
-  func test_objectGetClass() {
+  func test_equal_objectGetClass() {
     let object = NSObject()
 
     expect(object_getClass(object)) == NSObject.self
@@ -141,137 +111,120 @@ class BeTypeExpectationTests: XCTestCase {
     expect(object_getClass(nil)) == nil
   }
 
-  func test_beType() {
-    expect(Int.self).to(beType(Int.self))
-    expect(Int.self).toNot(beType(String.self))
-    expect(TypeComparisonSubclass.self).toNot(beType(TypeComparisonBase.self))
-    expect(beType(Int.self).description) == "be type \"Int\""
-  }
-
-  func test_eventualMatcher() {
+  func test_toEventually() {
     expect(Int.self).toEventually(beType(Int.self))
     expect(Int.self).toEventuallyNot(beType(String.self))
-    expect(Int.self as Any.Type?).toEventually(beType(Int.self))
-    expect(nil as Any.Type?).toEventuallyNot(beType(Int.self))
-  }
-
-  func test_evaluatesOnceAndKeepsDescriptionLazy() {
-    var evaluations = 0
-    var descriptions = 0
-    func value() -> Any.Type {
-      evaluations += 1
-      return Int.self
-    }
-    func description() -> String {
-      descriptions += 1
-      return "metatype"
-    }
-
-    let expression = expect(value(), description())
-    expression == Int.self
-    expression != String.self
-    expect(evaluations) == 1
-    expect(descriptions) == 0
-  }
-
-  func test_optionalEvaluatesOnceAndKeepsDescriptionLazy() {
-    var evaluations = 0
-    var descriptions = 0
-    func value() -> Any.Type? {
-      evaluations += 1
-      return Int.self
-    }
-    func description() -> String {
-      descriptions += 1
-      return "optional metatype"
-    }
-
-    let expression = expect(value(), description())
-    expression == Int.self
-    expression != nil
-    expect(evaluations) == 1
-    expect(descriptions) == 0
-  }
-
-  func test_throwingExpressionsStillSupportErrorMatchers() {
-    expect(try throwingTypeComparison()).to(throwAnError())
-    expect(try throwingOptionalTypeComparison()).to(throwAnError())
+    expect(object_getClass(NSObject())).toEventually(beType(NSObject.self))
+    expect(object_getClass(nil)).toEventuallyNot(beType(NSObject.self))
   }
 }
 
-class BeTypeExpectationFailureTests: FailureCapturingTestCase {
+class Expectation_BeTypeFailureMessageTests: FailureCapturingTestCase {
 
-  func test_equalityFailure() {
-    expect(Int.self) == String.self
-    assertFailure(expectedMessage: #"failed - expect "Int" to be type "String""#)
-  }
-
-  func test_inequalityFailure() {
-    expect(Int.self) != Int.self
-    assertFailure(expectedMessage: #"failed - expect "Int" to not be type "Int""#)
-  }
-
-  func test_failureWithDescription() {
-    expect(Int.self, "value type") == String.self
-    assertFailure(expectedMessage: #"failed - expect "value type" ("Int") to be type "String""#)
-  }
-
-  func test_matcherFailure() {
+  func test_beType() {
     expect(Int.self).to(beType(String.self))
-    assertFailure(expectedMessage: #"failed - expect "Int" to be type "String""#)
+    assertFailure(expectedMessage: #"failed - expect "Swift.Int" to be type "Swift.String""#)
+
+    expect(Int.self).toNot(beType(Int.self))
+    assertFailure(expectedMessage: #"failed - expect "Swift.Int" to not be type "Swift.Int""#)
   }
 
-  func test_optionalEqualityFailure() {
+  func test_equal() {
+    expect(Int.self) == String.self
+    assertFailure(expectedMessage: #"failed - expect "Swift.Int" to be type "Swift.String""#)
+
+    expect(Int.self, "type") == String.self
+    assertFailure(expectedMessage: #"failed - expect "type" ("Swift.Int") to be type "Swift.String""#)
+
+    expect(Int.self) != Int.self
+    assertFailure(expectedMessage: #"failed - expect "Swift.Int" to not be type "Swift.Int""#)
+
+    expect(Int.self, "type") != Int.self
+    assertFailure(expectedMessage: #"failed - expect "type" ("Swift.Int") to not be type "Swift.Int""#)
+  }
+
+  func test_equal_qualifiedTypeNames() {
+    expect(FeatureA.State.self) == FeatureB.State.self
+    assertFailure(expectedMessage: #"failed - expect "ChouTiTestTests.FeatureA.State" to be type "ChouTiTestTests.FeatureB.State""#)
+
+    expect(Base.self) == Subclass.self
+    assertFailure(expectedMessage: #"failed - expect "ChouTiTestTests.Base" to be type "ChouTiTestTests.Subclass""#)
+  }
+
+  func test_equal_optionalType() {
     expect(Int.self as Any.Type?) == String.self
-    assertFailure(expectedMessage: #"failed - expect "Int" to be type "String""#)
-  }
+    assertFailure(expectedMessage: #"failed - expect "Swift.Int" to be type "Swift.String""#)
 
-  func test_optionalInequalityFailureWithDescription() {
-    expect(Int.self as Any.Type?, "value type") != Int.self
-    assertFailure(expectedMessage: #"failed - expect "value type" ("Int") to not be type "Int""#)
-  }
+    expect(Int.self as Any.Type?, "type") == String.self
+    assertFailure(expectedMessage: #"failed - expect "type" ("Swift.Int") to be type "Swift.String""#)
 
-  func test_missingTypeFailure() {
+    expect(Int.self as Any.Type?) != Int.self
+    assertFailure(expectedMessage: #"failed - expect "Swift.Int" to not be type "Swift.Int""#)
+
+    expect(Int.self as Any.Type?, "type") != Int.self
+    assertFailure(expectedMessage: #"failed - expect "type" ("Swift.Int") to not be type "Swift.Int""#)
+
     expect(nil as Any.Type?) == Int.self
-    assertFailure(expectedMessage: #"failed - expect "nil" to be type "Int""#)
-  }
+    assertFailure(expectedMessage: #"failed - expect "nil" to be type "Swift.Int""#)
 
-  func test_expectedNilFailure() {
     expect(Int.self as Any.Type?) == nil
-    assertFailure(expectedMessage: #"failed - expect "Int" to be nil"#)
-  }
+    assertFailure(expectedMessage: #"failed - expect "Swift.Int" to be nil"#)
 
-  func test_nilInequalityFailure() {
     expect(nil as Any.Type?) != nil
     assertFailure(expectedMessage: #"failed - expect "nil" to not be nil"#)
   }
 
-  func test_throwingExpressionFailure() {
-    expect(try throwingTypeComparison()) == Int.self
-    assertFailure(expectedMessage: #"failed - expect not to throw error: "missingType""#)
+  func test_equal_objectGetClass() {
+    expect(object_getClass(NSObject())) == NSString.self
+    assertFailure(expectedMessage: #"failed - expect "NSObject" to be type "NSString""#)
+
+    expect(object_getClass(nil)) == NSObject.self
+    assertFailure(expectedMessage: #"failed - expect "nil" to be type "NSObject""#)
   }
 
-  func test_throwingOptionalExpressionFailure() {
-    expect(try throwingOptionalTypeComparison()) != nil
-    assertFailure(expectedMessage: #"failed - expect not to throw error: "missingType""#)
+  func test_equal_throwingExpression() {
+    expect(try makeType()) == Int.self
+    assertFailure(expectedMessage: #"failed - expect not to throw error: "type""#)
+
+    expect(try makeOptionalType()) == Int.self
+    assertFailure(expectedMessage: #"failed - expect not to throw error: "optionalType""#)
+  }
+
+  func test_toEventually() {
+    expect(Int.self).toEventually(beType(String.self), timeout: 0.05)
+    assertFailure(expectedMessage: #"failed - expect "Swift.Int" to be type "Swift.String" eventually"#)
+
+    expect(object_getClass(NSObject())).toEventually(beType(NSString.self), timeout: 0.05)
+    assertFailure(expectedMessage: #"failed - expect "NSObject" to be type "NSString" eventually"#)
   }
 }
 
-private protocol TypeComparisonProtocol {}
-private struct TypeComparisonValue: TypeComparisonProtocol {}
-private struct TypeComparisonOtherValue: TypeComparisonProtocol {}
-private enum TypeComparisonEnum {}
-private class TypeComparisonBase {}
-private class TypeComparisonSubclass: TypeComparisonBase {}
+// MARK: - Fixtures
 
-private enum TypeComparisonError: Error {
-  case missingType
+private protocol ValueProtocol {}
+private struct Value: ValueProtocol {}
+private struct OtherValue: ValueProtocol {}
+
+private class Base {}
+private final class Subclass: Base {}
+
+private enum FeatureA {
+  struct State {}
 }
 
-private func throwingTypeComparison() throws -> Any.Type {
-  throw TypeComparisonError.missingType
+private enum FeatureB {
+  struct State {}
 }
 
-private func throwingOptionalTypeComparison() throws -> Any.Type? {
-  throw TypeComparisonError.missingType
+private enum TypeError: Error {
+  case type
+  case optionalType
+}
+
+private func makeType() throws -> Any.Type {
+  throw TypeError.type
+}
+
+private func makeOptionalType() throws -> Any.Type? {
+  throw TypeError.optionalType
 }

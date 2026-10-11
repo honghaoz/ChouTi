@@ -68,9 +68,9 @@ public struct Expression<T> {
     let value = value()
     if !expectation.evaluate(value) {
       if let description = description() {
-        XCTFail("expect \"\(description)\" (\"\(value)\") to \(expectation.description)", file: file, line: line)
+        XCTFail("expect \"\(description)\" (\"\(describe(value))\") to \(expectation.description)", file: file, line: line)
       } else {
-        XCTFail("expect \"\(value)\" to \(expectation.description)", file: file, line: line)
+        XCTFail("expect \"\(describe(value))\" to \(expectation.description)", file: file, line: line)
       }
     }
   }
@@ -134,9 +134,9 @@ public struct Expression<T> {
     let value = value()
     if expectation.evaluate(value) {
       if let description = description() {
-        XCTFail("expect \"\(description)\" (\"\(value)\") to not \(expectation.description)", file: file, line: line)
+        XCTFail("expect \"\(description)\" (\"\(describe(value))\") to not \(expectation.description)", file: file, line: line)
       } else {
-        XCTFail("expect \"\(value)\" to not \(expectation.description)", file: file, line: line)
+        XCTFail("expect \"\(describe(value))\" to not \(expectation.description)", file: file, line: line)
       }
     }
   }

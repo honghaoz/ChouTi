@@ -2,6 +2,7 @@
 //  Expectation+BeType.swift
 //  ChouTi
 //
+//  Created by Honghao Zhang on 9/26/26.
 //  Copyright © 2020 Honghao Zhang.
 //
 //  MIT License
@@ -29,64 +30,62 @@
 
 import Foundation
 
-/// An expectation that the actual metatype is exactly the expected type.
+/// An expectation that the actual type is exactly the expected type.
 ///
-/// A subclass is distinct from its superclass. Type aliases are equal to the type they name.
+/// A type alias matches the type it refers to. A subclass doesn't match its superclass.
 public struct BeTypeExpectation: Expectation {
 
+  public typealias T = Any.Type
   public typealias ThrownErrorType = Never
 
-  fileprivate let value: Any.Type
+  fileprivate let type: Any.Type
 
   public func evaluate(_ actualValue: Any.Type) -> Bool {
-    ObjectIdentifier(actualValue) == ObjectIdentifier(value)
+    actualValue == type
   }
 
   public var description: String {
-    "be type \"\(value)\""
+    "be type \"\(describe(type))\""
   }
 }
 
-/// Make an expectation that a metatype is exactly the expected type.
+/// Make an expectation that the actual type is exactly the expected type.
 ///
-/// For example, `expect(Int.self).to(beType(Int.self))`.
-/// Optional metatypes can use the same matcher; `nil` fails `to` and passes `toNot`.
-/// - Parameter value: The expected metatype.
-/// - Returns: An expectation that compares exact type identity.
-public func beType(_ value: Any.Type) -> BeTypeExpectation {
-  BeTypeExpectation(value: value)
+/// Example:
+/// ```swift
+/// expect(type(of: view)).to(beType(MyView.self))
+/// expect(object_getClass(layer)).to(beType(CALayer.self))
+/// ```
+///
+/// - Parameter type: The expected type.
+/// - Returns: An expectation.
+public func beType(_ type: Any.Type) -> BeTypeExpectation {
+  BeTypeExpectation(type: type)
 }
 
 public extension Expression where T == Any.Type {
 
-  /// Assert that the actual metatype is exactly the expected type.
+  /// Expect the type to be exactly the expected type.
   static func == (lhs: Self, rhs: Any.Type) {
     lhs.to(beType(rhs))
   }
 
-  /// Assert that the actual metatype differs from the expected type.
+  /// Expect the type to not be exactly the expected type.
   static func != (lhs: Self, rhs: Any.Type) {
     lhs.toNot(beType(rhs))
   }
 }
 
+// `rhs` is non-optional so that `== nil` and `!= nil` only match the `BeNilExpectation` overloads.
 public extension OptionalExpression where T == Any.Type {
 
-  /// Assert that the metatypes are equal, or both are `nil`.
-  static func == (lhs: Self, rhs: Any.Type?) {
-    if let rhs {
-      lhs.to(beType(rhs))
-    } else {
-      lhs.to(beNil())
-    }
+  /// Expect the type to be exactly the expected type. A `nil` type fails the expectation.
+  static func == (lhs: Self, rhs: Any.Type) {
+    lhs.to(beType(rhs))
   }
 
-  /// Assert that the metatypes differ, including when only one is `nil`.
-  static func != (lhs: Self, rhs: Any.Type?) {
-    if let rhs {
-      lhs.toNot(beType(rhs))
-    } else {
-      lhs.toNot(beNil())
-    }
+  /// Expect the type to not be exactly the expected type. A `nil` type passes the expectation.
+  static func != (lhs: Self, rhs: Any.Type) {
+    lhs.toNot(beType(rhs))
   }
 }

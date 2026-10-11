@@ -36,6 +36,8 @@ infix operator ???: NilCoalescingPrecedence
 ///
 /// An operator that supports string interpolation for optional values, without using `String(describing:)`.
 ///
+/// The wrapped value is described by `describe(_:)`.
+///
 /// Examples:
 /// - `"\(anyOptionalValue ??? "nil")"`
 /// - `String(anyOptionalValue ??? "nil")`
@@ -44,7 +46,7 @@ infix operator ???: NilCoalescingPrecedence
 func ??? (lhs: (some Any)?, defaultValue: @autoclosure () -> String) -> String {
   switch lhs {
   case let value?:
-    return String(describing: value)
+    return describe(value)
   case nil:
     return defaultValue()
   }

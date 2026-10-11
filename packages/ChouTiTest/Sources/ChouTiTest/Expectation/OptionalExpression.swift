@@ -118,9 +118,9 @@ public struct OptionalExpression<T> {
 
     if !expectation.evaluate(unwrappedValue) {
       if let description = description() {
-        XCTFail("expect \"\(description)\" (\"\(unwrappedValue)\") to \(expectation.description)", file: file, line: line)
+        XCTFail("expect \"\(description)\" (\"\(describe(unwrappedValue))\") to \(expectation.description)", file: file, line: line)
       } else {
-        XCTFail("expect \"\(unwrappedValue)\" to \(expectation.description)", file: file, line: line)
+        XCTFail("expect \"\(describe(unwrappedValue))\" to \(expectation.description)", file: file, line: line)
       }
     }
   }
@@ -145,9 +145,9 @@ public struct OptionalExpression<T> {
 
     if expectation.evaluate(unwrappedValue) {
       if let description = description() {
-        XCTFail("expect \"\(description)\" (\"\(unwrappedValue)\") to not \(expectation.description)", file: file, line: line)
+        XCTFail("expect \"\(description)\" (\"\(describe(unwrappedValue))\") to not \(expectation.description)", file: file, line: line)
       } else {
-        XCTFail("expect \"\(unwrappedValue)\" to not \(expectation.description)", file: file, line: line)
+        XCTFail("expect \"\(describe(unwrappedValue))\" to not \(expectation.description)", file: file, line: line)
       }
     }
   }
