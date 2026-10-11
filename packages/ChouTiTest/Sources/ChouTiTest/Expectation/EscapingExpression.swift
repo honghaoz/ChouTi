@@ -434,10 +434,10 @@ public struct EscapingExpression<T> {
         return "nil"
       } else if let (_, wrappedValue) = mirror.children.first {
         // the optional is .some, get the wrapped value
-        return "\(wrappedValue)"
+        return describe(wrappedValue)
       }
     }
 
-    return "\(value)"
+    return describe(value)
   }
 }

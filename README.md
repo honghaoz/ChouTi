@@ -85,6 +85,12 @@ class SomeTests: XCTestCase {
     expect(expression).to(beIdentical(to: object))
     expect(expression) === object
 
+    // type
+    expect(type(of: expression)).to(beType(SomeType.self))
+    expect(type(of: expression)) == SomeType.self
+    expect(type(of: expression)).toNot(beType(SomeType.self))
+    expect(type(of: expression)) != SomeType.self
+
     // nil
     expect(expression).to(beNil())
     expect(expression) == nil
