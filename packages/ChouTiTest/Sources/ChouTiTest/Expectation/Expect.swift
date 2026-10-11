@@ -74,3 +74,24 @@ public func expect<T>(_ expression: @autoclosure () throws -> T?, _ description:
 public func expect<T>(_ expression: @autoclosure @escaping () throws -> T, _ description: @autoclosure @escaping () -> String? = nil, file: StaticString = #filePath, line: UInt = #line) -> EscapingExpression<T> {
   EscapingExpression(expression: expression, description: description, file: file, line: line)
 }
+
+/// Expect a boolean expression to be `true`.
+///
+/// This is a shorthand for `expect(expression).to(beTrue())`.
+///
+/// Example:
+/// ```swift
+/// expect(that: layer.hasFrame(frame))
+/// expect(that: a == b, "a equals b")
+/// ```
+///
+/// - Parameters:
+///   - expression: A boolean expression to be evaluated.
+///   - description: A human readable description of the expression.
+///   - file: The file where the failure occurs. The default is the filename of the test case where you call this function.
+///   - line: The line number where the failure occurs. The default is the line number where you call this function.
+public func expect(that expression: @autoclosure () throws -> Bool, _ description: @autoclosure @escaping () -> String? = nil, file: StaticString = #filePath, line: UInt = #line) {
+  // `that:` is intentional: an unlabeled `Bool` overload of `expect` makes every `expect(flag) == true` much slower to type-check.
+  let booleanExpression: Expression<Bool> = expect(try expression(), description(), file: file, line: line)
+  booleanExpression.to(beTrue())
+}

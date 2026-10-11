@@ -62,6 +62,7 @@ class SomeTests: XCTestCase {
   func testExample() throws {
 
     // boolean
+    expect(that: expression)
     expect(expression).to(beTrue())
     expect(expression) == true
     expect(expression).to(beFalse())
