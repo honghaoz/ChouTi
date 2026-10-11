@@ -114,5 +114,8 @@ public func beBetween<T: Comparable>(_ bound: T, and otherBound: T) -> BeBetween
 public func beBetween<T: FloatingPoint>(_ bound: T, and otherBound: T, within tolerance: T) -> BeBetweenExpectation<T> {
   let bounds = beBetween(bound, and: otherBound)
   let tolerance = Swift.abs(tolerance)
-  return BeBetweenExpectation(lowerBound: bounds.lowerBound - tolerance, upperBound: bounds.upperBound + tolerance)
+  // `.infinity - .infinity` is NaN, so an infinite bound on the inside of the range is kept as is
+  let lowerBound = bounds.lowerBound == .infinity ? bounds.lowerBound : bounds.lowerBound - tolerance
+  let upperBound = bounds.upperBound == -.infinity ? bounds.upperBound : bounds.upperBound + tolerance
+  return BeBetweenExpectation(lowerBound: lowerBound, upperBound: upperBound)
 }

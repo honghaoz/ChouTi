@@ -87,6 +87,16 @@ class Expectation_BeWithinTests: XCTestCase {
     expect(0.5).to(beBetween(1.0, and: 2.0, within: -0.5))
     expect(beBetween(1.0, and: 2.0, within: -1.0).description) == #"be within "0.0...3.0""#
     expect(1.5).toNot(beBetween(1.0, and: 2.0, within: .nan))
+    expect(1.0).toNot(beBetween(-.infinity, and: .infinity, within: .nan))
+  }
+
+  func test_beBetween_withTolerance_infinity() {
+    expect(Double.infinity).to(beBetween(.infinity, and: .infinity, within: 1))
+    expect(Double.infinity).to(beBetween(.infinity, and: .infinity, within: .infinity))
+    expect(-Double.infinity).to(beBetween(-.infinity, and: -.infinity, within: .infinity))
+    expect(1.0).toNot(beBetween(.infinity, and: .infinity, within: .infinity))
+    expect(1.0).to(beBetween(-.infinity, and: .infinity, within: .infinity))
+    expect(beBetween(Double.infinity, and: .infinity, within: .infinity).description) == #"be within "inf...inf""#
   }
 
   func test_optionalAndEventually() {
