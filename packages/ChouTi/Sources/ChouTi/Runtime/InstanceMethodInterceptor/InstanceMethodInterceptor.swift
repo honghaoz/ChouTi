@@ -376,6 +376,9 @@ enum InstanceMethodInterceptor {
   /// KVO dynamic subclass names usually start with `NSKVONotifying_`. On newer OS versions (observed on macOS 26 and later),
   /// the names for classes with a module-qualified runtime name, such as top-level Swift classes, start with `..` instead,
   /// e.g. `..NSKVONotifying_MyModule.MyClass`.
+  ///
+  /// The marker is matched anywhere in the name so that a future change to the prefix is still detected. A regular class
+  /// would only be misdetected if its name contained the `NSKVONotifying_` marker.
   static func isKVOClassName(_ className: String) -> Bool {
     className.contains(Constants.kvoSubclassMarker)
   }
