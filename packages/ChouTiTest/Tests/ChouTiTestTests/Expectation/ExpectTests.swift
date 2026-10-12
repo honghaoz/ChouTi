@@ -94,6 +94,22 @@ class ExpectTests: XCTestCase {
     expect(1).toNot(beApproximatelyEqual(to: 1.001, within: 1e-4))
   }
 
+  func test_beApproximatelyEqual_infinity() {
+    expect(Double.infinity).to(beApproximatelyEqual(to: .infinity, within: 0))
+    expect(Double.infinity).to(beApproximatelyEqual(to: .infinity, within: 1))
+    expect(-Double.infinity).to(beApproximatelyEqual(to: -.infinity, within: 0))
+    expect(CGFloat.infinity).to(beApproximatelyEqual(to: .infinity, within: 0.5))
+    expect(Double.infinity).toNot(beApproximatelyEqual(to: -.infinity, within: 1))
+    expect(Double.infinity).toNot(beApproximatelyEqual(to: 1.0, within: 1))
+    expect(1.0).toNot(beApproximatelyEqual(to: .infinity, within: 1))
+  }
+
+  func test_beApproximatelyEqual_nan() {
+    expect(Double.nan).toNot(beApproximatelyEqual(to: .nan, within: 1))
+    expect(Double.nan).toNot(beApproximatelyEqual(to: 1.0, within: 1))
+    expect(1.0).toNot(beApproximatelyEqual(to: .nan, within: 1))
+  }
+
   func testBeGreaterThan() {
     expect(2).to(beGreaterThan(1))
     expect(1).toNot(beGreaterThan(2))
