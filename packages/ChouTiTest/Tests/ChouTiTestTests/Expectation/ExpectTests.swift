@@ -97,6 +97,7 @@ class ExpectTests: XCTestCase {
   func test_beApproximatelyEqual_infinity() {
     expect(Double.infinity).to(beApproximatelyEqual(to: .infinity, within: 0))
     expect(Double.infinity).to(beApproximatelyEqual(to: .infinity, within: 1))
+    expect(Double.infinity).to(beApproximatelyEqual(to: .infinity, within: .infinity))
     expect(-Double.infinity).to(beApproximatelyEqual(to: -.infinity, within: 0))
     expect(CGFloat.infinity).to(beApproximatelyEqual(to: .infinity, within: 0.5))
     expect(Double.infinity).toNot(beApproximatelyEqual(to: -.infinity, within: 1))
