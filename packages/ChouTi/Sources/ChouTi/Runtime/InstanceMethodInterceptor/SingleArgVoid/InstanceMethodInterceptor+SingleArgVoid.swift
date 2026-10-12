@@ -211,7 +211,7 @@ extension InstanceMethodInterceptor {
     }
 
     let currentClassName = NSStringFromClass(currentClass)
-    let isKVOClass = currentClassName.hasPrefix("NSKVONotifying_")
+    let isKVOClass = isKVOClassName(currentClassName)
 
     let state = state(for: object)
 
