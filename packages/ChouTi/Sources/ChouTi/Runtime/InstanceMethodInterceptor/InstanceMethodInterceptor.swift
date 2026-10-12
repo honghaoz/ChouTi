@@ -154,7 +154,7 @@ enum InstanceMethodInterceptor {
     }
 
     let currentClassName = NSStringFromClass(currentClass)
-    let isKVOClass = currentClassName.hasPrefix("NSKVONotifying_")
+    let isKVOClass = isKVOClassName(currentClassName)
 
     let state = state(for: object)
 
@@ -324,6 +324,9 @@ enum InstanceMethodInterceptor {
 
     /// The prefix for the dynamic subclasses created by this interceptor.
     static let subclassPrefix = "ChouTiIMI_"
+
+    /// The marker in KVO dynamic subclass names.
+    static let kvoSubclassMarker = "NSKVONotifying_"
   }
 
   // MARK: - Reentrancy Guard
@@ -366,6 +369,15 @@ enum InstanceMethodInterceptor {
     } else {
       selectorCounts[selectorKey] = depth - 1
     }
+  }
+
+  /// Returns whether the class name is a KVO dynamic subclass name.
+  ///
+  /// KVO dynamic subclass names usually start with `NSKVONotifying_`. On newer OS versions (observed on macOS 26 and later),
+  /// the names for classes with a module-qualified runtime name, such as top-level Swift classes, start with `..` instead,
+  /// e.g. `..NSKVONotifying_MyModule.MyClass`.
+  static func isKVOClassName(_ className: String) -> Bool {
+    className.contains(Constants.kvoSubclassMarker)
   }
 
   /// Resolves the original class if the given class is one of our dynamic subclasses.

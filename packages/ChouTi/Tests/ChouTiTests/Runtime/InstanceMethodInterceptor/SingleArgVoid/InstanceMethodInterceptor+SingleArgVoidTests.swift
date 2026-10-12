@@ -529,4 +529,51 @@ class InstanceMethodInterceptor_SingleArgVoidTests: XCTestCase {
     observation.invalidate()
     expect(getClassName(object)) == originalClassName
   }
+
+  func test_singleArg_topLevelClass_isIntercepted_KVO() {
+    // cancels the interception before removing KVO. If the KVO class is not detected, the interceptor's subclass ends up on
+    // top of the KVO class, and removing KVO in that state hangs.
+    let object = InstanceMethodInterceptorSingleArgTopLevelTestObject()
+    let originalClassName = getClassName(object)
+    expect(originalClassName) == "ChouTiTests.InstanceMethodInterceptorSingleArgTopLevelTestObject"
+
+    let observation = object.observe(\.value, options: [.new]) { _, _ in }
+    _ = observation
+
+    // the KVO class name may start with `..` on newer OS versions
+    let kvoClassName = getClassName(object)
+    expect(kvoClassName.hasSuffix("NSKVONotifying_\(originalClassName)")) == true
+
+    var boolHooks = 0
+    let token = object.intercept(selector: #selector(InstanceMethodInterceptorSingleArgTopLevelTestObject.withBool(_:))) { (_, _, value: Bool, callOriginal) in
+      boolHooks += 1
+      callOriginal(value)
+    }
+    expect(getClassName(object)) == kvoClassName
+
+    object.withBool(true)
+    expect(boolHooks) == 1
+    expect(object.boolCallCount) == 1
+
+    token.cancel()
+    expect(getClassName(object)) == kvoClassName
+
+    observation.invalidate()
+    expect(getClassName(object)) == originalClassName
+  }
+}
+
+/// A top-level test class.
+///
+/// Nested and private test classes keep a mangled runtime name. A top-level class has a module-qualified runtime name instead,
+/// e.g. `ChouTiTests.InstanceMethodInterceptorSingleArgTopLevelTestObject`, whose KVO class name starts with `..` on newer OS versions.
+final class InstanceMethodInterceptorSingleArgTopLevelTestObject: NSObject {
+
+  @objc dynamic var value: Int = 0
+
+  private(set) var boolCallCount = 0
+
+  @objc dynamic func withBool(_ bool: Bool) {
+    boolCallCount += 1
+  }
 }

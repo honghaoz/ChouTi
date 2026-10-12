@@ -1516,6 +1516,69 @@ class InstanceMethodInterceptorTests: XCTestCase {
     }
   }
 
+  // MARK: - KVO Class Name
+
+  func test_isKVOClassName_detectsKVOClassNames() {
+    // KVO class names
+    expect(InstanceMethodInterceptor.isKVOClassName("NSKVONotifying_MyClass")) == true
+    expect(InstanceMethodInterceptor.isKVOClassName("NSKVONotifying_ChouTiIMI_MyClass")) == true
+    expect(InstanceMethodInterceptor.isKVOClassName("..NSKVONotifying_MyModule.MyClass")) == true
+    expect(InstanceMethodInterceptor.isKVOClassName("..NSKVONotifying_ChouTiIMI_MyModule.MyClass")) == true
+
+    // non-KVO class names
+    expect(InstanceMethodInterceptor.isKVOClassName("MyClass")) == false
+    expect(InstanceMethodInterceptor.isKVOClassName("MyModule.MyClass")) == false
+    expect(InstanceMethodInterceptor.isKVOClassName("ChouTiIMI_MyModule.MyClass")) == false
+  }
+
+  func test_KVO_topLevelClass_intercept_then_unintercept_unKVO() {
+    // cancels the interception before removing KVO. If the KVO class is not detected, the interceptor's subclass ends up on
+    // top of the KVO class, and removing KVO in that state hangs.
+
+    // given a KVO object of a top-level class
+    let object = InstanceMethodInterceptorTopLevelTestObject()
+    let originalClassName = getClassName(object)
+    expect(originalClassName) == "ChouTiTests.InstanceMethodInterceptorTopLevelTestObject"
+
+    let observation = object.observe(\.value, options: [.new]) { _, _ in }
+    _ = observation
+
+    // the KVO class name may start with `..` on newer OS versions
+    let kvoClassName = getClassName(object)
+    expect(kvoClassName.hasSuffix("NSKVONotifying_\(originalClassName)")) == true
+
+    // when intercept the method
+    var hookCount = 0
+    let token = object.intercept(selector: #selector(InstanceMethodInterceptorTopLevelTestObject.foo)) { _, _, callOriginal in
+      hookCount += 1
+      callOriginal()
+    }
+    // then the class should still be the KVO class
+    expect(getClassName(object)) == kvoClassName
+
+    // when call the method
+    object.foo()
+    // then the hook should be called
+    expect(hookCount) == 1
+    expect(object.fooCallCount) == 1
+
+    // when cancel the interception
+    token.cancel()
+    // then the class should still be the KVO class
+    expect(getClassName(object)) == kvoClassName
+
+    // when call the method again
+    object.foo()
+    // then the hook should not be called
+    expect(hookCount) == 1
+    expect(object.fooCallCount) == 2
+
+    // when invalidate KVO observation
+    observation.invalidate()
+    // then the class should be the original class
+    expect(getClassName(object)) == originalClassName
+  }
+
   // MARK: - Concurrency / Thread-Safety
 
   /// Creates `count` distinct runtime subclasses of `TestObject`, each with a unique name.
@@ -1680,4 +1743,19 @@ private func methodImplementation(_ cls: AnyClass, _ selector: Selector) -> IMP?
     return nil
   }
   return method_getImplementation(method)
+}
+
+/// A top-level test class.
+///
+/// Nested and private test classes keep a mangled runtime name. A top-level class has a module-qualified runtime name instead,
+/// e.g. `ChouTiTests.InstanceMethodInterceptorTopLevelTestObject`, whose KVO class name starts with `..` on newer OS versions.
+final class InstanceMethodInterceptorTopLevelTestObject: NSObject {
+
+  @objc dynamic var value: Int = 0
+
+  private(set) var fooCallCount = 0
+
+  @objc dynamic func foo() {
+    fooCallCount += 1
+  }
 }
