@@ -31,6 +31,9 @@
 import Foundation
 
 /// An expectation that the actual value is approximately equal to the expected value.
+///
+/// Equal values are approximately equal with any tolerance, including equal infinities.
+/// NaN is not approximately equal to any value, including itself.
 public struct BeApproximatelyEqualExpectation<T: FloatingPoint>: Expectation {
 
   public typealias ThrownErrorType = Never
@@ -39,7 +42,8 @@ public struct BeApproximatelyEqualExpectation<T: FloatingPoint>: Expectation {
   fileprivate let tolerance: T
 
   public func evaluate(_ actualValue: T) -> Bool {
-    Swift.abs(value - actualValue) <= tolerance
+    // the equality check is needed for equal infinities, whose difference is NaN
+    value == actualValue || Swift.abs(value - actualValue) <= tolerance
   }
 
   public var description: String {

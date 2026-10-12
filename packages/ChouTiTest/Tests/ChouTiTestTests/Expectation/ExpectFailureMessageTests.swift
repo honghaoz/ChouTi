@@ -123,6 +123,14 @@ class ExpectFailureMessageTests: FailureCapturingTestCase {
     assertFailure(expectedMessage: expectedMessage)
   }
 
+  func test_beApproximatelyEqual_infinity() {
+    expect(Double.infinity).toNot(beApproximatelyEqual(to: .infinity, within: 1))
+    assertFailure(expectedMessage: #"failed - expect "inf" to not be approximately equal to "inf ± 1.0""#)
+
+    expect(1.0).to(beApproximatelyEqual(to: .infinity, within: 1))
+    assertFailure(expectedMessage: #"failed - expect "1.0" to be approximately equal to "inf ± 1.0""#)
+  }
+
   func testGreaterThan() {
     let expectedMessage = "failed - expect \"1\" to be greater than \"2\""
     expect(1) > 2
