@@ -38,8 +38,8 @@ PARALLEL_LOG_DIR=""
 # PIDs of the running updates started by `update_in_parallel`
 PARALLEL_PIDS=()
 
-# The Package.resolved being updated by `update_xcode_project` and its backup ("" if the file didn't exist),
-# put back by `restore_package_resolved` if the update fails or is interrupted
+# The Package.resolved being updated and its backup ("" if the file didn't exist),
+# put back by `restore_package_resolved` if the update is interrupted
 UPDATING_PACKAGE_RESOLVED=""
 PACKAGE_RESOLVED_BACKUP=""
 
@@ -394,7 +394,10 @@ update_xcworkspace() {
 
     # Run the update command to fetch latest versions
     print_info "Updating package dependencies..."
+    UPDATING_PACKAGE_RESOLVED="$package_level_resolved"
+    PACKAGE_RESOLVED_BACKUP="$package_level_backup"
     if swift package update >/dev/null 2>&1; then
+        UPDATING_PACKAGE_RESOLVED=""
         # copy package-level Package.resolved to workspace location
         local workspace_package_resolved="$project_path/xcshareddata/swiftpm/Package.resolved"
         print_info "Copying $package_level_resolved to $workspace_package_resolved..."
@@ -404,6 +407,7 @@ update_xcworkspace() {
         rm -f "$package_level_backup"
         return 0
     else
+        UPDATING_PACKAGE_RESOLVED=""
         if [ -n "$package_level_backup" ]; then
             cp "$package_level_backup" "$package_level_resolved"
             rm -f "$package_level_backup"
@@ -439,7 +443,10 @@ update_swift_package() {
 
     # Run the update command to fetch latest versions
     print_info "Updating package dependencies..."
+    UPDATING_PACKAGE_RESOLVED="$package_resolved_path"
+    PACKAGE_RESOLVED_BACKUP="$backup"
     if swift package update >/dev/null 2>&1; then
+        UPDATING_PACKAGE_RESOLVED=""
         # Check if Package.resolved was created (indicates remote dependencies)
         # if [ -f "$package_resolved_path" ]; then
         #     print_success "Package update completed"
@@ -450,6 +457,7 @@ update_swift_package() {
         rm -f "$backup"
         return 0
     else
+        UPDATING_PACKAGE_RESOLVED=""
         if [ -n "$backup" ]; then
             cp "$backup" "$package_resolved_path"
             rm -f "$backup"
