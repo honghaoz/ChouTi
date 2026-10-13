@@ -566,6 +566,8 @@ stop_parallel_updates() {
         fi
     done
     wait
+    # the updates are reaped, so their PIDs may be reused and must not be stopped again
+    PARALLEL_PIDS=()
 }
 
 # Function to update multiple paths in parallel
@@ -573,10 +575,11 @@ stop_parallel_updates() {
 # Each path is updated by a separate run of this script with its output saved to a log file.
 # The logs are printed in the given order as the runs finish.
 update_in_parallel() {
-    trap cleanup_temp_files EXIT
     # The updates run as background jobs, which ignore SIGINT in a non-interactive shell and don't receive a SIGTERM
-    # sent to this script, so stop them explicitly. Otherwise they keep running and can still rewrite Package.resolved.
-    trap 'stop_parallel_updates; exit 1' INT TERM HUP
+    # sent to this script, so stop the ones still running whenever this script exits, for any reason. Otherwise they
+    # keep running and can still rewrite Package.resolved.
+    trap 'stop_parallel_updates; cleanup_temp_files' EXIT
+    trap 'exit 1' INT TERM HUP PIPE
     PARALLEL_LOG_DIR="$(mktemp -d)"
 
     # Skip paths that point to an already listed project, otherwise their updates would race on the same Package.resolved
