@@ -4,6 +4,7 @@ set -euo pipefail
 
 # Script to update Swift Package dependencies
 # Supports Xcode projects (.xcodeproj) and Xcode workspaces (.xcworkspace) and Swift packages (Package.swift)
+# When multiple paths are given, they are updated in parallel
 
 # Colors for output
 RED='\033[0;31m'
@@ -29,13 +30,32 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Global temp file for cleanup
+# Global temp files for cleanup
 TEMP_STATE_FILE=""
+TEMP_PACKAGES_DIR=""
+PARALLEL_LOG_DIR=""
+
+# PIDs of the running updates started by `update_in_parallel`
+PARALLEL_PIDS=()
+
+# The Package.resolved being updated and its backup ("" if the file didn't exist),
+# put back by `restore_package_resolved` if the update is interrupted
+UPDATING_PACKAGE_RESOLVED=""
+PACKAGE_RESOLVED_BACKUP=""
 
 # Cleanup function for temp files
 cleanup_temp_files() {
     if [ -n "$TEMP_STATE_FILE" ] && [ -f "$TEMP_STATE_FILE" ]; then
         rm -f "$TEMP_STATE_FILE"
+    fi
+    if [ -n "$PACKAGE_RESOLVED_BACKUP" ] && [ -f "$PACKAGE_RESOLVED_BACKUP" ]; then
+        rm -f "$PACKAGE_RESOLVED_BACKUP"
+    fi
+    if [ -n "$TEMP_PACKAGES_DIR" ] && [ -d "$TEMP_PACKAGES_DIR" ]; then
+        rm -rf "$TEMP_PACKAGES_DIR"
+    fi
+    if [ -n "$PARALLEL_LOG_DIR" ] && [ -d "$PARALLEL_LOG_DIR" ]; then
+        rm -rf "$PARALLEL_LOG_DIR"
     fi
 }
 
@@ -114,60 +134,24 @@ save_current_state() {
             ;;
     esac
 
-    TEMP_STATE_FILE="$temp_file"
     echo "$temp_file"
 }
 
-clean_derived_data() {
-    local derived_data="$HOME/Library/Developer/Xcode/DerivedData"
-    local project_path="$1"
-
-    # Check if DerivedData directory exists
-    if [ ! -d "$derived_data" ]; then
-        return 0
-    fi
-
-    # Extract project name from path (remove directory path and extension)
-    local project_name=$(basename "$project_path")
-
-    # Remove .xcodeproj or .xcworkspace extension if present
-    project_name="${project_name%.xcodeproj}"
-    project_name="${project_name%.xcworkspace}"
-
-    print_info "Cleaning derived data for project: $project_name"
-
-    # Find and remove folders that start with the project name followed by a dash
-    local removed_count=0
-    for folder in "$derived_data"/"$project_name"-*; do
-        if [ -d "$folder" ]; then
-            # print_info "Removing: $(basename "$folder")"
-            rm -rf "$folder"
-            removed_count=$((removed_count + 1))
-        fi
-    done
-
-    # if [ $removed_count -eq 0 ]; then
-    #     print_info "No derived data folders found for project: $project_name"
-    # else
-    #     print_success "Removed $removed_count derived data folder(s) for project: $project_name"
-    # fi
-}
-
-# Reconstruct the canonical Package.resolved from a resolved DerivedData workspace-state.json.
+# Reconstruct the canonical Package.resolved from a resolved workspace-state.json.
 #
 # `xcodebuild -resolvePackageDependencies` resolves remote packages into
-# DerivedData/<project>-*/SourcePackages/workspace-state.json but, for projects
+# <cloned source packages dir>/workspace-state.json but, for projects
 # that reference local Swift packages by folder, does NOT write the canonical
 # project.xcworkspace/xcshareddata/swiftpm/Package.resolved (only the Xcode IDE
 # does). This rebuilds that pin file from workspace-state.json's remote
 # source-control dependencies, preserving the passed-in originHash (which depends
 # on the declared dependency graph, not the resolved revisions).
 #
-# Args: <project_path> <dest_package_resolved> <origin_hash>
+# Args: <workspace_state_json> <dest_package_resolved> <origin_hash>
 # Returns 0 and writes dest on success; non-zero if no workspace-state.json or
 # no remote pins were found (e.g. python3 missing, or local-only dependencies).
 regenerate_package_resolved() {
-    local project_path="$1"
+    local ws_state="$1"
     local dest="$2"
     local origin_hash="$3"
 
@@ -176,18 +160,7 @@ regenerate_package_resolved() {
         return 1
     fi
 
-    # Find the newest DerivedData workspace-state.json for this project.
-    local project_name=$(basename "$project_path")
-    project_name="${project_name%.xcodeproj}"
-    project_name="${project_name%.xcworkspace}"
-    local derived_data="$HOME/Library/Developer/Xcode/DerivedData"
-    local ws_state=""
-    local candidate
-    for candidate in $(ls -dt "$derived_data/$project_name"-*/SourcePackages/workspace-state.json 2>/dev/null); do
-        ws_state="$candidate"
-        break
-    done
-    if [ -z "$ws_state" ] || [ ! -f "$ws_state" ]; then
+    if [ ! -f "$ws_state" ]; then
         return 1
     fi
 
@@ -287,6 +260,26 @@ PY
     grep -q '"identity"' "$package_resolved_path"
 }
 
+# Function to put back the Package.resolved being updated: restore its backup, or remove it if it didn't exist before
+restore_package_resolved() {
+    if [ -z "$UPDATING_PACKAGE_RESOLVED" ]; then
+        return
+    fi
+
+    if [ -n "$PACKAGE_RESOLVED_BACKUP" ]; then
+        cp "$PACKAGE_RESOLVED_BACKUP" "$UPDATING_PACKAGE_RESOLVED"
+    else
+        rm -f "$UPDATING_PACKAGE_RESOLVED"
+    fi
+    UPDATING_PACKAGE_RESOLVED=""
+}
+
+# Function to handle an interrupted update: put back the Package.resolved being updated and exit
+handle_update_interrupt() {
+    restore_package_resolved
+    exit 1
+}
+
 # Function to update Xcode project packages
 update_xcode_project() {
     local project_path="$1"
@@ -316,10 +309,13 @@ update_xcode_project() {
         fi
     fi
     print_info "Resetting $package_resolved_path for package update..."
+    UPDATING_PACKAGE_RESOLVED="$package_resolved_path"
+    PACKAGE_RESOLVED_BACKUP="$backup"
     write_empty_package_resolved "$package_resolved_path" "$origin_hash"
 
-    # Clean derived data
-    clean_derived_data "$project_path"
+    # Resolve into a fresh temporary directory instead of the project's DerivedData, so the resolution starts clean
+    # without deleting the DerivedData build products and index.
+    TEMP_PACKAGES_DIR="$(mktemp -d)"
 
     # Run the update command to fetch latest versions.
     #
@@ -330,7 +326,7 @@ update_xcode_project() {
     local attempt=1
     local resolved=false
     while [ $attempt -le $max_attempts ]; do
-        if xcodebuild -resolvePackageDependencies -project "$project_path" >/dev/null 2>&1; then
+        if xcodebuild -resolvePackageDependencies -project "$project_path" -clonedSourcePackagesDirPath "$TEMP_PACKAGES_DIR" >/dev/null 2>&1; then
             resolved=true
             break
         fi
@@ -343,22 +339,17 @@ update_xcode_project() {
 
     if [ "$resolved" != true ]; then
         # Restore the backup so a failed resolve never leaves pins deleted.
-        if [ -n "$backup" ]; then
-            cp "$backup" "$package_resolved_path"
-        else
-            # no backup file, means there's no Package.resolved before, remove the empty generated file
-            rm -f "$package_resolved_path"
-        fi
+        restore_package_resolved
         rm -f "$backup"
         print_error "Failed to resolve package dependencies after $max_attempts attempts"
         return 1
     fi
 
     # If xcodebuild didn't populate the seeded canonical pin file, rebuild it from
-    # the resolved DerivedData state so the committed file matches what Xcode
+    # the resolved workspace state so the committed file matches what Xcode
     # resolved. Fall back to restoring the backup if regeneration isn't possible.
     if [ ! -f "$package_resolved_path" ] || ! package_resolved_has_pins "$package_resolved_path"; then
-        if regenerate_package_resolved "$project_path" "$package_resolved_path" "$origin_hash"; then
+        if regenerate_package_resolved "$TEMP_PACKAGES_DIR/workspace-state.json" "$package_resolved_path" "$origin_hash"; then
             print_info "Regenerated $package_resolved_path from resolved dependencies."
         elif [ -n "$backup" ]; then
             cp "$backup" "$package_resolved_path"
@@ -368,6 +359,7 @@ update_xcode_project() {
             print_warning "Package.resolved still has no pins after resolution; removed the empty generated file."
         fi
     fi
+    UPDATING_PACKAGE_RESOLVED=""
     rm -f "$backup"
     return 0
 }
@@ -408,16 +400,24 @@ update_xcworkspace() {
 
     # Run the update command to fetch latest versions
     print_info "Updating package dependencies..."
+    UPDATING_PACKAGE_RESOLVED="$package_level_resolved"
+    PACKAGE_RESOLVED_BACKUP="$package_level_backup"
     if swift package update >/dev/null 2>&1; then
         # copy package-level Package.resolved to workspace location
         local workspace_package_resolved="$project_path/xcshareddata/swiftpm/Package.resolved"
         print_info "Copying $package_level_resolved to $workspace_package_resolved..."
+        # Ignore interrupts during the copy so it can't be stopped halfway. An interrupt before the copy still
+        # restores the package-level Package.resolved, so the two files stay in sync.
+        trap '' INT TERM HUP
         cp "$package_level_resolved" "$workspace_package_resolved"
+        UPDATING_PACKAGE_RESOLVED=""
+        trap handle_update_interrupt INT TERM HUP
         # print_success "Package update completed"
         cd "$original_dir"
         rm -f "$package_level_backup"
         return 0
     else
+        UPDATING_PACKAGE_RESOLVED=""
         if [ -n "$package_level_backup" ]; then
             cp "$package_level_backup" "$package_level_resolved"
             rm -f "$package_level_backup"
@@ -453,7 +453,10 @@ update_swift_package() {
 
     # Run the update command to fetch latest versions
     print_info "Updating package dependencies..."
+    UPDATING_PACKAGE_RESOLVED="$package_resolved_path"
+    PACKAGE_RESOLVED_BACKUP="$backup"
     if swift package update >/dev/null 2>&1; then
+        UPDATING_PACKAGE_RESOLVED=""
         # Check if Package.resolved was created (indicates remote dependencies)
         # if [ -f "$package_resolved_path" ]; then
         #     print_success "Package update completed"
@@ -464,6 +467,7 @@ update_swift_package() {
         rm -f "$backup"
         return 0
     else
+        UPDATING_PACKAGE_RESOLVED=""
         if [ -n "$backup" ]; then
             cp "$backup" "$package_resolved_path"
             rm -f "$backup"
@@ -534,16 +538,110 @@ show_package_changes() {
     rm -f "$temp_new"
 }
 
+# Function to terminate a process and the processes it started
+#
+# The process is signaled before its children, so an update can put back its Package.resolved as soon as its running
+# command exits. The children are collected first so they're still found if the process exits right away.
+kill_process_tree() {
+    local pid="$1"
+    local children
+    children="$(pgrep -P "$pid" || true)"
+    kill -TERM "$pid" 2>/dev/null || true
+    local child
+    for child in $children; do
+        kill_process_tree "$child"
+    done
+}
+
+# Function to stop the running updates started by `update_in_parallel` and wait for them to exit
+stop_parallel_updates() {
+    if [ ${#PARALLEL_PIDS[@]} -eq 0 ]; then
+        return
+    fi
+
+    local pid
+    for pid in "${PARALLEL_PIDS[@]}"; do
+        if [ -n "$pid" ]; then
+            kill_process_tree "$pid"
+        fi
+    done
+    wait
+    # the updates are reaped, so their PIDs may be reused and must not be stopped again
+    PARALLEL_PIDS=()
+}
+
+# Function to update multiple paths in parallel
+#
+# Each path is updated by a separate run of this script with its output saved to a log file.
+# The logs are printed in the given order as the runs finish.
+update_in_parallel() {
+    # The updates run as background jobs, which ignore SIGINT in a non-interactive shell and don't receive a SIGTERM
+    # sent to this script, so stop the ones still running whenever this script exits, for any reason. Otherwise they
+    # keep running and can still rewrite Package.resolved.
+    trap 'stop_parallel_updates; cleanup_temp_files' EXIT
+    trap 'exit 1' INT TERM HUP PIPE
+    PARALLEL_LOG_DIR="$(mktemp -d)"
+
+    # Skip paths that point to an already listed project, otherwise their updates would race on the same Package.resolved
+    local unique_paths=()
+    local seen_real_paths=""
+    local project_path
+    local real_path
+    for project_path in "$@"; do
+        real_path="$(realpath "$project_path" 2>/dev/null || echo "$project_path")"
+        if grep -Fxq -- "$real_path" <<< "$seen_real_paths"; then
+            print_warning "Skipping duplicate path: $project_path"
+            continue
+        fi
+        seen_real_paths+="$real_path"$'\n'
+        unique_paths+=("$project_path")
+    done
+    set -- "${unique_paths[@]}"
+
+    print_info "Updating $# paths in parallel..."
+
+    local index=0
+    for project_path in "$@"; do
+        "$0" "$project_path" > "$PARALLEL_LOG_DIR/$index.log" 2>&1 &
+        PARALLEL_PIDS+=("$!")
+        index=$((index + 1))
+    done
+
+    local failed_paths=()
+    index=0
+    for project_path in "$@"; do
+        if ! wait "${PARALLEL_PIDS[$index]}"; then
+            failed_paths+=("$project_path")
+        fi
+        # the finished update is reaped, so its PID may be reused and must not be stopped later
+        PARALLEL_PIDS[$index]=""
+        cat "$PARALLEL_LOG_DIR/$index.log"
+        index=$((index + 1))
+    done
+
+    if [ ${#failed_paths[@]} -gt 0 ]; then
+        print_error "Failed to update:"
+        printf '  %s\n' "${failed_paths[@]}"
+        exit 1
+    fi
+}
+
 # Main function
 main() {
     # Check if project path is provided
     if [ $# -eq 0 ]; then
-        print_error "Usage: $0 <path>"
+        print_error "Usage: $0 <path> [<path> ...]"
         print_info "Examples:"
         print_info "  $0 /path/to/MyApp.xcodeproj     # Update Xcode project packages"
         print_info "  $0 /path/to/MyApp.xcworkspace   # Update Xcode workspace packages"
         print_info "  $0 /path/to/MyPackage           # Update Swift package dependencies"
+        print_info "  $0 /path/to/MyPackage /path/to/MyApp.xcodeproj   # Update multiple paths in parallel"
         exit 1
+    fi
+
+    if [ $# -gt 1 ]; then
+        update_in_parallel "$@"
+        return
     fi
 
     print_info "Updating Swift packages..."
@@ -554,6 +652,8 @@ main() {
 
     # Setup cleanup trap for temp files
     trap cleanup_temp_files EXIT
+    # Put back the Package.resolved being updated if this update is interrupted or stopped
+    trap handle_update_interrupt INT TERM HUP
 
     # Validate project path
     if [ ! -e "$project_path" ]; then
@@ -614,6 +714,8 @@ main() {
     # Show current versions and save state (only if Package.resolved exists)
     if [ -f "$package_resolved_path" ] && show_current_versions "$package_resolved_path" "$project_type"; then
         temp_old=$(save_current_state "$package_resolved_path" "$project_type")
+        # `save_current_state` runs in a subshell, so record its temp file here for cleanup on exit
+        TEMP_STATE_FILE="$temp_old"
     fi
 
     # Update packages based on project type
