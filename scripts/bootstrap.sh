@@ -53,11 +53,12 @@ case "$OS" in
       echo "Skipping package update in CI"
     else
       echo "🔄 Update packages..."
-      "$REPO_ROOT/scripts/swift-package/update-packages.sh" "$REPO_ROOT/playgrounds/ChouTiPlayground-iOS/ChouTiPlayground-iOS.xcodeproj"
-      "$REPO_ROOT/scripts/swift-package/update-packages.sh" "$REPO_ROOT/playgrounds/ChouTiPlayground-macOS/ChouTiPlayground-macOS.xcodeproj"
-      "$REPO_ROOT/scripts/swift-package/update-packages.sh" "$REPO_ROOT/playgrounds/ChouTiPlayground-tvOS/ChouTiPlayground-tvOS.xcodeproj"
-      "$REPO_ROOT/scripts/swift-package/update-packages.sh" "$REPO_ROOT/playgrounds/ChouTiPlayground-watchOS/ChouTiPlayground-watchOS.xcodeproj"
-      "$REPO_ROOT/scripts/swift-package/update-packages.sh" "$REPO_ROOT/playgrounds/ChouTiPlayground-visionOS/ChouTiPlayground-visionOS.xcodeproj"
+      "$REPO_ROOT/scripts/swift-package/update-packages.sh" \
+        "$REPO_ROOT/playgrounds/ChouTiPlayground-iOS/ChouTiPlayground-iOS.xcodeproj" \
+        "$REPO_ROOT/playgrounds/ChouTiPlayground-macOS/ChouTiPlayground-macOS.xcodeproj" \
+        "$REPO_ROOT/playgrounds/ChouTiPlayground-tvOS/ChouTiPlayground-tvOS.xcodeproj" \
+        "$REPO_ROOT/playgrounds/ChouTiPlayground-watchOS/ChouTiPlayground-watchOS.xcodeproj" \
+        "$REPO_ROOT/playgrounds/ChouTiPlayground-visionOS/ChouTiPlayground-visionOS.xcodeproj"
     fi
 
     echo ""
