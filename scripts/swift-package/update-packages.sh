@@ -35,6 +35,9 @@ TEMP_STATE_FILE=""
 TEMP_PACKAGES_DIR=""
 PARALLEL_LOG_DIR=""
 
+# PIDs of the running updates started by `update_in_parallel`
+PARALLEL_PIDS=()
+
 # Cleanup function for temp files
 cleanup_temp_files() {
     if [ -n "$TEMP_STATE_FILE" ] && [ -f "$TEMP_STATE_FILE" ]; then
@@ -497,31 +500,60 @@ show_package_changes() {
     rm -f "$temp_new"
 }
 
+# Function to terminate a process and the processes it started, children first
+kill_process_tree() {
+    local pid="$1"
+    local child
+    for child in $(pgrep -P "$pid" || true); do
+        kill_process_tree "$child"
+    done
+    kill -TERM "$pid" 2>/dev/null || true
+}
+
+# Function to stop the running updates started by `update_in_parallel` and wait for them to exit
+stop_parallel_updates() {
+    if [ ${#PARALLEL_PIDS[@]} -eq 0 ]; then
+        return
+    fi
+
+    local pid
+    for pid in "${PARALLEL_PIDS[@]}"; do
+        if [ -n "$pid" ]; then
+            kill_process_tree "$pid"
+        fi
+    done
+    wait
+}
+
 # Function to update multiple paths in parallel
 #
 # Each path is updated by a separate run of this script with its output saved to a log file.
 # The logs are printed in the given order as the runs finish.
 update_in_parallel() {
     trap cleanup_temp_files EXIT
+    # The updates run as background jobs, which ignore SIGINT in a non-interactive shell and don't receive a SIGTERM
+    # sent to this script, so stop them explicitly. Otherwise they keep running and can still rewrite Package.resolved.
+    trap 'stop_parallel_updates; exit 1' INT TERM HUP
     PARALLEL_LOG_DIR="$(mktemp -d)"
 
     print_info "Updating $# paths in parallel..."
 
-    local pids=()
     local index=0
     local project_path
     for project_path in "$@"; do
         "$0" "$project_path" > "$PARALLEL_LOG_DIR/$index.log" 2>&1 &
-        pids+=("$!")
+        PARALLEL_PIDS+=("$!")
         index=$((index + 1))
     done
 
     local failed_paths=()
     index=0
     for project_path in "$@"; do
-        if ! wait "${pids[$index]}"; then
+        if ! wait "${PARALLEL_PIDS[$index]}"; then
             failed_paths+=("$project_path")
         fi
+        # the finished update is reaped, so its PID may be reused and must not be stopped later
+        PARALLEL_PIDS[$index]=""
         cat "$PARALLEL_LOG_DIR/$index.log"
         index=$((index + 1))
     done
