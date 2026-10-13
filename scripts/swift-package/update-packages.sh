@@ -274,6 +274,12 @@ restore_package_resolved() {
     UPDATING_PACKAGE_RESOLVED=""
 }
 
+# Function to handle an interrupted update: put back the Package.resolved being updated and exit
+handle_update_interrupt() {
+    restore_package_resolved
+    exit 1
+}
+
 # Function to update Xcode project packages
 update_xcode_project() {
     local project_path="$1"
@@ -397,11 +403,15 @@ update_xcworkspace() {
     UPDATING_PACKAGE_RESOLVED="$package_level_resolved"
     PACKAGE_RESOLVED_BACKUP="$package_level_backup"
     if swift package update >/dev/null 2>&1; then
-        UPDATING_PACKAGE_RESOLVED=""
         # copy package-level Package.resolved to workspace location
         local workspace_package_resolved="$project_path/xcshareddata/swiftpm/Package.resolved"
         print_info "Copying $package_level_resolved to $workspace_package_resolved..."
+        # Ignore interrupts during the copy so it can't be stopped halfway. An interrupt before the copy still
+        # restores the package-level Package.resolved, so the two files stay in sync.
+        trap '' INT TERM HUP
         cp "$package_level_resolved" "$workspace_package_resolved"
+        UPDATING_PACKAGE_RESOLVED=""
+        trap handle_update_interrupt INT TERM HUP
         # print_success "Package update completed"
         cd "$original_dir"
         rm -f "$package_level_backup"
@@ -569,10 +579,25 @@ update_in_parallel() {
     trap 'stop_parallel_updates; exit 1' INT TERM HUP
     PARALLEL_LOG_DIR="$(mktemp -d)"
 
+    # Skip paths that point to an already listed project, otherwise their updates would race on the same Package.resolved
+    local unique_paths=()
+    local seen_real_paths=""
+    local project_path
+    local real_path
+    for project_path in "$@"; do
+        real_path="$(realpath "$project_path" 2>/dev/null || echo "$project_path")"
+        if grep -Fxq -- "$real_path" <<< "$seen_real_paths"; then
+            print_warning "Skipping duplicate path: $project_path"
+            continue
+        fi
+        seen_real_paths+="$real_path"$'\n'
+        unique_paths+=("$project_path")
+    done
+    set -- "${unique_paths[@]}"
+
     print_info "Updating $# paths in parallel..."
 
     local index=0
-    local project_path
     for project_path in "$@"; do
         "$0" "$project_path" > "$PARALLEL_LOG_DIR/$index.log" 2>&1 &
         PARALLEL_PIDS+=("$!")
@@ -625,7 +650,7 @@ main() {
     # Setup cleanup trap for temp files
     trap cleanup_temp_files EXIT
     # Put back the Package.resolved being updated if this update is interrupted or stopped
-    trap 'restore_package_resolved; exit 1' INT TERM HUP
+    trap handle_update_interrupt INT TERM HUP
 
     # Validate project path
     if [ ! -e "$project_path" ]; then
