@@ -38,10 +38,18 @@ PARALLEL_LOG_DIR=""
 # PIDs of the running updates started by `update_in_parallel`
 PARALLEL_PIDS=()
 
+# The Package.resolved being updated by `update_xcode_project` and its backup ("" if the file didn't exist),
+# put back by `restore_package_resolved` if the update fails or is interrupted
+UPDATING_PACKAGE_RESOLVED=""
+PACKAGE_RESOLVED_BACKUP=""
+
 # Cleanup function for temp files
 cleanup_temp_files() {
     if [ -n "$TEMP_STATE_FILE" ] && [ -f "$TEMP_STATE_FILE" ]; then
         rm -f "$TEMP_STATE_FILE"
+    fi
+    if [ -n "$PACKAGE_RESOLVED_BACKUP" ] && [ -f "$PACKAGE_RESOLVED_BACKUP" ]; then
+        rm -f "$PACKAGE_RESOLVED_BACKUP"
     fi
     if [ -n "$TEMP_PACKAGES_DIR" ] && [ -d "$TEMP_PACKAGES_DIR" ]; then
         rm -rf "$TEMP_PACKAGES_DIR"
@@ -252,6 +260,20 @@ PY
     grep -q '"identity"' "$package_resolved_path"
 }
 
+# Function to put back the Package.resolved being updated: restore its backup, or remove it if it didn't exist before
+restore_package_resolved() {
+    if [ -z "$UPDATING_PACKAGE_RESOLVED" ]; then
+        return
+    fi
+
+    if [ -n "$PACKAGE_RESOLVED_BACKUP" ]; then
+        cp "$PACKAGE_RESOLVED_BACKUP" "$UPDATING_PACKAGE_RESOLVED"
+    else
+        rm -f "$UPDATING_PACKAGE_RESOLVED"
+    fi
+    UPDATING_PACKAGE_RESOLVED=""
+}
+
 # Function to update Xcode project packages
 update_xcode_project() {
     local project_path="$1"
@@ -281,6 +303,8 @@ update_xcode_project() {
         fi
     fi
     print_info "Resetting $package_resolved_path for package update..."
+    UPDATING_PACKAGE_RESOLVED="$package_resolved_path"
+    PACKAGE_RESOLVED_BACKUP="$backup"
     write_empty_package_resolved "$package_resolved_path" "$origin_hash"
 
     # Resolve into a fresh temporary directory instead of the project's DerivedData, so the resolution starts clean
@@ -309,12 +333,7 @@ update_xcode_project() {
 
     if [ "$resolved" != true ]; then
         # Restore the backup so a failed resolve never leaves pins deleted.
-        if [ -n "$backup" ]; then
-            cp "$backup" "$package_resolved_path"
-        else
-            # no backup file, means there's no Package.resolved before, remove the empty generated file
-            rm -f "$package_resolved_path"
-        fi
+        restore_package_resolved
         rm -f "$backup"
         print_error "Failed to resolve package dependencies after $max_attempts attempts"
         return 1
@@ -334,6 +353,7 @@ update_xcode_project() {
             print_warning "Package.resolved still has no pins after resolution; removed the empty generated file."
         fi
     fi
+    UPDATING_PACKAGE_RESOLVED=""
     rm -f "$backup"
     return 0
 }
@@ -500,14 +520,19 @@ show_package_changes() {
     rm -f "$temp_new"
 }
 
-# Function to terminate a process and the processes it started, children first
+# Function to terminate a process and the processes it started
+#
+# The process is signaled before its children, so an update can put back its Package.resolved as soon as its running
+# command exits. The children are collected first so they're still found if the process exits right away.
 kill_process_tree() {
     local pid="$1"
+    local children
+    children="$(pgrep -P "$pid" || true)"
+    kill -TERM "$pid" 2>/dev/null || true
     local child
-    for child in $(pgrep -P "$pid" || true); do
+    for child in $children; do
         kill_process_tree "$child"
     done
-    kill -TERM "$pid" 2>/dev/null || true
 }
 
 # Function to stop the running updates started by `update_in_parallel` and wait for them to exit
@@ -591,6 +616,8 @@ main() {
 
     # Setup cleanup trap for temp files
     trap cleanup_temp_files EXIT
+    # Put back the Package.resolved being updated if this update is interrupted or stopped
+    trap 'restore_package_resolved; exit 1' INT TERM HUP
 
     # Validate project path
     if [ ! -e "$project_path" ]; then
