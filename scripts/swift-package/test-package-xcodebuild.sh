@@ -458,10 +458,21 @@ phase_test() {
     fi
   fi
 
+  # xcodebuild passes only TEST_RUNNER_ prefixed variables to the test runner, with the prefix
+  # stripped. Forward the CI variables this way, so tests can detect CI on macOS too, where there
+  # is no simulator to set them in.
+  local test_runner_env=()
+  local name
+  for name in CI CONTINUOUS_INTEGRATION GITHUB_ACTIONS; do
+    if [ -n "${!name:-}" ]; then
+      test_runner_env+=("TEST_RUNNER_$name=${!name}")
+    fi
+  done
+
   echo "➡️  Running $CURRENT_OS tests on ${CYAN}$DEVICE_NAME ($DEVICE_OS_VERSION)${RESET}..."
   local test_status=0
   cd "$PACKAGE_PATH"
-  run_xcodebuild xcodebuild test-without-building \
+  run_xcodebuild env ${test_runner_env[@]+"${test_runner_env[@]}"} xcodebuild test-without-building \
     -scheme "$SCHEME" \
     -destination "$DESTINATION" \
     ${DD_ARGS[@]+"${DD_ARGS[@]}"} \
