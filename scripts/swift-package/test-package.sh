@@ -19,12 +19,14 @@ print_help() {
   echo "  --delay N                    Delay in seconds between attempts (default: 3)"
   echo "  --beautifier PATH            Optional command used to format each attempt's output"
   echo "  --summary PATH               Optional Markdown summary output file, if specified, the summary will be appended to the file"
+  echo "  --coverage-lcov PATH         Optional LCOV output file, if specified, the tests run with code coverage, which is exported to the file after they pass"
   echo "  --help, -h                   Show this help message and exit"
   echo
   echo "All remaining arguments are passed to 'swift test'."
   echo ""
   echo "${BOLD}EXAMPLES:${RESET}"
   echo "  $0 --package path/to/Package --max-attempts 3 --delay 3 --beautifier path/to/beautifier --summary path/to/summary.md"
+  echo "  $0 --package path/to/Package --coverage-lcov path/to/Package/.build/debug/codecov/coverage.lcov"
 }
 
 package_path=""
@@ -32,6 +34,7 @@ max_attempts=1
 delay=3
 beautifier=""
 summary_output=""
+coverage_lcov=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -85,6 +88,16 @@ while [[ $# -gt 0 ]]; do
       shift
       shift
       ;;
+    --coverage-lcov)
+      if [ "$#" -lt 2 ] || [ -z "$2" ]; then
+        echo "🛑 Missing value for --coverage-lcov"
+        print_help
+        exit 1
+      fi
+      coverage_lcov="$2"
+      shift
+      shift
+      ;;
     --)
       shift
       break
@@ -126,6 +139,11 @@ package_name=$(basename "$package_path")
 if [ ! -f "$package_path/Package.swift" ]; then
   echo "🛑 Package.swift not found at package path: $package_path"
   exit 1
+fi
+
+# the coverage data is from this run, not one left over from an earlier run with code coverage
+if [ -n "$coverage_lcov" ]; then
+  set -- "$@" --enable-code-coverage
 fi
 
 tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/swift-package-test.XXXXXX") || exit 1
@@ -257,6 +275,43 @@ write_summary() {
   fi
 }
 
+# SwiftPM's native build system and Swift Build put the coverage data and the test bundles in different folders, and name
+# the test bundles after the package or after each test target. SwiftPM reports the coverage folder for the arguments that
+# the tests ran with, and the test bundles are in the folder that contains it.
+export_coverage() {
+  local codecov_path
+  codecov_path=$(cd "$package_path" && swift test "$@" --show-codecov-path)
+  codecov_path=$(dirname "$codecov_path")
+
+  local profile="$codecov_path/default.profdata"
+  if [ ! -f "$profile" ]; then
+    echo "🛑 Coverage data not found: $profile"
+    return 1
+  fi
+
+  # llvm-cov takes the first test binary as an argument, and each other one after -object
+  local test_binaries=()
+  local bundle
+  for bundle in "$(dirname "$codecov_path")"/*.xctest; do
+    if [ ! -d "$bundle" ]; then
+      continue
+    fi
+    if [ "${#test_binaries[@]}" -gt 0 ]; then
+      test_binaries+=(-object)
+    fi
+    test_binaries+=("$bundle/Contents/MacOS/$(basename "$bundle" .xctest)")
+  done
+
+  if [ "${#test_binaries[@]}" -eq 0 ]; then
+    echo "🛑 No test bundle found in $(dirname "$codecov_path")"
+    return 1
+  fi
+
+  mkdir -p "$(dirname "$coverage_lcov")"
+  echo "xcrun llvm-cov export -format=lcov ${test_binaries[*]} -instr-profile $profile > $coverage_lcov"
+  xcrun llvm-cov export -format="lcov" "${test_binaries[@]}" -instr-profile "$profile" > "$coverage_lcov"
+}
+
 attempt=1
 final_exit_code=1
 
@@ -305,5 +360,9 @@ while [ "$attempt" -le "$max_attempts" ]; do
 done
 
 write_summary "$attempt" "$final_exit_code"
+
+if [ "$final_exit_code" -eq 0 ] && [ -n "$coverage_lcov" ]; then
+  export_coverage "$@"
+fi
 
 exit "$final_exit_code"
