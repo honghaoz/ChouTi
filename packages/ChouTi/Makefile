@@ -77,8 +77,7 @@ test-ci: # Run tests with CI-optimized caching path. Usage: make test-ci OS=iOS 
 .PHONY: test-codecov
 test-codecov: # Run tests with code coverage.
 	@echo test with code coverage: $(MAKEFILE_DIR_NAME)
-	@$(REPO_ROOT)/scripts/swift-package/test-package.sh --package "$(MAKEFILE_DIR)" --max-attempts 3 --delay 3 --summary "$${GITHUB_STEP_SUMMARY:-}" --enable-code-coverage -Xswiftc -DTEST
-	xcrun llvm-cov export -format="lcov" .build/debug/ChouTiPackageTests.xctest/Contents/MacOS/ChouTiPackageTests -instr-profile .build/debug/codecov/default.profdata > .build/debug/codecov/coverage.lcov
+	@$(REPO_ROOT)/scripts/swift-package/test-package.sh --package "$(MAKEFILE_DIR)" --max-attempts 3 --delay 3 --summary "$${GITHUB_STEP_SUMMARY:-}" --coverage-lcov .build/debug/codecov/coverage.lcov -Xswiftc -DTEST
 	$(REPO_ROOT)/scripts/filter-lcov.sh .build/debug/codecov/coverage.lcov --keep-pattern '.+packages/ChouTi/Sources/.+'
 
 .PHONY: clean
