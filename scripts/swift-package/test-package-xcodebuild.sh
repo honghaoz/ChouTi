@@ -476,6 +476,7 @@ phase_test() {
     -scheme "$SCHEME" \
     -destination "$DESTINATION" \
     ${DD_ARGS[@]+"${DD_ARGS[@]}"} \
+    -collect-test-diagnostics never \
     -retry-tests-on-failure \
     -test-iterations 3 || test_status=$?
 
