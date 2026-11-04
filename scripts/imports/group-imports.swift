@@ -101,6 +101,7 @@ enum GroupImports {
 
   /// Returns the Swift files that a configuration applies to, relative to the repository, in order.
   ///
+  /// The hidden files and folders in a directory are left out, such as `.build`, where SwiftPM puts generated Swift files.
   /// A symbolic link to a file outside the repository is left out, as the file isn't the repository's, and a directory
   /// that can't be read throws, so that its files aren't left out without a word.
   ///
@@ -121,7 +122,7 @@ enum GroupImports {
       let urls: [URL]
       if isDirectory.boolValue {
         var enumerationError: Error?
-        let enumerator = fileManager.enumerator(at: url, includingPropertiesForKeys: nil, options: [], errorHandler: { _, error in
+        let enumerator = fileManager.enumerator(at: url, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles], errorHandler: { _, error in
           enumerationError = error
           return false
         })

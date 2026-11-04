@@ -72,7 +72,8 @@ enum ImportGroups {
     /// Creates a configuration from its text.
     ///
     /// Each line is a key and its values, separated by spaces, and a `#` starts a comment:
-    /// - `paths: <path>...`: The directories and files whose Swift files the groups apply to.
+    /// - `paths: <path>...`: The directories and files whose Swift files the groups apply to, without the hidden files and
+    ///   folders in the directories, such as `.build`.
     /// - `exclude: <path>...`: The directories and files in the paths that the groups don't apply to.
     /// - `group: <module>...`: A group's modules, in the order of the groups, with `*` for the modules that no group
     ///   lists.
