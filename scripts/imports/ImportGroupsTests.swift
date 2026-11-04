@@ -687,6 +687,53 @@ class ImportGroupsTests: XCTestCase {
     """##)
   }
 
+  func test_group_fileWideIf_withARawMultilineString_endsAtItsEndif() {
+    // given: a file in an #if block, with a raw multiline string literal that has a multiline string literal in it, with
+    // an #endif, and a multiline string literal that closes on the line where another opens
+    let text = ##"""
+    #if canImport(UIKit)
+    import ChouTiTest
+    import UIKit
+
+    let sample = #"""
+      let s = """
+      #endif
+      """
+      """#
+    let pair = """
+      a
+      """ + """
+      #endif
+      """
+    #endif
+    """##
+
+    // when: grouping its imports
+    let outcome = ImportGroups.group(text, config: Constants.config)
+
+    // then: each string ends at its own closing delimiter, so the #if wraps the file, and the imports are grouped
+    expect(outcome) == .grouped(##"""
+    #if canImport(UIKit)
+
+    import UIKit
+
+    import ChouTiTest
+
+    let sample = #"""
+      let s = """
+      #endif
+      """
+      """#
+    let pair = """
+      a
+      """ + """
+      #endif
+      """
+
+    #endif
+    """##)
+  }
+
   func test_group_groupedText_isUnchanged() {
     // given: files whose imports are out of order
     let texts = [

@@ -502,7 +502,7 @@ enum ImportGroups {
   ///
   /// A string literal, raw or not, as in `#"a "quoted" word"#`, and an extended regular expression literal, as in
   /// `#/a/*b/#`, stand for `""`, and go to the end of the text when they don't end in it. A multiline string literal's
-  /// delimiter, as in `"""` or `#"""`, stands for `"""`.
+  /// opening delimiter, as in `"""` or `#"""`, stands for itself, so that its `#` give its closing delimiter.
   ///
   /// - Parameter text: The text.
   /// - Returns: The code that the literal stands for, and the index after it.
@@ -510,7 +510,8 @@ enum ImportGroups {
     let hashes = text.prefix(while: { $0 == "#" }).count
     let rest = text.dropFirst(hashes)
     if rest.hasPrefix(Constants.multilineStringDelimiter) {
-      return (Constants.multilineStringDelimiter, rest.index(rest.startIndex, offsetBy: Constants.multilineStringDelimiter.count))
+      let end = rest.index(rest.startIndex, offsetBy: Constants.multilineStringDelimiter.count)
+      return (String(text[..<end]), end)
     }
     guard let open = rest.first, open == "\"" || (open == "/" && hashes > 0) else {
       return nil
@@ -646,7 +647,8 @@ enum ImportGroups {
   ///
   /// The lines of block comments and multiline string literals are skipped, as an `#if` in them, such as in a template
   /// or a test's sample code, isn't a directive. The `"""` that opens a multiline string literal is looked for in a
-  /// line's code, so that the quotes in its comments and its string literals don't open one.
+  /// line's code, so that the quotes in its comments and its string literals don't open one, and the literal ends at
+  /// its own closing delimiter, such as `"""#` for a raw one, which a `"""` in it doesn't end.
   ///
   /// - Parameters:
   ///   - lines: The file's lines.
@@ -655,18 +657,22 @@ enum ImportGroups {
   private static func endOfBlock(_ lines: [String], from start: Int) -> Int? {
     var depth = 0
     var commentDepth = 0
-    var isInString = false
+    // the closing delimiter of the multiline string literal that the lines are in
+    var stringCloser: String?
     for index in start ..< lines.count {
       let line = lines[index]
-      if isInString {
-        isInString = !togglesMultilineString(line)
+      if let closer = stringCloser {
+        // the code after the closing delimiter can open another literal, as in `""" + """`
+        if let range = line.range(of: closer) {
+          stringCloser = multilineStringCloser(opening: code(of: String(line[range.upperBound...]), depth: &commentDepth))
+        }
         continue
       }
 
       // a line that starts in a block comment isn't a directive, whatever follows the comment
       let startsInComment = commentDepth > 0
-      if togglesMultilineString(code(of: line, depth: &commentDepth)) {
-        isInString = true
+      if let closer = multilineStringCloser(opening: code(of: line, depth: &commentDepth)) {
+        stringCloser = closer
       } else if !startsInComment {
         if isDirective(line, "#if") {
           depth += 1
@@ -681,12 +687,19 @@ enum ImportGroups {
     return nil
   }
 
-  /// Returns whether a text has an odd number of `"""`, so that it opens or closes a multiline string literal.
+  /// Returns the closing delimiter of the multiline string literal that a line's code opens, such as `"""#` for one that
+  /// opens with `#"""`, `nil` when the code opens none.
   ///
-  /// - Parameter text: The text, such as a line.
-  /// - Returns: Whether the text opens or closes a multiline string literal.
-  private static func togglesMultilineString(_ text: String) -> Bool {
-    text.components(separatedBy: Constants.multilineStringDelimiter).count.isMultiple(of: 2)
+  /// The literal's content starts on the next line, so the last `"""` in the code is the one that opens it.
+  ///
+  /// - Parameter code: The line's code, in which a multiline string literal's opening delimiter stands for itself.
+  /// - Returns: The closing delimiter.
+  private static func multilineStringCloser(opening code: String) -> String? {
+    guard let range = code.range(of: Constants.multilineStringDelimiter, options: .backwards) else {
+      return nil
+    }
+    let hashes = code[..<range.lowerBound].reversed().prefix(while: { $0 == "#" }).count
+    return Constants.multilineStringDelimiter + String(repeating: "#", count: hashes)
   }
 
   /// Returns whether only blank lines, and the `#endif` lines of the blocks around a block, follow its `#endif` to the
