@@ -468,6 +468,11 @@ phase_test() {
       test_runner_env+=("TEST_RUNNER_$name=${!name}")
     fi
   done
+  # A layer change on a thread without a run loop, such as a GCD queue's, outside an explicit
+  # CATransaction opens an implicit transaction that commits only when the thread exits, during a
+  # later test, and removes the animations that test checks. This makes Core Animation abort where
+  # such a transaction opens, so the test that opens it crashes at its own line.
+  test_runner_env+=("TEST_RUNNER_CA_ASSERT_MAIN_THREAD_TRANSACTIONS=1")
 
   echo "➡️  Running $CURRENT_OS tests on ${CYAN}$DEVICE_NAME ($DEVICE_OS_VERSION)${RESET}..."
   local test_status=0
