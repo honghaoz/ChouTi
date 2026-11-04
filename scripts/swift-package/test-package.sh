@@ -150,8 +150,10 @@ tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/swift-package-test.XXXXXX") || exit 1
 trap 'rm -rf "$tmp_dir"' EXIT
 
 failures_tsv="$tmp_dir/failures.tsv"
+crashes_tsv="$tmp_dir/crashes.tsv"
 final_failures="$tmp_dir/final-failures.txt"
 : > "$failures_tsv"
+: > "$crashes_tsv"
 : > "$final_failures"
 
 parse_failed_tests() {
@@ -163,6 +165,27 @@ parse_failed_tests() {
     "$output_file" | sort | uniq
 }
 
+# Prints the test that started last without a passed, failed or skipped line after it. When the test process crashes,
+# XCTest prints no failure line, and this is the test that was running.
+parse_crashed_test() {
+  local output_file="$1"
+
+  sed -E -n \
+    -e "s|.*Test Case '-\\[([^]]+) ([^]]+)\\]' started.*|started \\1/\\2|p" \
+    -e "s|.*Test Case '-\\[([^]]+) ([^]]+)\\]' passed.*|ended \\1/\\2|p" \
+    -e "s|.*Test Case '-\\[([^]]+) ([^]]+)\\]' failed.*|ended \\1/\\2|p" \
+    -e "s|.*Test Case '-\\[([^]]+) ([^]]+)\\]' skipped.*|ended \\1/\\2|p" \
+    "$output_file" | awk '
+      $1 == "started" { running = $2 }
+      $1 == "ended" && $2 == running { running = "" }
+      END { if (running != "") print running }
+    '
+}
+
+# The tests run with CA_ASSERT_MAIN_THREAD_TRANSACTIONS=1. A layer change on a thread without a run loop, such as a GCD
+# queue's, outside an explicit CATransaction opens an implicit transaction that commits only when the thread exits, during
+# a later test, and removes the animations that test checks. The variable makes Core Animation abort where such a
+# transaction opens, so the test that opens it crashes at its own line.
 run_test_attempt() {
   local output_file="$1"
   shift
@@ -171,8 +194,8 @@ run_test_attempt() {
   if [ -n "$beautifier" ] && [ -x "$beautifier" ]; then
     (
       cd "$package_path" || exit 1
-      echo "swift test $*"
-      swift test "$@"
+      echo "CA_ASSERT_MAIN_THREAD_TRANSACTIONS=1 swift test $*"
+      CA_ASSERT_MAIN_THREAD_TRANSACTIONS=1 swift test "$@"
     ) 2>&1 | tee "$output_file" | "$beautifier"
     local pipeline_status=("${PIPESTATUS[@]}")
     set -e
@@ -193,8 +216,8 @@ run_test_attempt() {
 
   (
     cd "$package_path" || exit 1
-    echo "swift test $*"
-    swift test "$@"
+    echo "CA_ASSERT_MAIN_THREAD_TRANSACTIONS=1 swift test $*"
+    CA_ASSERT_MAIN_THREAD_TRANSACTIONS=1 swift test "$@"
   ) 2>&1 | tee "$output_file"
   local pipeline_status=("${PIPESTATUS[@]}")
   set -e
@@ -256,6 +279,23 @@ write_summary() {
           print "| " $2 " | `" $3 "` | " $4 " |"
         }
       '
+    fi
+
+    if [ -s "$crashes_tsv" ]; then
+      echo
+      awk -F '\t' '
+        {
+          if (!($2 in attempts)) {
+            order[++count] = $2
+          }
+          attempts[$2] = attempts[$2] == "" ? $1 : attempts[$2] ", " $1
+        }
+        END {
+          for (i = 1; i <= count; i++) {
+            print "> The test process crashed in `" order[i] "` in attempt(s) " attempts[order[i]] ", so the tests after it did not run. Check the raw log for the crash."
+          }
+        }
+      ' "$crashes_tsv"
     fi
 
     if [ "$final_exit_code" -ne 0 ] && [ ! -s "$final_failures" ]; then
@@ -329,6 +369,18 @@ while [ "$attempt" -le "$max_attempts" ]; do
 
   failed_tests_file="$tmp_dir/attempt-$attempt-failed-tests.txt"
   parse_failed_tests "$output_file" > "$failed_tests_file"
+
+  # a crash fails the test that was running, and the tests after it don't run
+  if [ "$exit_code" -ne 0 ]; then
+    crashed_test=$(parse_crashed_test "$output_file")
+    if [ -n "$crashed_test" ]; then
+      echo "💥 The test process crashed in $crashed_test."
+      printf "%s\t%s\n" "$attempt" "$crashed_test" >> "$crashes_tsv"
+      if ! grep -qxF "$crashed_test" "$failed_tests_file"; then
+        echo "$crashed_test" >> "$failed_tests_file"
+      fi
+    fi
+  fi
 
   while IFS= read -r test; do
     if [ -n "$test" ]; then
