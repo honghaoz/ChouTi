@@ -231,9 +231,17 @@ enum ImportGroups {
       let path = url.resolvingSymlinksInPath().path
       return path.hasPrefix(repository.path + "/") ? String(path.dropFirst(repository.path.count + 1)) : nil
     }
-    // the excluded paths, with their symbolic links resolved, as the walked files' are, so that one through a link in the
-    // paths, such as `Linked/Generated`, matches its files
-    let excludedPaths = config.excludedPaths.compactMap { relativePath(of: repository.appendingPathComponent($0)) }
+    // the excluded paths, with the symbolic links on the way to them resolved, as the walked files' are, so that one
+    // through a link, such as `Linked/Generated`, matches its files. an excluded path that's a link names the link, which
+    // the walk leaves out anyway, rather than what it points to, whose files would be left out without a word
+    let excludedPaths = config.excludedPaths.compactMap { path -> String? in
+      let url = repository.appendingPathComponent(path).standardized
+      let parent = url.deletingLastPathComponent().resolvingSymlinksInPath()
+      if parent.path == repository.path {
+        return url.lastPathComponent
+      }
+      return relativePath(of: parent).map { "\($0)/\(url.lastPathComponent)" }
+    }
     func isExcluded(_ relativePath: String) -> Bool {
       excludedPaths.contains { relativePath == $0 || relativePath.hasPrefix($0 + "/") }
     }

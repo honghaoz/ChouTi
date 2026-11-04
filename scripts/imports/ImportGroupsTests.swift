@@ -1514,6 +1514,23 @@ class ImportGroupsTests: XCTestCase {
     expect(files) == ["Sources/A.swift"]
   }
 
+  func test_swiftFiles_excludedLink_doesntExcludeWhatItPointsTo() throws {
+    // given: a repository with Swift files in a folder and in its generated folder, links to both, and a configuration
+    // whose excluded paths are the links, one at the top of the repository and one in a folder
+    let repository = try makeDirectory()
+    try write("let a = 1", to: "Sources/A.swift", in: repository)
+    try write("let b = 1", to: "Sources/Generated/B.swift", in: repository)
+    try FileManager.default.createSymbolicLink(at: repository.appendingPathComponent("Linked"), withDestinationURL: repository.appendingPathComponent("Sources"))
+    try FileManager.default.createSymbolicLink(at: repository.appendingPathComponent("Sources/ToGenerated"), withDestinationURL: repository.appendingPathComponent("Sources/Generated"))
+    let config = try ImportGroups.Config(parsing: "paths: .\nexclude: Linked Sources/ToGenerated\ngroup: *")
+
+    // when: listing its Swift files
+    let files = try ImportGroups.swiftFiles(config: config, repository: repository)
+
+    // then: an excluded link names the link, not the folder it points to, whose files are listed
+    expect(files) == ["Sources/A.swift", "Sources/Generated/B.swift"]
+  }
+
   func test_swiftFiles_unreadableFolder_throws() throws {
     // given: a repository with an unreadable folder in its paths
     let repository = try makeDirectory()
