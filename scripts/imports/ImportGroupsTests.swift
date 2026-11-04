@@ -1474,6 +1474,46 @@ class ImportGroupsTests: XCTestCase {
     expect(files) == ["Sources/A.swift"]
   }
 
+  func test_swiftFiles_leftOutFilesAndLinks_dontSkipTheNextFolder() throws {
+    // given: a repository with folders of Swift files, next to dot files, links and an excluded file, which the walk
+    // leaves out
+    let repository = try makeDirectory()
+    let folders = (1 ... 20).map { "Sources/Folder\($0)" }
+    for (index, folder) in folders.enumerated() {
+      try write("let a = 1", to: "\(folder)/A.swift", in: repository)
+      try write("a", to: "Sources/.hidden\(index)", in: repository)
+      try FileManager.default.createSymbolicLink(
+        at: repository.appendingPathComponent("Sources/Link\(index).swift"),
+        withDestinationURL: repository.appendingPathComponent("\(folder)/A.swift")
+      )
+    }
+    try write("let b = 1", to: "Sources/Excluded.swift", in: repository)
+    let config = try ImportGroups.Config(parsing: "paths: Sources\nexclude: Sources/Excluded.swift\ngroup: *")
+
+    // when: listing its Swift files
+    let files = try ImportGroups.swiftFiles(config: config, repository: repository)
+
+    // then: the files of every folder are listed, as the walk skips the descendants of a folder only, since skipping a
+    // file's makes the enumerator skip the next folder's
+    expect(files) == folders.map { "\($0)/A.swift" }.sorted()
+  }
+
+  func test_swiftFiles_excludedPathThroughALink_isLeftOut() throws {
+    // given: a repository with a Swift file in a folder and one in its generated folder, and a configuration whose path
+    // is a link to the folder, and whose excluded path goes through the link
+    let repository = try makeDirectory()
+    try write("let a = 1", to: "Sources/A.swift", in: repository)
+    try write("let b = 1", to: "Sources/Generated/B.swift", in: repository)
+    try FileManager.default.createSymbolicLink(at: repository.appendingPathComponent("Linked"), withDestinationURL: repository.appendingPathComponent("Sources"))
+    let config = try ImportGroups.Config(parsing: "paths: Linked\nexclude: Linked/Generated\ngroup: *")
+
+    // when: listing its Swift files
+    let files = try ImportGroups.swiftFiles(config: config, repository: repository)
+
+    // then: the excluded path is resolved as the files' paths are, so it leaves out the generated folder's file
+    expect(files) == ["Sources/A.swift"]
+  }
+
   func test_swiftFiles_unreadableFolder_throws() throws {
     // given: a repository with an unreadable folder in its paths
     let repository = try makeDirectory()

@@ -74,9 +74,10 @@ enum GroupImports {
     let repository = repository.resolvingSymlinksInPath()
     let config = try ImportGroups.Config(parsing: String(contentsOfFile: configPath, encoding: .utf8))
 
-    var notGrouped: [String] = []
-    var unsupported: [String] = []
+    var isAnyNotGrouped = false
+    var isAnyUnsupported = false
     for path in try ImportGroups.swiftFiles(config: config, repository: repository) {
+      // each file is listed once it's handled, so that the files rewritten before an error are listed
       let url = repository.appendingPathComponent(path)
       let text = try String(contentsOf: url, encoding: .utf8)
       switch ImportGroups.group(text, config: config) {
@@ -84,22 +85,17 @@ enum GroupImports {
         if fixes {
           if grouped != text {
             try grouped.write(to: url, atomically: true, encoding: .utf8)
-            notGrouped.append(path)
+            print("✏️  Grouped the imports of \(path)")
           }
         } else if !ImportGroups.hasSameGroups(text, as: grouped) {
-          notGrouped.append(path)
+          print("🛑 \(path): the imports aren't grouped, run `make format`")
+          isAnyNotGrouped = true
         }
       case .unsupported(let line, let reason):
-        unsupported.append("\(path):\(line): \(reason), so its imports can't be grouped")
+        print("🛑 \(path):\(line): \(reason), so its imports can't be grouped")
+        isAnyUnsupported = true
       }
     }
-
-    for path in notGrouped {
-      print(fixes ? "✏️  Grouped the imports of \(path)" : "🛑 \(path): the imports aren't grouped, run `make format`")
-    }
-    for problem in unsupported {
-      print("🛑 \(problem)")
-    }
-    return unsupported.isEmpty && (fixes || notGrouped.isEmpty) ? 0 : 1
+    return isAnyUnsupported || isAnyNotGrouped ? 1 : 0
   }
 }

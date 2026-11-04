@@ -231,8 +231,11 @@ enum ImportGroups {
       let path = url.resolvingSymlinksInPath().path
       return path.hasPrefix(repository.path + "/") ? String(path.dropFirst(repository.path.count + 1)) : nil
     }
+    // the excluded paths, with their symbolic links resolved, as the walked files' are, so that one through a link in the
+    // paths, such as `Linked/Generated`, matches its files
+    let excludedPaths = config.excludedPaths.compactMap { relativePath(of: repository.appendingPathComponent($0)) }
     func isExcluded(_ relativePath: String) -> Bool {
-      config.excludedPaths.contains { relativePath == $0 || relativePath.hasPrefix($0 + "/") }
+      excludedPaths.contains { relativePath == $0 || relativePath.hasPrefix($0 + "/") }
     }
 
     let fileManager = FileManager.default
@@ -250,7 +253,7 @@ enum ImportGroups {
       var urls: [URL] = []
       if isDirectory.boolValue {
         var enumerationError: Error?
-        let enumerator = fileManager.enumerator(at: url, includingPropertiesForKeys: [.isSymbolicLinkKey], options: [], errorHandler: { _, error in
+        let enumerator = fileManager.enumerator(at: url, includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey], options: [], errorHandler: { _, error in
           enumerationError = error
           return false
         })
@@ -258,12 +261,17 @@ enum ImportGroups {
           throw ConfigError("\(path) can't be read")
         }
         while let item = enumerator.nextObject() as? URL {
-          // a skipped folder isn't walked, so that one that can't be read doesn't stop the run. the name is checked
-          // rather than skipping hidden files, which on macOS also skips the files flagged as hidden
-          let isLink = (try? item.resourceValues(forKeys: [.isSymbolicLinkKey]).isSymbolicLink) == true
-          if isLink || item.lastPathComponent.hasPrefix(".") || relativePath(of: item).map(isExcluded) == true {
-            enumerator.skipDescendants()
-          } else {
+          // the name is checked rather than skipping hidden files, which on macOS also skips the files flagged as hidden.
+          // a link isn't a folder, and the walk doesn't go into one
+          let values = try? item.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
+          let isLeftOut = values?.isSymbolicLink == true || item.lastPathComponent.hasPrefix(".") || relativePath(of: item).map(isExcluded) == true
+          if values?.isDirectory == true {
+            // a folder that's left out isn't walked, so that one that can't be read doesn't stop the run. only a folder's
+            // descendants are skipped, as skipping a file's makes the enumerator skip the next folder's instead
+            if isLeftOut {
+              enumerator.skipDescendants()
+            }
+          } else if !isLeftOut {
             urls.append(item)
           }
         }
