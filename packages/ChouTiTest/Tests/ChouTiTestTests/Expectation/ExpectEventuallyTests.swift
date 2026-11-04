@@ -28,11 +28,11 @@
 //  IN THE SOFTWARE.
 //
 
-import ChouTiTest
-import XCTest
-
 import Foundation
 import QuartzCore
+
+import ChouTiTest
+import XCTest
 
 class ExpectEventuallyTests: XCTestCase {
 

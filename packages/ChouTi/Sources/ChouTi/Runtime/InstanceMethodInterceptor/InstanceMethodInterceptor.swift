@@ -28,8 +28,8 @@
 //  IN THE SOFTWARE.
 //
 
-import ObjectiveC
 import Foundation
+import ObjectiveC
 
 public typealias InstanceMethodInvokeBlock = (_ object: AnyObject, _ selector: Selector, _ callOriginal: @escaping () -> Void) -> Void
 public typealias InstanceMethodInvokeBlockWithArg<Arg> = (_ object: AnyObject, _ selector: Selector, _ arg: Arg, _ callOriginal: @escaping (Arg) -> Void) -> Void

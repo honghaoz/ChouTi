@@ -28,5 +28,4 @@
 //  IN THE SOFTWARE.
 //
 
-/// import `ChouTiTest` will import `XCTest`.
-@_exported import XCTest
+@_exported import XCTest // import `ChouTiTest` will import `XCTest`.

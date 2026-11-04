@@ -28,10 +28,10 @@
 //  IN THE SOFTWARE.
 //
 
+import Foundation
+
 import ChouTiTest
 import XCTest
-
-import Foundation
 
 class ExpectEventuallyThrowErrorTests: XCTestCase {
 

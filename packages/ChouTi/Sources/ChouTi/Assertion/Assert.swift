@@ -30,8 +30,8 @@
 
 import Foundation
 
-/// Run test with `swift test -Xswiftc -DTEST` to enable `import XCTest`.
 #if TEST
+// Run test with `swift test -Xswiftc -DTEST` to enable `import XCTest`.
 import XCTest
 #endif
 

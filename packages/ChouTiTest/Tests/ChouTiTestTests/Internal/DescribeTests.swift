@@ -28,10 +28,10 @@
 //  IN THE SOFTWARE.
 //
 
+import Foundation
+
 import XCTest
 @testable import ChouTiTest
-
-import Foundation
 
 class DescribeTests: XCTestCase {
 
