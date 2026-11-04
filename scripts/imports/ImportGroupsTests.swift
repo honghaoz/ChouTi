@@ -963,6 +963,66 @@ class ImportGroupsTests: XCTestCase {
     expect(ImportGroups.hasSameGroups("import QuartzCore\n\nimport ChouTiTest\nimport UIKit\n\nclass A {}", as: grouped)) == false
   }
 
+  // MARK: - Swift Files
+
+  func test_swiftFiles_leavesOutDotFoldersExcludedFoldersAndOutsideLinks() throws {
+    // given: a repository with a Swift file and a text file in its sources, a Swift file in a dot folder and in an
+    // excluded folder, an unreadable folder in each, a dot file, a dot folder and that dot file listed in the paths, and
+    // a symbolic link to a Swift file outside the repository
+    let repository = try makeDirectory()
+    try write("let a = 1", to: "Sources/A.swift", in: repository)
+    try write("a", to: "Sources/A.txt", in: repository)
+    try write("let b = 1", to: "Sources/.build/Generated.swift", in: repository)
+    try write("let c = 1", to: "Sources/.build/locked/Locked.swift", in: repository)
+    try write("let d = 1", to: "Sources/Excluded/Excluded.swift", in: repository)
+    try write("let e = 1", to: "Sources/Excluded/locked/Locked.swift", in: repository)
+    try write("let f = 1", to: "Sources/.hidden.swift", in: repository)
+    try write("let g = 1", to: ".github/G.swift", in: repository)
+    let outside = try makeDirectory()
+    try write("let h = 1", to: "Outside.swift", in: outside)
+    try FileManager.default.createSymbolicLink(
+      at: repository.appendingPathComponent("Sources/Link.swift"),
+      withDestinationURL: outside.appendingPathComponent("Outside.swift")
+    )
+    try lock("Sources/.build/locked", in: repository)
+    try lock("Sources/Excluded/locked", in: repository)
+    let config = try ImportGroups.Config(parsing: """
+    paths: Sources .github Sources/.hidden.swift
+    exclude: Sources/Excluded
+    group: *
+    """)
+
+    // when: listing its Swift files
+    let files = try ImportGroups.swiftFiles(config: config, repository: repository)
+
+    // then: the walk goes into neither the dot folder nor the excluded folder, so their unreadable folders don't throw,
+    // leaves out the dot file and the link, and keeps the paths it's given, whatever their names
+    expect(files) == [".github/G.swift", "Sources/.hidden.swift", "Sources/A.swift"]
+  }
+
+  func test_swiftFiles_unreadableFolder_throws() throws {
+    // given: a repository with an unreadable folder in its paths
+    let repository = try makeDirectory()
+    try write("let a = 1", to: "Sources/locked/A.swift", in: repository)
+    try lock("Sources/locked", in: repository)
+    if FileManager.default.isReadableFile(atPath: repository.appendingPathComponent("Sources/locked").path) {
+      try skip("the locked folder can be read, as by the root user")
+    }
+    let config = try ImportGroups.Config(parsing: "paths: Sources\ngroup: *")
+
+    // then: listing its Swift files throws, instead of leaving out the folder's files
+    expect(try ImportGroups.swiftFiles(config: config, repository: repository)).to(throwAnError())
+  }
+
+  func test_swiftFiles_missingPath_throws() throws {
+    // given: a configuration whose path isn't in the repository
+    let repository = try makeDirectory()
+    let config = try ImportGroups.Config(parsing: "paths: Sources\ngroup: *")
+
+    // then: listing the Swift files throws an error that names the path
+    expect(try ImportGroups.swiftFiles(config: config, repository: repository)).to(throwError(ImportGroups.ConfigError("Sources doesn't exist")))
+  }
+
   // MARK: - Config
 
   func test_config_parsing() throws {
@@ -1014,6 +1074,46 @@ class ImportGroupsTests: XCTestCase {
     expect(Constants.config.group(of: "ComposeUI")) == 3
     expect(Constants.config.group(of: "UIKit.UIGestureRecognizerSubclass")) == 0
     expect(Constants.config.group(of: "QuartzCore")) == 0
+  }
+
+  // MARK: - Helpers
+
+  /// Returns a new empty directory, with its symbolic links resolved, which is removed when the test ends.
+  ///
+  /// - Returns: The directory's URL.
+  private func makeDirectory() throws -> URL {
+    let url = FileManager.default.temporaryDirectory.appendingPathComponent("ImportGroupsTests-\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+    addTeardownBlock {
+      try? FileManager.default.removeItem(at: url)
+    }
+    return url.resolvingSymlinksInPath()
+  }
+
+  /// Writes a text to a file in a directory, with the folders on its path.
+  ///
+  /// - Parameters:
+  ///   - text: The text.
+  ///   - path: The file's path, relative to the directory.
+  ///   - directory: The directory.
+  private func write(_ text: String, to path: String, in directory: URL) throws {
+    let url = directory.appendingPathComponent(path)
+    try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+    try text.write(to: url, atomically: true, encoding: .utf8)
+  }
+
+  /// Makes a folder in a directory unreadable until the test ends, when it's made readable again so it can be removed.
+  ///
+  /// - Parameters:
+  ///   - path: The folder's path, relative to the directory.
+  ///   - directory: The directory.
+  private func lock(_ path: String, in directory: URL) throws {
+    let path = directory.appendingPathComponent(path).path
+    try FileManager.default.setAttributes([.posixPermissions: 0], ofItemAtPath: path)
+    // teardown blocks run in reverse order, so this runs before the directory is removed
+    addTeardownBlock {
+      try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: path)
+    }
   }
 
   // MARK: - Constants

@@ -72,7 +72,7 @@ enum GroupImports {
 
     var notGrouped: [String] = []
     var unsupported: [String] = []
-    for path in try swiftFiles(config: config, repository: repository) {
+    for path in try ImportGroups.swiftFiles(config: config, repository: repository) {
       let url = repository.appendingPathComponent(path)
       let text = try String(contentsOf: url, encoding: .utf8)
       switch ImportGroups.group(text, config: config) {
@@ -97,67 +97,5 @@ enum GroupImports {
       print("🛑 \(problem)")
     }
     exit(unsupported.isEmpty && (fixes || notGrouped.isEmpty) ? 0 : 1)
-  }
-
-  /// Returns the Swift files that a configuration applies to, relative to the repository, in order.
-  ///
-  /// The hidden files and folders in a directory are left out, such as `.build`, where SwiftPM puts generated Swift files,
-  /// and the excluded folders aren't walked. A symbolic link to a file outside the repository is left out, as the file
-  /// isn't the repository's, and a directory that can't be read throws, so that its files aren't left out without a word.
-  ///
-  /// - Parameters:
-  ///   - config: The configuration.
-  ///   - repository: The repository, with its symbolic links resolved.
-  /// - Returns: The files' paths.
-  static func swiftFiles(config: ImportGroups.Config, repository: URL) throws -> [String] {
-    // the path of a file relative to the repository, with its symbolic links resolved, `nil` for a file outside it
-    func relativePath(of url: URL) -> String? {
-      let path = url.resolvingSymlinksInPath().path
-      return path.hasPrefix(repository.path + "/") ? String(path.dropFirst(repository.path.count + 1)) : nil
-    }
-    func isExcluded(_ relativePath: String) -> Bool {
-      config.excludedPaths.contains { relativePath == $0 || relativePath.hasPrefix($0 + "/") }
-    }
-
-    let fileManager = FileManager.default
-    var files: [String] = []
-    for path in config.paths {
-      let url = repository.appendingPathComponent(path)
-      var isDirectory: ObjCBool = false
-      guard fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory) else {
-        throw ImportGroups.ConfigError("\(path) doesn't exist")
-      }
-
-      var urls: [URL] = []
-      if isDirectory.boolValue {
-        var enumerationError: Error?
-        let enumerator = fileManager.enumerator(at: url, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles], errorHandler: { _, error in
-          enumerationError = error
-          return false
-        })
-        guard let enumerator else {
-          throw ImportGroups.ConfigError("\(path) can't be read")
-        }
-        while let item = enumerator.nextObject() as? URL {
-          // an excluded folder isn't walked, so that one that can't be read doesn't stop the run
-          if let relativePath = relativePath(of: item), isExcluded(relativePath) {
-            enumerator.skipDescendants()
-          } else {
-            urls.append(item)
-          }
-        }
-        if let enumerationError {
-          throw enumerationError
-        }
-      } else {
-        urls = [url]
-      }
-      for file in urls where file.pathExtension == "swift" {
-        if let relativePath = relativePath(of: file), !isExcluded(relativePath) {
-          files.append(relativePath)
-        }
-      }
-    }
-    return files.sorted()
   }
 }
