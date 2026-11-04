@@ -31,11 +31,21 @@
 import XCTest
 
 /// Skips the remaining tests in a test method unconditionally.
+///
+/// This function always throws, so it can end a `guard` statement's `else` clause without a `return`,
+/// including in an initializer:
+///
+/// ```swift
+/// guard #available(iOS 17.0, *) else {
+///   try skip("requires iOS 17")
+/// }
+/// ```
+///
 /// - Parameters:
 ///   - message: A message for the skip.
 ///   - file: The file where the skip is occurred.
 ///   - line: The line number where the skip is occurred.
-public func skip(_ message: @autoclosure () -> String? = nil, file: StaticString = #filePath, line: UInt = #line) throws {
+public func skip(_ message: @autoclosure () -> String? = nil, file: StaticString = #filePath, line: UInt = #line) throws -> Never {
   throw XCTSkip(message(), file: file, line: line)
 }
 
