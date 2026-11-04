@@ -1013,6 +1013,14 @@ class ImportGroupsTests: XCTestCase {
 
     let x = Date()
     """
+    let importAfterTheComment = """
+    import Foundation
+    #if canImport(Dispatch) /* for the queues,
+     and more */ import Dispatch
+    #endif
+
+    let x = Date()
+    """
     let onOneLine = """
     import Foundation
     #if canImport(Dispatch)
@@ -1026,6 +1034,7 @@ class ImportGroupsTests: XCTestCase {
     // lines, and the block with the comment that ends on its line moves with it
     expect(ImportGroups.group(onTheEndif, config: Constants.config)) == .unsupported(line: 4, reason: "a directive with a block comment that spans lines")
     expect(ImportGroups.group(onTheIf, config: Constants.config)) == .unsupported(line: 2, reason: "a directive with a block comment that spans lines")
+    expect(ImportGroups.group(importAfterTheComment, config: Constants.config)) == .unsupported(line: 2, reason: "a directive with a block comment that spans lines")
     expect(ImportGroups.group(onOneLine, config: Constants.config)) == .grouped("""
     #if canImport(Dispatch)
     import Dispatch
@@ -1034,6 +1043,52 @@ class ImportGroupsTests: XCTestCase {
 
     let x = Date()
     """)
+  }
+
+  func test_group_directiveWithAMultilineBlockComment_inAnIfBlockOfCode_isLeftAlone() {
+    // given: imports before an #if block of code whose #if starts a block comment that goes on to the next line, the same
+    // after a comment, and a file in an #if block whose #if does
+    let afterTheImports = """
+    import ChouTiTest
+    import UIKit
+
+    #if DEBUG /* remove once
+     the bug is fixed */
+    let debug = true
+    #endif
+    """
+    let afterAComment = """
+    import UIKit
+
+    // the debug flag
+    #if DEBUG /* remove once
+     the bug is fixed */
+    let debug = true
+    #endif
+    """
+    let fileWide = """
+    #if canImport(UIKit) /* the whole file,
+     on UIKit */
+    import UIKit
+
+    class A {}
+    #endif
+    """
+
+    // then: the #if blocks of code start the code, so the imports before them are grouped, and the file in the #if block
+    // stays as it is
+    expect(ImportGroups.group(afterTheImports, config: Constants.config)) == .grouped("""
+    import UIKit
+
+    import ChouTiTest
+
+    #if DEBUG /* remove once
+     the bug is fixed */
+    let debug = true
+    #endif
+    """)
+    expect(ImportGroups.group(afterAComment, config: Constants.config)) == .grouped(afterAComment)
+    expect(ImportGroups.group(fileWide, config: Constants.config)) == .grouped(fileWide)
   }
 
   // MARK: - Same Groups

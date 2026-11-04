@@ -597,8 +597,8 @@ enum ImportGroups {
   /// imports and comments.
   ///
   /// The block moves whole, so a comment in it belongs to it, unlike a comment between imports. A directive that starts
-  /// a block comment that goes on past its line makes the imports unsupported, as the comment's other lines aren't read
-  /// as a comment, and the comment can go on past the block, which can't move without it.
+  /// a block comment that goes on past its line makes a block of imports unsupported, as the comment can go on past the
+  /// block, which can't move without it. A block of code with such a directive stays where it is, as any block of code.
   ///
   /// - Parameters:
   ///   - lines: The file's lines.
@@ -607,25 +607,46 @@ enum ImportGroups {
   private static func importBlock(_ lines: [String], from start: Int) -> Block {
     var depth = 0
     var modules: [String] = []
+    // the first directive that starts a block comment that goes on past its line
+    var multilineCommentDirective: Int?
     var index = start
     while index < lines.count {
       let line = lines[index]
       if ["#if", "#elseif", "#else", "#endif"].contains(where: { isDirective(line, $0) }) {
+        if isDirective(line, "#if") {
+          depth += 1
+        } else if isDirective(line, "#endif") {
+          depth -= 1
+        }
         var commentDepth = 0
         _ = code(of: line, depth: &commentDepth)
-        if commentDepth > 0 {
-          return .unsupported(lineIndex: index, reason: Constants.directiveWithAMultilineCommentReason)
+        if commentDepth > 0, multilineCommentDirective == nil {
+          multilineCommentDirective = index
         }
-      }
 
-      if isDirective(line, "#if") {
-        depth += 1
-      } else if isDirective(line, "#endif") {
-        depth -= 1
         if depth == 0 {
-          return modules.isEmpty ? .other : .imports(end: index, modules: modules)
+          if modules.isEmpty {
+            return .other
+          } else if let multilineCommentDirective {
+            return .unsupported(lineIndex: multilineCommentDirective, reason: Constants.directiveWithAMultilineCommentReason)
+          } else {
+            return .imports(end: index, modules: modules)
+          }
         }
-      } else if !isDirective(line, "#elseif"), !isDirective(line, "#else") {
+
+        // the comment's other lines are skipped, and code after it on its last line, such as an import, ends the read,
+        // as a line that has the end of a comment that spans lines can't be grouped
+        index += 1
+        while commentDepth > 0, index < lines.count {
+          let rest = code(of: lines[index], depth: &commentDepth)
+          if !isBlank(rest) {
+            let reason = Constants.directiveWithAMultilineCommentReason
+            return restAfterImportKeyword(rest) == nil ? .other : .unsupported(lineIndex: multilineCommentDirective ?? index, reason: reason)
+          }
+          index += 1
+        }
+        continue
+      } else {
         switch lineKind(lines, at: index) {
         case .comment(let next):
           index = next
