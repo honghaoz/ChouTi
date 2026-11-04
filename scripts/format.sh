@@ -99,6 +99,18 @@ SWIFTLINT_REPO_ROOT_AUTOCORRECT_CONFIG="$REPO_ROOT/$SWIFTLINT_AUTOCORRECT_CONFIG
 SWIFTLINT_CACHE_DIR="$REPO_ROOT/.temp/swiftlint-cache" && mkdir -p "$SWIFTLINT_CACHE_DIR"
 SWIFTLINT_BEAUTIFY="$REPO_ROOT/scripts/swiftlint-beautify"
 
+# the imports are grouped only in a repository that has the config
+IMPORT_GROUPS_CONFIG="$CONFIG_PATH/.import-groups"
+GROUP_IMPORTS_DIR="$REPO_ROOT/scripts/imports"
+GROUP_IMPORTS="$GROUP_IMPORTS_DIR/group-imports.sh" && [[ -f "$IMPORT_GROUPS_CONFIG" && ! -f "$GROUP_IMPORTS" ]] && { echo "🛑 Error: group-imports.sh not found."; exit 1; }
+
+# the grouping's Swift files are ChouTi's, with its file header, so swiftformat skips them in a repository that
+# downloads them, and ignores them. swiftlint still corrects them there, with that repository's rules
+SWIFTFORMAT_EXCLUDE="$CONFIG_PATH"
+if (unset GIT_DIR; git check-ignore -q "$GROUP_IMPORTS_DIR/ImportGroups.swift"); then
+  SWIFTFORMAT_EXCLUDE="$SWIFTFORMAT_EXCLUDE,scripts/imports" # relative to the repository, where swiftformat runs
+fi
+
 if [[ "$FORMAT_ALL" == "true" ]]; then
   # copy config files to the root directory
   cp "$SWIFTFORMAT_CONFIG" "$SWIFTFORMAT_REPO_ROOT_CONFIG"
@@ -119,12 +131,22 @@ if [[ "$FORMAT_ALL" == "true" ]]; then
   }
   trap cleanup EXIT
 
+  # group imports, before swiftformat, whose sortImports sorts each group
+  if [[ -f "$IMPORT_GROUPS_CONFIG" ]]; then
+    echo ""
+    echo "➡️  Grouping imports..."
+
+    measure_start
+    "$GROUP_IMPORTS" --fix
+    measure_end "group-imports"
+  fi
+
   # swiftformat
   echo ""
   echo "➡️  Executing swiftformat ($SWIFTFORMAT_VERSION)..."
 
   measure_start
-  command "$SWIFTFORMAT_BIN" --exclude "$CONFIG_PATH" --cache "$SWIFTFORMAT_CACHE" "$REPO_ROOT" 2>&1 | "$SWIFTFORMAT_BEAUTIFY"
+  command "$SWIFTFORMAT_BIN" --exclude "$SWIFTFORMAT_EXCLUDE" --cache "$SWIFTFORMAT_CACHE" "$REPO_ROOT" 2>&1 | "$SWIFTFORMAT_BEAUTIFY"
   measure_end "swiftformat"
 
   # swiftlint

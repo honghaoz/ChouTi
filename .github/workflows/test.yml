@@ -71,6 +71,10 @@ jobs:
           flags: ChouTiTest
           name: ChouTiTest
           fail_ci_if_error: true
+      # scripts
+      - name: Test the import grouping of "scripts/imports"
+        if: success() || failure()
+        run: scripts/swift-package/test-package.sh --package scripts/imports --summary "${GITHUB_STEP_SUMMARY:-}"
 
   test:
     name: Test
