@@ -580,8 +580,9 @@ enum ImportGroups {
   private static func lineKind(_ lines: [Line], at index: Int) -> LineKind {
     let line = lines[index]
     if isBlank(line.code) {
-      // the comment's last line is the first line after it that ends outside it, or that has code
-      if line.endsInCommentOrString,
+      // the comment's last line is the first line after it that ends outside it, or that has code. only the comment's
+      // first line looks for it, so that a long comment is read once, as its last line reports its own import
+      if line.endsInCommentOrString, !line.startsInCommentOrString,
          let end = lines[(index + 1)...].firstIndex(where: { !$0.endsInCommentOrString || !isBlank($0.code) }),
          restAfterImportKeyword(lines[end].code) != nil
       {
