@@ -104,8 +104,8 @@ IMPORT_GROUPS_CONFIG="$CONFIG_PATH/.import-groups"
 GROUP_IMPORTS_DIR="$REPO_ROOT/scripts/imports"
 GROUP_IMPORTS="$GROUP_IMPORTS_DIR/group-imports.sh" && [[ -f "$IMPORT_GROUPS_CONFIG" && ! -f "$GROUP_IMPORTS" ]] && { echo "🛑 Error: group-imports.sh not found."; exit 1; }
 
-# the grouping's Swift files are ChouTi's, so a repository that downloads them, and ignores them, doesn't format them
-# with its own file header and rules
+# the grouping's Swift files are ChouTi's, with its file header, so swiftformat skips them in a repository that
+# downloads them, and ignores them. swiftlint still corrects them there, with that repository's rules
 SWIFTFORMAT_EXCLUDE="$CONFIG_PATH"
 if (unset GIT_DIR; git check-ignore -q "$GROUP_IMPORTS_DIR/ImportGroups.swift"); then
   SWIFTFORMAT_EXCLUDE="$SWIFTFORMAT_EXCLUDE,scripts/imports" # relative to the repository, where swiftformat runs

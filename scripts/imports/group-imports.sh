@@ -42,7 +42,9 @@ if [[ ! -x "$TOOL" ]]; then
   mkdir -p "$BUILD_DIR"
   swiftc -parse-as-library -o "$TOOL.$$" "$LOGIC" "$ENTRY"
   mv "$TOOL.$$" "$TOOL"
-  find "$BUILD_DIR" -type f ! -name "$(basename "$TOOL")*" -delete
+  # remove the other versions' tools, and the builds that another run may still be writing, such as a hook's during a
+  # rebase, only once they're an hour old, which a run that stopped halfway leaves behind
+  find "$BUILD_DIR" -type f ! -name "$(basename "$TOOL")" \( ! -name "*.*" -o -mmin +60 \) -delete
 fi
 
 "$TOOL" "$1" "$CONFIG" "$REPO_ROOT"
