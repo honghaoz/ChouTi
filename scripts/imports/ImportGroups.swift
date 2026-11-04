@@ -179,136 +179,26 @@ enum ImportGroups {
   /// `#if` before the imports, such as one around a platform's part of the file, starts the code, which leaves the file
   /// alone. A comment in an `#if` block of imports moves with the block, and a comment on an import's line moves with the
   /// import. A comment between imports, an `#if` block that imports modules of different groups, a line with more than
-  /// an import and a comment, an import with a block comment that spans lines, or an import whose module is on another
-  /// line, makes the imports unsupported, as the grouping doesn't know where it belongs.
+  /// an import and a comment, an import with a block comment that spans lines, or an import whose module or attributes
+  /// are on another line, makes the imports unsupported, as the grouping doesn't know where it belongs.
+  ///
+  /// The grouping only moves whole imports and `#if` blocks of imports, which follow each other with only blank lines
+  /// between them, and changes only blank lines, so it doesn't change what a file means.
   ///
   /// - Parameters:
   ///   - text: The file's text.
   ///   - config: The configuration.
   /// - Returns: The file's text with its imports grouped, or why they can't be.
   static func group(_ text: String, config: Config) -> Outcome {
-    let lines = ImportGroups.lines(of: text)
-    let texts = lines.map(\.text)
-
-    var index = 0
-    while index < lines.count, case .comment = lineKind(lines, at: index) {
-      index += 1
+    let result = top(of: ImportGroups.lines(of: text)).flatMap { top in
+      top.items.isEmpty ? .success(text) : grouped(top, config: config)
     }
-    var headerEnd = index
-    while headerEnd > 0, isBlank(texts[headerEnd - 1]) {
-      headerEnd -= 1
+    switch result {
+    case .success(let grouped):
+      return .grouped(grouped)
+    case .failure(let unsupported):
+      return .unsupported(line: unsupported.line, reason: unsupported.reason)
     }
-
-    var wrappers: [String] = []
-    var wrapperEnd: Int?
-    var items: [Item] = []
-    var codeStart = lines.count
-    scan: while index < lines.count {
-      let line = lines[index]
-      if isBlank(line.text) {
-        index += 1
-      } else if isDirective(line, "#if") {
-        switch importBlock(lines, from: index) {
-        case .imports(let end, let modules):
-          items.append(Item(lines: Array(texts[index ... end]), modules: modules, isBlock: true, line: index + 1))
-          index = end + 1
-        case .unsupported(let lineIndex, let reason):
-          return .unsupported(line: lineIndex + 1, reason: reason)
-        case .other:
-          if items.isEmpty, let end = endOfBlock(lines, from: index), endsTheFile(lines, after: end) {
-            // the lines of a block comment that the #if starts stay with it
-            wrappers.append(line.text)
-            while lines[index].endsInCommentOrString, index + 1 < lines.count, isBlank(lines[index + 1].code) {
-              index += 1
-              wrappers.append(texts[index])
-            }
-            wrapperEnd = end
-            index += 1
-          } else {
-            codeStart = index
-            break scan
-          }
-        }
-      } else {
-        switch lineKind(lines, at: index) {
-        case .comment:
-          if importFollows(lines, from: index + 1) {
-            return .unsupported(line: index + 1, reason: "a comment between imports")
-          } else {
-            codeStart = index
-            break scan
-          }
-        case .import(let module):
-          items.append(Item(lines: [line.text], modules: [module], isBlock: false, line: index + 1))
-          index += 1
-        case .unsupportedImport(let reason):
-          return .unsupported(line: index + 1, reason: reason)
-        case .code:
-          codeStart = index
-          break scan
-        }
-      }
-    }
-
-    guard !items.isEmpty else {
-      return .grouped(text)
-    }
-
-    var groups = Array(repeating: (blocks: [Item](), imports: [Item]()), count: config.groups.count)
-    for item in items {
-      let indices = Set(item.modules.map(config.group(of:)))
-      guard indices.count == 1, let groupIndex = indices.first else {
-        return .unsupported(line: item.line, reason: "an #if block that imports modules of different groups")
-      }
-      if item.isBlock {
-        groups[groupIndex].blocks.append(item)
-      } else {
-        groups[groupIndex].imports.append(item)
-      }
-    }
-
-    var output = Array(texts[0 ..< headerEnd])
-    if !output.isEmpty {
-      output.append("")
-    }
-    if !wrappers.isEmpty {
-      output += wrappers
-      output.append("")
-    }
-    var isFirstGroup = true
-    for group in groups where !group.blocks.isEmpty || !group.imports.isEmpty {
-      if !isFirstGroup {
-        output.append("")
-      }
-      isFirstGroup = false
-
-      // the blocks are ordered by the first module they import, so that the order doesn't depend on where they were
-      let blocks = group.blocks.enumerated().sorted { lhs, rhs in
-        let lhsModule = lhs.element.modules[0].lowercased()
-        let rhsModule = rhs.element.modules[0].lowercased()
-        return lhsModule == rhsModule ? lhs.offset < rhs.offset : lhsModule < rhsModule
-      }
-      for item in blocks.map(\.element) + group.imports {
-        output += item.lines
-      }
-    }
-    output.append("")
-
-    // a file-wide #if has a blank line after it, so the #endif lines that end the file have one before them, for the two
-    // ends to look alike
-    var code = Array(texts[codeStart...])
-    if let wrapperEnd, wrapperEnd > codeStart {
-      let end = wrapperEnd - codeStart
-      var blankStart = end
-      while blankStart > 0, isBlank(code[blankStart - 1]) {
-        blankStart -= 1
-      }
-      if blankStart > 0 {
-        code.replaceSubrange(blankStart ..< end, with: [""])
-      }
-    }
-    output += code
-    return .grouped(output.joined(separator: "\n"))
   }
 
   /// Returns whether a file's imports are in the same groups as in its grouped text, whatever their order in a group,
@@ -327,8 +217,8 @@ enum ImportGroups {
   /// The walk of a directory doesn't follow a symbolic link, so that a file is grouped where it is, when the paths have
   /// it, and doesn't go into a file or folder whose name starts with a dot, such as `.build`, where SwiftPM puts
   /// generated Swift files, or into an excluded one. A path in the paths that's a symbolic link is walked where it points,
-  /// as the configuration names it. A file listed in the paths is kept, whatever its name, when it's in the repository,
-  /// and a directory that can't be read throws, so that its files aren't left out without a word.
+  /// as the configuration names it. A file listed in the paths is kept, whatever its name, and a path outside the
+  /// repository, or a directory that can't be read, throws, so that its files aren't left out without a word.
   ///
   /// - Parameters:
   ///   - config: The configuration.
@@ -349,6 +239,9 @@ enum ImportGroups {
     var files: [String] = []
     for path in config.paths {
       let url = repository.appendingPathComponent(path).resolvingSymlinksInPath()
+      guard url.path == repository.path || relativePath(of: url) != nil else {
+        throw ConfigError("\(path) is outside the repository")
+      }
       var isDirectory: ObjCBool = false
       guard fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory) else {
         throw ConfigError("\(path) doesn't exist")
@@ -416,7 +309,11 @@ enum ImportGroups {
   /// ends at its closing delimiter, which for a multiline string literal starts its line, so that an escaped `\"""` in
   /// it doesn't end it. A string literal's interpolations, as in `"\(name ?? "")"`, are read as code to their closing
   /// parenthesis, with the literals in them, which can be multiline. An extended regular expression literal, as in
-  /// `#/a/*b/#`, ends on its line. A single-line string literal that doesn't end on its line is left there.
+  /// `#/a/*b/#`, is read to its end on its line, and one that spans lines isn't read, nor is one without `#`, as in
+  /// `/"/`, which can't be told from a division without parsing the code. What's in them can be misread, such as a `/*`
+  /// taken for a comment that hides the `#endif` lines after it, which can make the grouping leave the file alone, but
+  /// not change what it means, as it only moves whole imports. A single-line string literal that doesn't end on its line
+  /// is left there.
   ///
   /// - Parameter text: The file's text.
   /// - Returns: The file's lines.
@@ -536,8 +433,51 @@ enum ImportGroups {
     }
   }
 
+  /// Why the imports of a file can't be grouped.
+  private struct Unsupported: Error, Equatable {
+
+    /// The line that makes them unsupported, counted from 1.
+    let line: Int
+
+    /// Why the line makes them unsupported.
+    let reason: String
+  }
+
+  /// The top of a file, which the grouping rewrites: its leading comments, the `#if` lines that wrap the whole file and
+  /// its imports, above its code.
+  private struct Top {
+
+    /// The file's leading comments, without the blank lines after them.
+    let header: [String]
+
+    /// The lines of the `#if` directives that wrap the whole file, with the lines of the block comments they start.
+    let wrappers: [String]
+
+    /// The imports and the `#if` blocks of imports, in the file's order.
+    let items: [Item]
+
+    /// The file's lines from its code on, which starts at the first line after the imports that isn't blank.
+    let code: [String]
+
+    /// The index in the code of the `#endif` of the innermost `#if` that wraps the whole file, `nil` when none does.
+    let wrapperEnd: Int?
+  }
+
   /// An import, or an `#if` block of imports, at the top of a file.
   private struct Item {
+
+    /// Whether an item is an import or an `#if` block of imports.
+    enum Kind {
+
+      /// An import.
+      case `import`
+
+      /// An `#if` block of imports, which goes first in its group.
+      case block
+    }
+
+    /// Whether it's an import or an `#if` block of imports.
+    let kind: Kind
 
     /// The lines of the import or the block.
     let lines: [String]
@@ -545,11 +485,147 @@ enum ImportGroups {
     /// The modules it imports.
     let modules: [String]
 
-    /// Whether it's an `#if` block.
-    let isBlock: Bool
-
     /// The line where it starts, counted from 1.
     let line: Int
+  }
+
+  /// Returns the top of a file, which the grouping rewrites, or why its imports can't be grouped.
+  ///
+  /// - Parameter lines: The file's lines.
+  /// - Returns: The top of the file.
+  private static func top(of lines: [Line]) -> Result<Top, Unsupported> {
+    var index = 0
+    while index < lines.count, case .comment = lineKind(lines, at: index) {
+      index += 1
+    }
+    var headerEnd = index
+    while headerEnd > 0, isBlank(lines[headerEnd - 1].text) {
+      headerEnd -= 1
+    }
+
+    var wrappers: [String] = []
+    var wrapperEnd: Int?
+    var items: [Item] = []
+    var codeStart = lines.count
+    scan: while index < lines.count {
+      let line = lines[index]
+      if isBlank(line.text) {
+        index += 1
+      } else if isDirective(line, "#if") {
+        switch importBlock(lines, from: index) {
+        case .imports(let end, let modules):
+          items.append(Item(kind: .block, lines: lines[index ... end].map(\.text), modules: modules, line: index + 1))
+          index = end + 1
+        case .unsupported(let unsupported):
+          return .failure(unsupported)
+        case .other:
+          if items.isEmpty, let end = endOfBlock(lines, from: index), endsTheFile(lines, after: end) {
+            // the lines of a block comment that the #if starts stay with it
+            wrappers.append(line.text)
+            while lines[index].endsInCommentOrString, index + 1 < lines.count, isBlank(lines[index + 1].code) {
+              index += 1
+              wrappers.append(lines[index].text)
+            }
+            wrapperEnd = end
+            index += 1
+          } else {
+            codeStart = index
+            break scan
+          }
+        }
+      } else {
+        switch lineKind(lines, at: index) {
+        case .comment:
+          if importFollows(lines, from: index + 1) {
+            return .failure(Unsupported(line: index + 1, reason: Constants.commentBetweenImportsReason))
+          } else {
+            codeStart = index
+            break scan
+          }
+        case .import(let module):
+          items.append(Item(kind: .import, lines: [line.text], modules: [module], line: index + 1))
+          index += 1
+        case .unsupportedImport(let reason):
+          return .failure(Unsupported(line: index + 1, reason: reason))
+        case .code:
+          codeStart = index
+          break scan
+        }
+      }
+    }
+
+    return .success(Top(
+      header: lines[0 ..< headerEnd].map(\.text),
+      wrappers: wrappers,
+      items: items,
+      code: lines[codeStart...].map(\.text),
+      // the #endif of a file-wide #if is in the code, after the imports
+      wrapperEnd: wrapperEnd.map { $0 - codeStart }
+    ))
+  }
+
+  /// Returns the text of a file with the imports at its top grouped, or why they can't be.
+  ///
+  /// - Parameters:
+  ///   - top: The top of the file.
+  ///   - config: The configuration.
+  /// - Returns: The file's text with its imports grouped.
+  private static func grouped(_ top: Top, config: Config) -> Result<String, Unsupported> {
+    var groups = Array(repeating: (blocks: [Item](), imports: [Item]()), count: config.groups.count)
+    for item in top.items {
+      let indices = Set(item.modules.map(config.group(of:)))
+      guard indices.count == 1, let groupIndex = indices.first else {
+        return .failure(Unsupported(line: item.line, reason: Constants.blockOfModulesOfDifferentGroupsReason))
+      }
+      switch item.kind {
+      case .import:
+        groups[groupIndex].imports.append(item)
+      case .block:
+        groups[groupIndex].blocks.append(item)
+      }
+    }
+
+    var output = top.header
+    if !output.isEmpty {
+      output.append("")
+    }
+    if !top.wrappers.isEmpty {
+      output += top.wrappers
+      output.append("")
+    }
+    var isFirstGroup = true
+    for group in groups where !group.blocks.isEmpty || !group.imports.isEmpty {
+      if !isFirstGroup {
+        output.append("")
+      }
+      isFirstGroup = false
+
+      // the blocks are ordered by the first module they import, so that the order doesn't depend on where they were
+      let blocks = group.blocks.enumerated().sorted { lhs, rhs in
+        let lhsModule = lhs.element.modules[0].lowercased()
+        let rhsModule = rhs.element.modules[0].lowercased()
+        return lhsModule == rhsModule ? lhs.offset < rhs.offset : lhsModule < rhsModule
+      }
+      for item in blocks.map(\.element) + group.imports {
+        output += item.lines
+      }
+    }
+    output.append("")
+
+    // a file-wide #if has a blank line after it, so the #endif lines that end the file have one before them, for the two
+    // ends to look alike
+    var code = top.code
+    if let end = top.wrapperEnd {
+      var blankStart = end
+      while blankStart > 0, isBlank(code[blankStart - 1]) {
+        blankStart -= 1
+      }
+      if blankStart > 0 {
+        code.replaceSubrange(blankStart ..< end, with: [""])
+      }
+    }
+    output += code
+    return .success(output.joined(separator: "\n"))
   }
 
   /// What a line is, from its code.
@@ -683,8 +759,8 @@ enum ImportGroups {
     /// comments.
     case imports(end: Int, modules: [String])
 
-    /// A line that makes the imports unsupported, such as two imports on one line, with its index and why.
-    case unsupported(lineIndex: Int, reason: String)
+    /// A line that makes the imports unsupported, such as two imports on one line, and why.
+    case unsupported(Unsupported)
 
     /// Other lines, or no import.
     case other
@@ -722,7 +798,7 @@ enum ImportGroups {
           if modules.isEmpty {
             return .other
           } else if let multilineCommentDirective {
-            return .unsupported(lineIndex: multilineCommentDirective, reason: Constants.directiveWithAMultilineCommentReason)
+            return .unsupported(Unsupported(line: multilineCommentDirective + 1, reason: Constants.directiveWithAMultilineCommentReason))
           } else {
             return .imports(end: index, modules: modules)
           }
@@ -734,7 +810,7 @@ enum ImportGroups {
         case .import(let module):
           modules.append(module)
         case .unsupportedImport(let reason):
-          return .unsupported(lineIndex: index, reason: reason)
+          return .unsupported(Unsupported(line: index + 1, reason: reason))
         case .code:
           return .other
         }
@@ -903,6 +979,13 @@ enum ImportGroups {
     /// Why an import whose attributes are on another line, as in a line with `@testable` followed by `import UIKit`,
     /// makes the imports unsupported, as the import can't move without its attributes' line.
     static let importWithItsAttributesOnAnotherLineReason = "an import whose attributes are on another line"
+
+    /// Why a comment between imports makes them unsupported, as the grouping doesn't know which import it belongs to.
+    static let commentBetweenImportsReason = "a comment between imports"
+
+    /// Why an `#if` block that imports modules of different groups makes the imports unsupported, as the block can't go in
+    /// two groups.
+    static let blockOfModulesOfDifferentGroupsReason = "an #if block that imports modules of different groups"
 
     /// Why a directive that starts a block comment that spans lines, in an `#if` block at the top of a file, makes the
     /// imports unsupported, as the block can't move without the comment's other lines.

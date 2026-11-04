@@ -1497,6 +1497,25 @@ class ImportGroupsTests: XCTestCase {
     expect(try ImportGroups.swiftFiles(config: config, repository: repository)).to(throwError(ImportGroups.ConfigError("Sources doesn't exist")))
   }
 
+  func test_swiftFiles_pathOutsideTheRepository_throws() throws {
+    // given: a repository with a Swift file, a folder next to it with another, and a link in the repository to that folder
+    let directory = try makeDirectory()
+    let repository = directory.appendingPathComponent("Repository")
+    try write("let a = 1", to: "Repository/A.swift", in: directory)
+    try write("let b = 1", to: "Outside/B.swift", in: directory)
+    try FileManager.default.createSymbolicLink(at: repository.appendingPathComponent("Linked"), withDestinationURL: directory.appendingPathComponent("Outside"))
+
+    // then: a path to the folder, or to the link, throws an error that names it, instead of leaving out the folder's files
+    for path in ["../Outside", "Linked"] {
+      let config = try ImportGroups.Config(parsing: "paths: \(path)\ngroup: *")
+      expect(try ImportGroups.swiftFiles(config: config, repository: repository), path).to(throwError(ImportGroups.ConfigError("\(path) is outside the repository")))
+    }
+
+    // then: the repository's own path is in it
+    let config = try ImportGroups.Config(parsing: "paths: .\ngroup: *")
+    expect(try ImportGroups.swiftFiles(config: config, repository: repository)) == ["A.swift"]
+  }
+
   func test_swiftFiles_pathsWithADotOrASlash() throws {
     // given: a repository with a Swift file and two folders of them, and a configuration whose path ends with a slash,
     // and whose excluded folders start with `./` or end with a slash

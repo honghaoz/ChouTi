@@ -49,24 +49,28 @@ enum GroupImports {
       exit(2)
     }
 
+    let status: Int32
     do {
-      try run(fixes: arguments[1] == "--fix", configPath: arguments[2], repository: URL(fileURLWithPath: arguments[3]))
+      status = try run(fixes: arguments[1] == "--fix", configPath: arguments[2], repository: URL(fileURLWithPath: arguments[3]))
     } catch let error as ImportGroups.ConfigError {
       print("🛑 \(arguments[2]): \(error)")
-      exit(2)
+      status = 2
     } catch {
       print("🛑 \(error.localizedDescription)")
-      exit(2)
+      status = 2
     }
+    exit(status)
   }
 
-  /// Groups or checks the imports of the files that a configuration applies to, and exits with the result.
+  /// Groups or checks the imports of the files that a configuration applies to, and lists the files.
   ///
   /// - Parameters:
   ///   - fixes: Whether to rewrite the files whose imports aren't grouped, instead of listing them.
   ///   - configPath: The configuration's path.
   ///   - repository: The repository.
-  static func run(fixes: Bool, configPath: String, repository: URL) throws {
+  /// - Returns: The exit status: 1 when a file's imports can't be grouped, or, when checking, aren't grouped, and 0
+  ///   otherwise.
+  static func run(fixes: Bool, configPath: String, repository: URL) throws -> Int32 {
     let repository = repository.resolvingSymlinksInPath()
     let config = try ImportGroups.Config(parsing: String(contentsOfFile: configPath, encoding: .utf8))
 
@@ -96,6 +100,6 @@ enum GroupImports {
     for problem in unsupported {
       print("🛑 \(problem)")
     }
-    exit(unsupported.isEmpty && (fixes || notGrouped.isEmpty) ? 0 : 1)
+    return unsupported.isEmpty && (fixes || notGrouped.isEmpty) ? 0 : 1
   }
 }
