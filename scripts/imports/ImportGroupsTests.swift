@@ -609,6 +609,48 @@ class ImportGroupsTests: XCTestCase {
     """#)
   }
 
+  func test_group_fileWideIf_withQuotesAfterCode_endsAtItsEndif() {
+    // given: a file in an #if block, with three quotes in a comment after code, a multiline string literal after a
+    // string literal with `//` in it, and one after a block comment, both with an #endif in them
+    let text = #"""
+    #if canImport(UIKit)
+    import ChouTiTest
+    import UIKit
+
+    let x = 1 // use """ for a multiline string
+    let url = "https://example.com" + """
+    #endif
+    """
+    /* the sample */ let sample = """
+    #endif
+    """
+    #endif
+    """#
+
+    // when: grouping its imports
+    let outcome = ImportGroups.group(text, config: Constants.config)
+
+    // then: the quotes in the comment don't open a string, the strings' #endif lines aren't the file's, so the #if wraps
+    // the file, and the imports are grouped
+    expect(outcome) == .grouped(#"""
+    #if canImport(UIKit)
+
+    import UIKit
+
+    import ChouTiTest
+
+    let x = 1 // use """ for a multiline string
+    let url = "https://example.com" + """
+    #endif
+    """
+    /* the sample */ let sample = """
+    #endif
+    """
+
+    #endif
+    """#)
+  }
+
   func test_group_groupedText_isUnchanged() {
     // given: files whose imports are out of order
     let texts = [
@@ -823,6 +865,31 @@ class ImportGroupsTests: XCTestCase {
     expect(ImportGroups.group(commentBefore, config: Constants.config)) == .unsupported(line: 2, reason: "an import with a block comment that spans lines")
     expect(ImportGroups.group(commentAfter, config: Constants.config)) == .unsupported(line: 2, reason: "an import with a block comment that spans lines")
     expect(ImportGroups.group(inAnIfBlock, config: Constants.config)) == .unsupported(line: 3, reason: "an import with a block comment that spans lines")
+  }
+
+  func test_group_importWithItsModuleOnTheNextLine_isUnsupported() {
+    // given: imports whose modules are on the next line, which compile: after the keyword, after the keyword and a
+    // space, and after the kind of a declaration
+    let keyword = """
+    import ComposeUI
+    import
+      UIKit
+
+    let x = 1
+    """
+    let keywordAndASpace = "import ComposeUI\nimport \n  UIKit\n\nlet x = 1"
+    let declaration = """
+    import ComposeUI
+    import struct
+      Foundation.Date
+
+    let x = 1
+    """
+
+    // then: the imports can't be grouped, as the import can't move without its module's line
+    expect(ImportGroups.group(keyword, config: Constants.config)) == .unsupported(line: 2, reason: "an import whose module isn't on its line")
+    expect(ImportGroups.group(keywordAndASpace, config: Constants.config)) == .unsupported(line: 2, reason: "an import whose module isn't on its line")
+    expect(ImportGroups.group(declaration, config: Constants.config)) == .unsupported(line: 2, reason: "an import whose module isn't on its line")
   }
 
   func test_group_ifBlockOfModulesOfDifferentGroups_isUnsupported() {

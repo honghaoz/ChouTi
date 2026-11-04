@@ -101,6 +101,9 @@ enum GroupImports {
 
   /// Returns the Swift files that a configuration applies to, relative to the repository, in order.
   ///
+  /// A symbolic link to a file outside the repository is left out, as the file isn't the repository's, and a directory
+  /// that can't be read throws, so that its files aren't left out without a word.
+  ///
   /// - Parameters:
   ///   - config: The configuration.
   ///   - repository: The repository, with its symbolic links resolved.
@@ -117,12 +120,27 @@ enum GroupImports {
 
       let urls: [URL]
       if isDirectory.boolValue {
-        urls = fileManager.enumerator(at: url, includingPropertiesForKeys: nil)?.allObjects.compactMap { $0 as? URL } ?? []
+        var enumerationError: Error?
+        let enumerator = fileManager.enumerator(at: url, includingPropertiesForKeys: nil, options: [], errorHandler: { _, error in
+          enumerationError = error
+          return false
+        })
+        guard let enumerator else {
+          throw ImportGroups.ConfigError("\(path) can't be read")
+        }
+        urls = enumerator.allObjects.compactMap { $0 as? URL }
+        if let enumerationError {
+          throw enumerationError
+        }
       } else {
         urls = [url]
       }
       for file in urls where file.pathExtension == "swift" {
-        let relativePath = String(file.resolvingSymlinksInPath().path.dropFirst(repository.path.count + 1))
+        let resolvedPath = file.resolvingSymlinksInPath().path
+        guard resolvedPath.hasPrefix(repository.path + "/") else {
+          continue
+        }
+        let relativePath = String(resolvedPath.dropFirst(repository.path.count + 1))
         if !config.excludedPaths.contains(where: { relativePath == $0 || relativePath.hasPrefix($0 + "/") }) {
           files.append(relativePath)
         }

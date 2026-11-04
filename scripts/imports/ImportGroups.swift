@@ -172,8 +172,8 @@ enum ImportGroups {
   /// `#if` before the imports, such as one around a platform's part of the file, starts the code, which leaves the file
   /// alone. A comment in an `#if` block of imports moves with the block, and a comment on an import's line moves with the
   /// import. A comment between imports, an `#if` block that imports modules of different groups, a line with more than
-  /// an import and a comment, or an import with a block comment that spans lines, makes the imports unsupported, as the
-  /// grouping doesn't know where it belongs.
+  /// an import and a comment, an import with a block comment that spans lines, or an import whose module is on another
+  /// line, makes the imports unsupported, as the grouping doesn't know where it belongs.
   ///
   /// - Parameters:
   ///   - text: The file's text.
@@ -360,7 +360,7 @@ enum ImportGroups {
       if span.end > index || span.depth > 0 {
         return .unsupportedImport(Constants.importWithAMultilineCommentReason)
       } else if let module = importedModule(after: rest) {
-        return .import(module)
+        return module.isEmpty ? .unsupportedImport(Constants.importWithoutItsModuleReason) : .import(module)
       } else {
         return .unsupportedImport(Constants.unreadableImportReason)
       }
@@ -388,8 +388,8 @@ enum ImportGroups {
 
   /// Returns the code of a line, with each of its comments replaced by a space.
   ///
-  /// String literals aren't recognized: a `//` or a `/*` in one ends the code early, which leaves a line of code a line
-  /// of code, as the code before it isn't blank.
+  /// A string literal on the line is kept whole, so that a `//` or a `/*` in it isn't a comment. A multiline string
+  /// literal's delimiter, `"""`, is kept as code, and the lines in the literal are left to the caller.
   ///
   /// - Parameters:
   ///   - line: The line.
@@ -415,6 +415,19 @@ enum ImportGroups {
         }
       } else if rest.hasPrefix("//") {
         break
+      } else if rest.hasPrefix(Constants.multilineStringDelimiter) {
+        code += Constants.multilineStringDelimiter
+        rest = rest.dropFirst(Constants.multilineStringDelimiter.count)
+      } else if character == "\"" {
+        // a string literal goes to its closing quote, or to the end of the line, past its escaped characters, such as
+        // `\"`
+        var end = rest.index(after: rest.startIndex)
+        while end < rest.endIndex, rest[end] != "\"" {
+          end = rest.index(end, offsetBy: rest[end] == "\\" ? 2 : 1, limitedBy: rest.endIndex) ?? rest.endIndex
+        }
+        end = end < rest.endIndex ? rest.index(after: end) : end
+        code += rest[..<end]
+        rest = rest[end...]
       } else {
         code.append(character)
         rest = rest.dropFirst()
@@ -423,13 +436,15 @@ enum ImportGroups {
     return code
   }
 
-  /// Returns the module that an import imports, `nil` when more code follows the module, such as a second import.
+  /// Returns the module that an import imports, empty when the module isn't on the line, and `nil` when more code follows
+  /// the module, such as a second import.
   ///
   /// - Parameter rest: The import's code after its `import` keyword, without its comments.
   /// - Returns: The module, with its submodules, such as `UIKit.UIGestureRecognizerSubclass`.
   private static func importedModule(after rest: Substring) -> String? {
     var rest = rest
-    for kind in Constants.importKinds where rest.hasPrefix(kind) && rest.dropFirst(kind.count).first?.isWhitespace == true {
+    // a kind can end the line, as in `import struct`, whose module is on the next line
+    for kind in Constants.importKinds where rest.hasPrefix(kind) && rest.dropFirst(kind.count).first.map(\.isWhitespace) ?? true {
       rest = rest.dropFirst(kind.count).drop(while: \.isWhitespace)
       break
     }
@@ -465,7 +480,8 @@ enum ImportGroups {
       rest = rest.drop(while: \.isWhitespace)
     }
 
-    guard rest.hasPrefix("import"), rest.dropFirst("import".count).first?.isWhitespace == true else {
+    // the keyword can end the line, when the module is on the next line
+    guard rest.hasPrefix("import"), rest.dropFirst("import".count).first.map(\.isWhitespace) ?? true else {
       return nil
     }
     return rest.dropFirst("import".count).drop(while: \.isWhitespace)
@@ -528,7 +544,8 @@ enum ImportGroups {
   /// Returns the index of the `#endif` of the `#if` block at a line, `nil` when the block doesn't end.
   ///
   /// The lines of block comments and multiline string literals are skipped, as an `#if` in them, such as in a template
-  /// or a test's sample code, isn't a directive.
+  /// or a test's sample code, isn't a directive. The `"""` that opens a multiline string literal is looked for in a
+  /// line's code, so that the quotes in its comments and its string literals don't open one.
   ///
   /// - Parameters:
   ///   - lines: The file's lines.
@@ -536,25 +553,21 @@ enum ImportGroups {
   /// - Returns: The index of the block's `#endif`.
   private static func endOfBlock(_ lines: [String], from start: Int) -> Int? {
     var depth = 0
+    var commentDepth = 0
     var isInString = false
-    var index = start
-    while index < lines.count {
+    for index in start ..< lines.count {
       let line = lines[index]
-      // a line with an odd number of `"""` opens or closes a multiline string literal
-      let togglesString = line.components(separatedBy: "\"\"\"").count.isMultiple(of: 2)
       if isInString {
-        isInString = !togglesString
-        index += 1
-      } else if let next = lineAfterComment(lines, at: index) {
-        // comments are skipped before the quotes are counted, as the quotes in a comment don't open a string
-        index = next
-      } else if line.drop(while: \.isWhitespace).hasPrefix("/*") {
-        // a block comment with code after it is skipped with that code, so that a directive in the comment isn't counted
-        index = codeSpan(lines, at: index).end + 1
-      } else {
-        if togglesString {
-          isInString = true
-        } else if isDirective(line, "#if") {
+        isInString = !togglesMultilineString(line)
+        continue
+      }
+
+      // a line that starts in a block comment isn't a directive, whatever follows the comment
+      let startsInComment = commentDepth > 0
+      if togglesMultilineString(code(of: line, depth: &commentDepth)) {
+        isInString = true
+      } else if !startsInComment {
+        if isDirective(line, "#if") {
           depth += 1
         } else if isDirective(line, "#endif") {
           depth -= 1
@@ -562,10 +575,17 @@ enum ImportGroups {
             return index
           }
         }
-        index += 1
       }
     }
     return nil
+  }
+
+  /// Returns whether a text has an odd number of `"""`, so that it opens or closes a multiline string literal.
+  ///
+  /// - Parameter text: The text, such as a line.
+  /// - Returns: Whether the text opens or closes a multiline string literal.
+  private static func togglesMultilineString(_ text: String) -> Bool {
+    text.components(separatedBy: Constants.multilineStringDelimiter).count.isMultiple(of: 2)
   }
 
   /// Returns whether only blank lines, and the `#endif` lines of the blocks around a block, follow its `#endif` to the
@@ -704,5 +724,12 @@ enum ImportGroups {
     /// Why an import with a block comment that spans lines makes the imports unsupported, as the import can't move
     /// without the comment's other lines.
     static let importWithAMultilineCommentReason = "an import with a block comment that spans lines"
+
+    /// Why an import whose module is on another line, as in `import` followed by a line with `UIKit`, makes the imports
+    /// unsupported, as the import can't move without its module's line.
+    static let importWithoutItsModuleReason = "an import whose module isn't on its line"
+
+    /// The delimiter of a multiline string literal.
+    static let multilineStringDelimiter = "\"\"\""
   }
 }
