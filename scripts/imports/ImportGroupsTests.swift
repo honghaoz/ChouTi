@@ -1108,16 +1108,26 @@ class ImportGroupsTests: XCTestCase {
 
     let x = 1
     """
+    let onLinesOfTheirOwn = """
+    import UIKit
+    @testable
+    // for the internals
+    @_spi(Private)
+    import ComposeUI
 
-    // then: the imports can't be grouped, as the import can't move without its attributes' line
+    let x = 1
+    """
+
+    // then: the imports can't be grouped, as the import can't move without its attributes' lines
     expect(ImportGroups.group(afterAnImport, config: Constants.config)) == .unsupported(line: 2, reason: "an import whose attributes are on another line")
     expect(ImportGroups.group(withAComment, config: Constants.config)) == .unsupported(line: 2, reason: "an import whose attributes are on another line")
     expect(ImportGroups.group(inAnIfBlock, config: Constants.config)) == .unsupported(line: 3, reason: "an import whose attributes are on another line")
+    expect(ImportGroups.group(onLinesOfTheirOwn, config: Constants.config)) == .unsupported(line: 2, reason: "an import whose attributes are on another line")
   }
 
   func test_group_attributesBeforeADeclaration_areCode() {
     // given: imports out of order, before declarations whose attributes are on the lines before them, one with an
-    // argument and a comment after it
+    // argument and a comment after it, and two on lines of their own
     let text = """
     import ChouTiTest
     import UIKit
@@ -1127,6 +1137,10 @@ class ImportGroupsTests: XCTestCase {
     @available(iOS 15, *)
     // the newer view
     final class B {}
+
+    @MainActor
+    @available(iOS 15, *)
+    final class C {}
     """
 
     // when: grouping its imports
@@ -1144,6 +1158,10 @@ class ImportGroupsTests: XCTestCase {
     @available(iOS 15, *)
     // the newer view
     final class B {}
+
+    @MainActor
+    @available(iOS 15, *)
+    final class C {}
     """)
   }
 

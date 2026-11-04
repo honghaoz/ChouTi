@@ -598,11 +598,11 @@ enum ImportGroups {
       } else {
         return .unsupportedImport(Constants.unreadableImportReason)
       }
-    } else if restAfterAttributes(line.code)?.isEmpty == true,
-              let next = lines[(index + 1)...].firstIndex(where: { !isBlank($0.code) }),
+    } else if isOnlyAttributes(line.code),
+              let next = lines[(index + 1)...].firstIndex(where: { !isBlank($0.code) && !isOnlyAttributes($0.code) }),
               restAfterImportKeyword(lines[next].code) != nil
     {
-      // a line of only attributes is the start of the import that comes next, after comments
+      // a line of only attributes is the start of the import that comes next, after comments and other such lines
       return .unsupportedImport(Constants.importWithItsAttributesOnAnotherLineReason)
     } else {
       return .code
@@ -646,6 +646,14 @@ enum ImportGroups {
       return nil
     }
     return rest.dropFirst("import".count).drop(while: \.isWhitespace)
+  }
+
+  /// Returns whether the code of a line has only attributes, such as `@testable @_spi(Private)`.
+  ///
+  /// - Parameter code: The code of the line, without its comments.
+  /// - Returns: Whether the code has only attributes.
+  private static func isOnlyAttributes(_ code: String) -> Bool {
+    !isBlank(code) && restAfterAttributes(code)?.isEmpty == true
   }
 
   /// Returns the rest of the code of a line after its attributes, such as `@testable` or `@_spi(Private)`, `nil` when an
