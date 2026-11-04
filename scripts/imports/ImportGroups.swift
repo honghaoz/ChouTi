@@ -326,8 +326,9 @@ enum ImportGroups {
   ///
   /// The walk of a directory doesn't follow a symbolic link, so that a file is grouped where it is, when the paths have
   /// it, and doesn't go into a file or folder whose name starts with a dot, such as `.build`, where SwiftPM puts
-  /// generated Swift files, or into an excluded one. A file listed in the paths is kept, whatever its name, when it's in
-  /// the repository, and a directory that can't be read throws, so that its files aren't left out without a word.
+  /// generated Swift files, or into an excluded one. A path in the paths that's a symbolic link is walked where it points,
+  /// as the configuration names it. A file listed in the paths is kept, whatever its name, when it's in the repository,
+  /// and a directory that can't be read throws, so that its files aren't left out without a word.
   ///
   /// - Parameters:
   ///   - config: The configuration.
@@ -347,7 +348,7 @@ enum ImportGroups {
     let fileManager = FileManager.default
     var files: [String] = []
     for path in config.paths {
-      let url = repository.appendingPathComponent(path)
+      let url = repository.appendingPathComponent(path).resolvingSymlinksInPath()
       var isDirectory: ObjCBool = false
       guard fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory) else {
         throw ConfigError("\(path) doesn't exist")

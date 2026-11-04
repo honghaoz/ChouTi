@@ -1109,11 +1109,42 @@ class ImportGroupsTests: XCTestCase {
     let x = 1
     """
 
-    // then: the imports can't be grouped, as the import can't move without its attributes' line, while an attribute
-    // before a declaration stays code
+    // then: the imports can't be grouped, as the import can't move without its attributes' line
     expect(ImportGroups.group(afterAnImport, config: Constants.config)) == .unsupported(line: 2, reason: "an import whose attributes are on another line")
     expect(ImportGroups.group(withAComment, config: Constants.config)) == .unsupported(line: 2, reason: "an import whose attributes are on another line")
     expect(ImportGroups.group(inAnIfBlock, config: Constants.config)) == .unsupported(line: 3, reason: "an import whose attributes are on another line")
+  }
+
+  func test_group_attributesBeforeADeclaration_areCode() {
+    // given: imports out of order, before declarations whose attributes are on the lines before them, one with an
+    // argument and a comment after it
+    let text = """
+    import ChouTiTest
+    import UIKit
+    @MainActor
+    final class A {}
+
+    @available(iOS 15, *)
+    // the newer view
+    final class B {}
+    """
+
+    // when: grouping its imports
+    let outcome = ImportGroups.group(text, config: Constants.config)
+
+    // then: the attributes start the code, so the imports before them are grouped
+    expect(outcome) == .grouped("""
+    import UIKit
+
+    import ChouTiTest
+
+    @MainActor
+    final class A {}
+
+    @available(iOS 15, *)
+    // the newer view
+    final class B {}
+    """)
   }
 
   func test_group_ifBlockOfModulesOfDifferentGroups_isUnsupported() {
@@ -1408,6 +1439,20 @@ class ImportGroupsTests: XCTestCase {
     let files = try ImportGroups.swiftFiles(config: config, repository: repository)
 
     // then: the links aren't followed, so each file is grouped where it is, when the paths have it
+    expect(files) == ["Sources/A.swift"]
+  }
+
+  func test_swiftFiles_pathThatIsALinkToAFolder_isWalkedWhereItPoints() throws {
+    // given: a repository with a Swift file in a folder, and a configuration whose path is a link to that folder
+    let repository = try makeDirectory()
+    try write("let a = 1", to: "Sources/A.swift", in: repository)
+    try FileManager.default.createSymbolicLink(at: repository.appendingPathComponent("Linked"), withDestinationURL: repository.appendingPathComponent("Sources"))
+    let config = try ImportGroups.Config(parsing: "paths: Linked\ngroup: *")
+
+    // when: listing its Swift files
+    let files = try ImportGroups.swiftFiles(config: config, repository: repository)
+
+    // then: the folder that the path points to is walked, and its files are where they are
     expect(files) == ["Sources/A.swift"]
   }
 
