@@ -34,10 +34,13 @@ import XCTest
 class SkipTests: XCTestCase {
 
   func test_skip() throws {
-    let shouldSkip = true
-    guard !shouldSkip else {
-      try skip("skip") // ends the guard without a `return`
+    func skipIfNeeded(_ shouldSkip: Bool) throws {
+      guard !shouldSkip else {
+        try skip("skip") // ends the guard without a `return`
+      }
     }
+
+    try skipIfNeeded(true)
 
     fail("skip should have been skipped")
   }
