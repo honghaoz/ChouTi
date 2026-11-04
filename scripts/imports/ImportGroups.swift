@@ -57,16 +57,22 @@ enum ImportGroups {
 
     /// Creates a configuration.
     ///
+    /// The paths are kept without their `.` and empty components, as in `./Sources/` or `Tests//Unit`, so that they're
+    /// in the form of the paths relative to the repository that they're compared with.
+    ///
     /// - Parameters:
     ///   - groups: The groups, in order, each with the modules it takes.
     ///   - otherModulesGroup: The index of the group that takes the modules that no group lists.
     ///   - paths: The directories and files whose Swift files the groups apply to, relative to the repository.
     ///   - excludedPaths: The directories and files in the paths that the groups don't apply to.
     init(groups: [Set<String>], otherModulesGroup: Int, paths: [String], excludedPaths: [String]) {
+      func normalized(_ path: String) -> String {
+        path.split(separator: "/").filter { $0 != "." }.joined(separator: "/")
+      }
       self.groups = groups
       self.otherModulesGroup = otherModulesGroup
-      self.paths = paths
-      self.excludedPaths = excludedPaths
+      self.paths = paths.map { normalized($0) }
+      self.excludedPaths = excludedPaths.map { normalized($0) }
     }
 
     /// Creates a configuration from its text.
@@ -589,7 +595,9 @@ enum ImportGroups {
   /// Returns what the `#if` block at a line contains, which it reads to the block's `#endif` while the block has only
   /// imports and comments.
   ///
-  /// The block moves whole, so a comment in it belongs to it, unlike a comment between imports.
+  /// The block moves whole, so a comment in it belongs to it, unlike a comment between imports. A directive that starts
+  /// a block comment that goes on past its line makes the imports unsupported, as the comment's other lines aren't read
+  /// as a comment, and the comment can go on past the block, which can't move without it.
   ///
   /// - Parameters:
   ///   - lines: The file's lines.
@@ -601,6 +609,14 @@ enum ImportGroups {
     var index = start
     while index < lines.count {
       let line = lines[index]
+      if ["#if", "#elseif", "#else", "#endif"].contains(where: { isDirective(line, $0) }) {
+        var commentDepth = 0
+        _ = code(of: line, depth: &commentDepth)
+        if commentDepth > 0 {
+          return .unsupported(lineIndex: index, reason: Constants.directiveWithAMultilineCommentReason)
+        }
+      }
+
       if isDirective(line, "#if") {
         depth += 1
       } else if isDirective(line, "#endif") {
@@ -813,6 +829,10 @@ enum ImportGroups {
     /// Why an import whose module is on another line, as in `import` followed by a line with `UIKit`, makes the imports
     /// unsupported, as the import can't move without its module's line.
     static let importWithoutItsModuleReason = "an import whose module isn't on its line"
+
+    /// Why a directive that starts a block comment that spans lines, in an `#if` block at the top of a file, makes the
+    /// imports unsupported, as the block can't move without the comment's other lines.
+    static let directiveWithAMultilineCommentReason = "a directive with a block comment that spans lines"
 
     /// The delimiter of a multiline string literal.
     static let multilineStringDelimiter = "\"\"\""

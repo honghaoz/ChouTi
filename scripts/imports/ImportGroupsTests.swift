@@ -945,6 +945,50 @@ class ImportGroupsTests: XCTestCase {
     expect(ImportGroups.group(text, config: Constants.config)) == .unsupported(line: 3, reason: "an #if block that imports modules of different groups")
   }
 
+  func test_group_directiveWithAMultilineBlockComment_isUnsupported() {
+    // given: an #if block of imports whose #endif starts a block comment that goes on to the next line, one whose #if
+    // does, both after another import, and one whose #endif has a block comment that ends on its line
+    let onTheEndif = """
+    import Foundation
+    #if canImport(Dispatch)
+    import Dispatch
+    #endif /* for the queues,
+     and more */
+
+    let x = Date()
+    """
+    let onTheIf = """
+    import Foundation
+    #if canImport(Dispatch) /* for the queues,
+     and more */
+    import Dispatch
+    #endif
+
+    let x = Date()
+    """
+    let onOneLine = """
+    import Foundation
+    #if canImport(Dispatch)
+    import Dispatch
+    #endif /* for the queues */
+
+    let x = Date()
+    """
+
+    // then: the imports can't be grouped when the comment goes on, as the block can't move without the comment's other
+    // lines, and the block with the comment that ends on its line moves with it
+    expect(ImportGroups.group(onTheEndif, config: Constants.config)) == .unsupported(line: 4, reason: "a directive with a block comment that spans lines")
+    expect(ImportGroups.group(onTheIf, config: Constants.config)) == .unsupported(line: 2, reason: "a directive with a block comment that spans lines")
+    expect(ImportGroups.group(onOneLine, config: Constants.config)) == .grouped("""
+    #if canImport(Dispatch)
+    import Dispatch
+    #endif /* for the queues */
+    import Foundation
+
+    let x = Date()
+    """)
+  }
+
   // MARK: - Same Groups
 
   func test_hasSameGroups() {
@@ -1023,7 +1067,39 @@ class ImportGroupsTests: XCTestCase {
     expect(try ImportGroups.swiftFiles(config: config, repository: repository)).to(throwError(ImportGroups.ConfigError("Sources doesn't exist")))
   }
 
+  func test_swiftFiles_pathsWithADotOrASlash() throws {
+    // given: a repository with a Swift file and two folders of them, and a configuration whose path ends with a slash,
+    // and whose excluded folders start with `./` or end with a slash
+    let repository = try makeDirectory()
+    try write("let a = 1", to: "Sources/A.swift", in: repository)
+    try write("let b = 1", to: "Sources/Generated/Generated.swift", in: repository)
+    try write("let c = 1", to: "Sources/Vendor/Vendor.swift", in: repository)
+    let config = try ImportGroups.Config(parsing: "paths: Sources/\nexclude: Sources/Generated/ ./Sources/Vendor\ngroup: *")
+
+    // when: listing its Swift files
+    let files = try ImportGroups.swiftFiles(config: config, repository: repository)
+
+    // then: the excluded folders are left out
+    expect(files) == ["Sources/A.swift"]
+  }
+
   // MARK: - Config
+
+  func test_config_normalizesThePaths() throws {
+    // given: a configuration whose paths start with `./`, end with a slash or have two slashes in a row
+    let text = """
+    paths: ./Sources/ Tests//Unit
+    exclude: ./Sources/Generated/
+    group: *
+    """
+
+    // when: parsing it
+    let config = try ImportGroups.Config(parsing: text)
+
+    // then: the paths are in the form of the paths relative to the repository that they're compared with
+    expect(config.paths) == ["Sources", "Tests/Unit"]
+    expect(config.excludedPaths) == ["Sources/Generated"]
+  }
 
   func test_config_parsing() throws {
     // given: a configuration with comments, two lines of paths and an excluded path
