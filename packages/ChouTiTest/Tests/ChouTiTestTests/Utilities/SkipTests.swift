@@ -34,7 +34,27 @@ import XCTest
 class SkipTests: XCTestCase {
 
   func test_skip() throws {
-    try skip("skip")
+    let shouldSkip = true
+    guard !shouldSkip else {
+      try skip("skip") // ends the guard without a `return`
+    }
+
+    fail("skip should have been skipped")
+  }
+
+  func test_skip_inInitializer() throws {
+    struct Fixture {
+      let value: Int
+
+      init(isAvailable: Bool) throws {
+        guard isAvailable else {
+          try skip("unavailable") // ends the guard before all stored properties are initialized
+        }
+        value = 1
+      }
+    }
+
+    _ = try Fixture(isAvailable: false)
 
     fail("skip should have been skipped")
   }
