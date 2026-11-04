@@ -389,8 +389,8 @@ enum ImportGroups {
 
   /// Returns the code of a line, with each of its comments replaced by a space.
   ///
-  /// A string literal on the line is kept whole, so that a `//` or a `/*` in it isn't a comment. A multiline string
-  /// literal's delimiter, `"""`, is kept as code, and the lines in the literal are left to the caller.
+  /// The literals on the line stand for `""`, so that what's in them, such as a `//`, a `/*` or a `"""`, isn't read as
+  /// code. A multiline string literal's delimiter stands for `"""`, and the lines in the literal are left to the caller.
   ///
   /// - Parameters:
   ///   - line: The line.
@@ -416,25 +416,45 @@ enum ImportGroups {
         }
       } else if rest.hasPrefix("//") {
         break
-      } else if rest.hasPrefix(Constants.multilineStringDelimiter) {
-        code += Constants.multilineStringDelimiter
-        rest = rest.dropFirst(Constants.multilineStringDelimiter.count)
-      } else if character == "\"" {
-        // a string literal goes to its closing quote, or to the end of the line, past its escaped characters, such as
-        // `\"`
-        var end = rest.index(after: rest.startIndex)
-        while end < rest.endIndex, rest[end] != "\"" {
-          end = rest.index(end, offsetBy: rest[end] == "\\" ? 2 : 1, limitedBy: rest.endIndex) ?? rest.endIndex
-        }
-        end = end < rest.endIndex ? rest.index(after: end) : end
-        code += rest[..<end]
-        rest = rest[end...]
+      } else if let literal = literal(at: rest) {
+        code += literal.code
+        rest = rest[literal.end...]
       } else {
         code.append(character)
         rest = rest.dropFirst()
       }
     }
     return code
+  }
+
+  /// Returns the code that a literal at the start of a text stands for, and where the literal ends, `nil` when no
+  /// literal starts there.
+  ///
+  /// A string literal, raw or not, as in `#"a "quoted" word"#`, and an extended regular expression literal, as in
+  /// `#/a/*b/#`, stand for `""`, and go to the end of the text when they don't end in it. A multiline string literal's
+  /// delimiter, as in `"""` or `#"""`, stands for `"""`.
+  ///
+  /// - Parameter text: The text.
+  /// - Returns: The code that the literal stands for, and the index after it.
+  private static func literal(at text: Substring) -> (code: String, end: Substring.Index)? {
+    let hashes = text.prefix(while: { $0 == "#" }).count
+    let rest = text.dropFirst(hashes)
+    if rest.hasPrefix(Constants.multilineStringDelimiter) {
+      return (Constants.multilineStringDelimiter, rest.index(rest.startIndex, offsetBy: Constants.multilineStringDelimiter.count))
+    }
+    guard let open = rest.first, open == "\"" || (open == "/" && hashes > 0) else {
+      return nil
+    }
+
+    // the literal ends at its quote or slash followed by as many `#` as it starts with. in a literal without `#`, a
+    // backslash escapes the next character, as in `\"`
+    let close = String(open) + String(repeating: "#", count: hashes)
+    var index = rest.index(after: rest.startIndex)
+    while index < rest.endIndex, !rest[index...].hasPrefix(close) {
+      index = rest.index(index, offsetBy: hashes == 0 && rest[index] == "\\" ? 2 : 1, limitedBy: rest.endIndex) ?? rest.endIndex
+    }
+    let end = rest.index(index, offsetBy: close.count, limitedBy: rest.endIndex) ?? rest.endIndex
+    return ("\"\"", end)
   }
 
   /// Returns the module that an import imports, empty when the module isn't on the line, and `nil` when more code follows

@@ -651,6 +651,42 @@ class ImportGroupsTests: XCTestCase {
     """#)
   }
 
+  func test_group_fileWideIf_withRawLiterals_endsAtItsEndif() {
+    // given: a file in an #if block, with raw string literals that have a quote before a `/*` and three quotes, and an
+    // extended regular expression literal with a `/*`
+    let text = ##"""
+    #if canImport(UIKit)
+    import ChouTiTest
+    import UIKit
+
+    let pattern = #"a "/*" b"#
+    let glob = #"--include "**/*.swift""#
+    let quotes = #"use """ here"#
+    let regex = #/a/*b/#
+    #endif
+    """##
+
+    // when: grouping its imports
+    let outcome = ImportGroups.group(text, config: Constants.config)
+
+    // then: what's in the literals isn't a comment or a multiline string literal, so the #if wraps the file, and the
+    // imports are grouped
+    expect(outcome) == .grouped(##"""
+    #if canImport(UIKit)
+
+    import UIKit
+
+    import ChouTiTest
+
+    let pattern = #"a "/*" b"#
+    let glob = #"--include "**/*.swift""#
+    let quotes = #"use """ here"#
+    let regex = #/a/*b/#
+
+    #endif
+    """##)
+  }
+
   func test_group_groupedText_isUnchanged() {
     // given: files whose imports are out of order
     let texts = [
