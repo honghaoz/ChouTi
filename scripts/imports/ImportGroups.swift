@@ -187,14 +187,15 @@ enum ImportGroups {
   ///   - config: The configuration.
   /// - Returns: The file's text with its imports grouped, or why they can't be.
   static func group(_ text: String, config: Config) -> Outcome {
-    let lines = text.components(separatedBy: "\n")
+    let lines = ImportGroups.lines(of: text)
+    let texts = lines.map(\.text)
 
     var index = 0
-    while index < lines.count, let next = lineAfterComment(lines, at: index) {
-      index = next
+    while index < lines.count, case .comment = lineKind(lines, at: index) {
+      index += 1
     }
     var headerEnd = index
-    while headerEnd > 0, isBlank(lines[headerEnd - 1]) {
+    while headerEnd > 0, isBlank(texts[headerEnd - 1]) {
       headerEnd -= 1
     }
 
@@ -204,18 +205,23 @@ enum ImportGroups {
     var codeStart = lines.count
     scan: while index < lines.count {
       let line = lines[index]
-      if isBlank(line) {
+      if isBlank(line.text) {
         index += 1
       } else if isDirective(line, "#if") {
         switch importBlock(lines, from: index) {
         case .imports(let end, let modules):
-          items.append(Item(lines: Array(lines[index ... end]), modules: modules, isBlock: true, line: index + 1))
+          items.append(Item(lines: Array(texts[index ... end]), modules: modules, isBlock: true, line: index + 1))
           index = end + 1
         case .unsupported(let lineIndex, let reason):
           return .unsupported(line: lineIndex + 1, reason: reason)
         case .other:
           if items.isEmpty, let end = endOfBlock(lines, from: index), endsTheFile(lines, after: end) {
-            wrappers.append(line)
+            // the lines of a block comment that the #if starts stay with it
+            wrappers.append(line.text)
+            while lines[index].endsInCommentOrString, index + 1 < lines.count, isBlank(lines[index + 1].code) {
+              index += 1
+              wrappers.append(texts[index])
+            }
             wrapperEnd = end
             index += 1
           } else {
@@ -225,15 +231,15 @@ enum ImportGroups {
         }
       } else {
         switch lineKind(lines, at: index) {
-        case .comment(let next):
-          if importFollows(lines, from: next) {
+        case .comment:
+          if importFollows(lines, from: index + 1) {
             return .unsupported(line: index + 1, reason: "a comment between imports")
           } else {
             codeStart = index
             break scan
           }
         case .import(let module):
-          items.append(Item(lines: [line], modules: [module], isBlock: false, line: index + 1))
+          items.append(Item(lines: [line.text], modules: [module], isBlock: false, line: index + 1))
           index += 1
         case .unsupportedImport(let reason):
           return .unsupported(line: index + 1, reason: reason)
@@ -261,7 +267,7 @@ enum ImportGroups {
       }
     }
 
-    var output = Array(lines[0 ..< headerEnd])
+    var output = Array(texts[0 ..< headerEnd])
     if !output.isEmpty {
       output.append("")
     }
@@ -290,7 +296,7 @@ enum ImportGroups {
 
     // a file-wide #if has a blank line after it, so the #endif lines that end the file have one before them, for the two
     // ends to look alike
-    var code = Array(lines[codeStart...])
+    var code = Array(texts[codeStart...])
     if let wrapperEnd, wrapperEnd > codeStart {
       let end = wrapperEnd - codeStart
       var blankStart = end
@@ -380,7 +386,152 @@ enum ImportGroups {
     return files.sorted()
   }
 
+  // MARK: - Lines
+
+  /// A line of a file, with its code.
+  struct Line: Equatable {
+
+    /// The line's text.
+    let text: String
+
+    /// The line's code: its text without its comments, with each of its literals standing for `""`, so that what's in
+    /// them, such as a `//`, a `/*`, a `"""` or an `#endif`, isn't read as code. A line in a multiline string literal is
+    /// code, as it's part of the literal.
+    let code: String
+
+    /// Whether the line starts in a block comment or a multiline string literal.
+    let startsInCommentOrString: Bool
+
+    /// Whether the line ends in a block comment or a multiline string literal.
+    let endsInCommentOrString: Bool
+  }
+
+  /// Returns the lines of a file, read from its start, so that each line's code is read knowing the block comments and
+  /// the multiline string literals that are open at its start.
+  ///
+  /// Block comments nest, as in Swift. A string literal can be raw, as in `#"a "quoted" word"#`, and multiline, and
+  /// ends at its closing delimiter, which for a multiline string literal starts its line, so that an escaped `\"""` in
+  /// it doesn't end it. A string literal's interpolations, as in `"\(name ?? "")"`, are read as code to their closing
+  /// parenthesis, with the literals in them, which can be multiline. An extended regular expression literal, as in
+  /// `#/a/*b/#`, ends on its line. A single-line string literal that doesn't end on its line is left there.
+  ///
+  /// - Parameter text: The file's text.
+  /// - Returns: The file's lines.
+  static func lines(of text: String) -> [Line] {
+    var commentDepth = 0
+    var contexts: [Context] = []
+    var lines: [Line] = []
+    for lineText in text.components(separatedBy: "\n") {
+      let startsInString = contexts.contains(where: \.isMultilineString)
+      let startsInCommentOrString = commentDepth > 0 || startsInString
+      var code = startsInString ? Constants.literalCode : ""
+      var rest = Substring(lineText)
+      while let character = rest.first {
+        if commentDepth > 0 {
+          if rest.hasPrefix("/*") {
+            commentDepth += 1
+            rest = rest.dropFirst(2)
+          } else if rest.hasPrefix("*/") {
+            commentDepth -= 1
+            rest = rest.dropFirst(2)
+          } else {
+            rest = rest.dropFirst()
+          }
+        } else if case .string(let hashes, let isMultiline)? = contexts.last {
+          let closer = (isMultiline ? Constants.multilineStringDelimiter : "\"") + String(repeating: "#", count: hashes)
+          let escape = "\\" + String(repeating: "#", count: hashes)
+          if rest.hasPrefix(closer), !isMultiline || lineText[..<rest.startIndex].allSatisfy(\.isWhitespace) {
+            contexts.removeLast()
+            rest = rest.dropFirst(closer.count)
+          } else if rest.hasPrefix(escape) {
+            // an escape, as in `\"`, or an interpolation, as in `\(name)`, with as many `#` as the literal
+            rest = rest.dropFirst(escape.count)
+            if rest.first == "(" {
+              contexts.append(.interpolation(parentheses: 0))
+            }
+            rest = rest.dropFirst()
+          } else {
+            rest = rest.dropFirst()
+          }
+        } else {
+          // code, the file's or an interpolation's, of which only the file's is the line's code
+          let isFileCode = contexts.isEmpty
+          let hashes = rest.prefix(while: { $0 == "#" }).count
+          let afterHashes = rest.dropFirst(hashes)
+          if rest.hasPrefix("//") {
+            break
+          } else if rest.hasPrefix("/*") {
+            commentDepth = 1
+            code += isFileCode ? " " : ""
+            rest = rest.dropFirst(2)
+          } else if afterHashes.first == "\"" {
+            let isMultiline = afterHashes.hasPrefix(Constants.multilineStringDelimiter)
+            contexts.append(.string(hashes: hashes, isMultiline: isMultiline))
+            code += isFileCode ? Constants.literalCode : ""
+            rest = afterHashes.dropFirst(isMultiline ? Constants.multilineStringDelimiter.count : 1)
+          } else if hashes > 0, afterHashes.first == "/" {
+            let closer = "/" + String(repeating: "#", count: hashes)
+            var literal = afterHashes.dropFirst()
+            while !literal.isEmpty, !literal.hasPrefix(closer) {
+              literal = literal.dropFirst()
+            }
+            code += isFileCode ? Constants.literalCode : ""
+            rest = literal.dropFirst(closer.count)
+          } else if case .interpolation(let parentheses)? = contexts.last {
+            if character == "(" {
+              contexts[contexts.count - 1] = .interpolation(parentheses: parentheses + 1)
+            } else if character == ")" {
+              if parentheses == 0 {
+                contexts.removeLast()
+              } else {
+                contexts[contexts.count - 1] = .interpolation(parentheses: parentheses - 1)
+              }
+            }
+            rest = rest.dropFirst()
+          } else {
+            code.append(character)
+            rest = rest.dropFirst()
+          }
+        }
+      }
+
+      // a single-line string literal ends on its line, so one that doesn't is left there, with what's open in it
+      if let index = contexts.firstIndex(where: \.isSingleLineString) {
+        contexts.removeSubrange(index...)
+      }
+      let endsInCommentOrString = commentDepth > 0 || contexts.contains(where: \.isMultilineString)
+      lines.append(Line(text: lineText, code: code, startsInCommentOrString: startsInCommentOrString, endsInCommentOrString: endsInCommentOrString))
+    }
+    return lines
+  }
+
   // MARK: - Private
+
+  /// A literal, or an interpolation in one, that's open at a point of a file.
+  private enum Context {
+
+    /// A string literal, with the number of `#` around it, and whether it's multiline.
+    case string(hashes: Int, isMultiline: Bool)
+
+    /// An interpolation in a string literal, with the number of parentheses open in it.
+    case interpolation(parentheses: Int)
+
+    /// Whether it's a multiline string literal.
+    var isMultilineString: Bool {
+      if case .string(_, true) = self {
+        return true
+      }
+      return false
+    }
+
+    /// Whether it's a single-line string literal.
+    var isSingleLineString: Bool {
+      if case .string(_, false) = self {
+        return true
+      }
+      return false
+    }
+  }
 
   /// An import, or an `#if` block of imports, at the top of a file.
   private struct Item {
@@ -398,11 +549,11 @@ enum ImportGroups {
     let line: Int
   }
 
-  /// What a line is, from its code without its comments.
+  /// What a line is, from its code.
   private enum LineKind {
 
-    /// A blank line or comments, with the index of the line after them.
-    case comment(next: Int)
+    /// A blank line or comments.
+    case comment
 
     /// An import of a module, with its submodules, such as `UIKit.UIGestureRecognizerSubclass`.
     case `import`(String)
@@ -414,21 +565,28 @@ enum ImportGroups {
     case code
   }
 
-  /// Returns what a line is, from its code without its comments.
+  /// Returns what a line is, from its code.
   ///
-  /// A block comment that goes on past the line makes the lines it spans part of the line: they're comments when the
-  /// line has no code, and an import on the line can't be grouped, as it can't move without them.
+  /// An import can't be grouped when it shares a line with a block comment that spans lines, as it can't move without
+  /// the comment's other lines, and neither can a comment whose last line has an import.
   ///
   /// - Parameters:
   ///   - lines: The file's lines.
   ///   - index: The index of the line.
   /// - Returns: What the line is.
-  private static func lineKind(_ lines: [String], at index: Int) -> LineKind {
-    let span = codeSpan(lines, at: index)
-    if isBlank(span.text) {
-      return .comment(next: span.end + 1)
-    } else if let rest = restAfterImportKeyword(span.text) {
-      if span.end > index || span.depth > 0 {
+  private static func lineKind(_ lines: [Line], at index: Int) -> LineKind {
+    let line = lines[index]
+    if isBlank(line.code) {
+      // the comment's last line is the first line after it that ends outside it, or that has code
+      if line.endsInCommentOrString,
+         let end = lines[(index + 1)...].firstIndex(where: { !$0.endsInCommentOrString || !isBlank($0.code) }),
+         restAfterImportKeyword(lines[end].code) != nil
+      {
+        return .unsupportedImport(Constants.importWithAMultilineCommentReason)
+      }
+      return .comment
+    } else if let rest = restAfterImportKeyword(line.code) {
+      if line.startsInCommentOrString || line.endsInCommentOrString {
         return .unsupportedImport(Constants.importWithAMultilineCommentReason)
       } else if let module = importedModule(after: rest) {
         return module.isEmpty ? .unsupportedImport(Constants.importWithoutItsModuleReason) : .import(module)
@@ -438,131 +596,6 @@ enum ImportGroups {
     } else {
       return .code
     }
-  }
-
-  /// Returns the code of a line, read on through the lines that a block comment on it spans while there's no code.
-  ///
-  /// - Parameters:
-  ///   - lines: The file's lines.
-  ///   - index: The index of the line.
-  /// - Returns: The code, the index of the last line read, and the depth of the block comments open at its end.
-  private static func codeSpan(_ lines: [String], at index: Int) -> (text: String, end: Int, depth: Int) {
-    var depth = 0
-    var end = index
-    var text = code(of: lines[index], depth: &depth)
-    while isBlank(text), depth > 0, end + 1 < lines.count {
-      end += 1
-      text += code(of: lines[end], depth: &depth)
-    }
-    return (text, end, depth)
-  }
-
-  /// Returns the code of a line, with each of its comments replaced by a space.
-  ///
-  /// The literals on the line stand for `""`, so that what's in them, such as a `//`, a `/*` or a `"""`, isn't read as
-  /// code. A multiline string literal's opening delimiter, as in `"""` or `#"""`, stands for itself, and the lines in the
-  /// literal are left to the caller.
-  ///
-  /// - Parameters:
-  ///   - line: The line.
-  ///   - depth: The depth of the block comments, which nest in Swift, that are open at the start of the line, set to
-  ///     the depth at its end.
-  /// - Returns: The line's code.
-  private static func code(of line: String, depth: inout Int) -> String {
-    var code = ""
-    var rest = Substring(line)
-    while let character = rest.first {
-      if rest.hasPrefix("/*") {
-        if depth == 0 {
-          code.append(" ")
-        }
-        depth += 1
-        rest = rest.dropFirst(2)
-      } else if depth > 0 {
-        if rest.hasPrefix("*/") {
-          depth -= 1
-          rest = rest.dropFirst(2)
-        } else {
-          rest = rest.dropFirst()
-        }
-      } else if rest.hasPrefix("//") {
-        break
-      } else if let literal = literal(at: rest) {
-        code += literal.code
-        rest = rest[literal.end...]
-      } else {
-        code.append(character)
-        rest = rest.dropFirst()
-      }
-    }
-    return code
-  }
-
-  /// Returns the code that a literal at the start of a text stands for, and where the literal ends, `nil` when no
-  /// literal starts there.
-  ///
-  /// A string literal, raw or not, as in `#"a "quoted" word"#`, and an extended regular expression literal, as in
-  /// `#/a/*b/#`, stand for `""`, and go to the end of the text when they don't end in it. A string literal's
-  /// interpolations are read to their closing parenthesis, with the literals in them, as in `"\(name ?? "")"`. A
-  /// multiline string literal's opening delimiter, as in `"""` or `#"""`, stands for itself, so that its `#` give its
-  /// closing delimiter.
-  ///
-  /// - Parameter text: The text.
-  /// - Returns: The code that the literal stands for, and the index after it.
-  private static func literal(at text: Substring) -> (code: String, end: Substring.Index)? {
-    let hashes = text.prefix(while: { $0 == "#" }).count
-    let rest = text.dropFirst(hashes)
-    if rest.hasPrefix(Constants.multilineStringDelimiter) {
-      let end = rest.index(rest.startIndex, offsetBy: Constants.multilineStringDelimiter.count)
-      return (String(text[..<end]), end)
-    }
-    guard let open = rest.first, open == "\"" || (open == "/" && hashes > 0) else {
-      return nil
-    }
-
-    // the literal ends at its quote or slash followed by as many `#` as it starts with. in a string literal, a
-    // backslash followed by as many `#` escapes the next character, as in `\"` or `\#"`, or starts an interpolation, as
-    // in `\(name)` or `\#(name)`
-    let close = String(open) + String(repeating: "#", count: hashes)
-    let escape = "\\" + String(repeating: "#", count: hashes)
-    var index = rest.index(after: rest.startIndex)
-    while index < rest.endIndex, !rest[index...].hasPrefix(close) {
-      if open == "\"", rest[index...].hasPrefix(escape), let escaped = rest.index(index, offsetBy: escape.count, limitedBy: rest.endIndex), escaped < rest.endIndex {
-        index = rest[escaped] == "(" ? endOfInterpolation(in: rest, from: rest.index(after: escaped)) : rest.index(after: escaped)
-      } else {
-        index = rest.index(after: index)
-      }
-    }
-    let end = rest.index(index, offsetBy: close.count, limitedBy: rest.endIndex) ?? rest.endIndex
-    return ("\"\"", end)
-  }
-
-  /// Returns the index after the parenthesis that closes an interpolation in a string literal, whose code can have
-  /// parentheses and literals, as in `\(f("a", g("")))`, or the end of the text when it doesn't close in it.
-  ///
-  /// - Parameters:
-  ///   - text: The text.
-  ///   - start: The index after the interpolation's opening parenthesis.
-  /// - Returns: The index after the interpolation.
-  private static func endOfInterpolation(in text: Substring, from start: Substring.Index) -> Substring.Index {
-    var depth = 1
-    var index = start
-    while index < text.endIndex {
-      if let literal = literal(at: text[index...]) {
-        index = literal.end
-        continue
-      }
-      if text[index] == "(" {
-        depth += 1
-      } else if text[index] == ")" {
-        depth -= 1
-        if depth == 0 {
-          return text.index(after: index)
-        }
-      }
-      index = text.index(after: index)
-    }
-    return text.endIndex
   }
 
   /// Returns the module that an import imports, empty when the module isn't on the line, and `nil` when more code follows
@@ -641,13 +674,12 @@ enum ImportGroups {
   ///   - lines: The file's lines.
   ///   - start: The index of the block's `#if`.
   /// - Returns: What the block contains.
-  private static func importBlock(_ lines: [String], from start: Int) -> Block {
+  private static func importBlock(_ lines: [Line], from start: Int) -> Block {
     var depth = 0
     var modules: [String] = []
     // the first directive that starts a block comment that goes on past its line
     var multilineCommentDirective: Int?
-    var index = start
-    while index < lines.count {
+    for index in start ..< lines.count {
       let line = lines[index]
       if ["#if", "#elseif", "#else", "#endif"].contains(where: { isDirective(line, $0) }) {
         if isDirective(line, "#if") {
@@ -655,9 +687,7 @@ enum ImportGroups {
         } else if isDirective(line, "#endif") {
           depth -= 1
         }
-        var commentDepth = 0
-        _ = code(of: line, depth: &commentDepth)
-        if commentDepth > 0, multilineCommentDirective == nil {
+        if line.endsInCommentOrString, multilineCommentDirective == nil {
           multilineCommentDirective = index
         }
 
@@ -670,23 +700,9 @@ enum ImportGroups {
             return .imports(end: index, modules: modules)
           }
         }
-
-        // the comment's other lines are skipped, and code after it on its last line, such as an import, ends the read,
-        // as a line that has the end of a comment that spans lines can't be grouped
-        index += 1
-        while commentDepth > 0, index < lines.count {
-          let rest = code(of: lines[index], depth: &commentDepth)
-          if !isBlank(rest) {
-            let reason = Constants.directiveWithAMultilineCommentReason
-            return restAfterImportKeyword(rest) == nil ? .other : .unsupported(lineIndex: multilineCommentDirective ?? index, reason: reason)
-          }
-          index += 1
-        }
-        continue
       } else {
         switch lineKind(lines, at: index) {
-        case .comment(let next):
-          index = next
+        case .comment:
           continue
         case .import(let module):
           modules.append(module)
@@ -696,71 +712,32 @@ enum ImportGroups {
           return .other
         }
       }
-      index += 1
     }
     return .other
   }
 
   /// Returns the index of the `#endif` of the `#if` block at a line, `nil` when the block doesn't end.
   ///
-  /// The lines of block comments and multiline string literals are skipped, as an `#if` in them, such as in a template
-  /// or a test's sample code, isn't a directive. The `"""` that opens a multiline string literal is looked for in a
-  /// line's code, so that the quotes in its comments and its string literals don't open one, and the literal ends at
-  /// its own closing delimiter, such as `"""#` for a raw one, which starts its line, so that a `"""` in it, such as an
-  /// escaped `\"""`, doesn't end it.
+  /// A line that starts in a block comment or a multiline string literal isn't a directive, as an `#if` in them, such
+  /// as in a template or a test's sample code, isn't the file's.
   ///
   /// - Parameters:
   ///   - lines: The file's lines.
   ///   - start: The index of the block's `#if`.
   /// - Returns: The index of the block's `#endif`.
-  private static func endOfBlock(_ lines: [String], from start: Int) -> Int? {
+  private static func endOfBlock(_ lines: [Line], from start: Int) -> Int? {
     var depth = 0
-    var commentDepth = 0
-    // the closing delimiter of the multiline string literal that the lines are in
-    var stringCloser: String?
     for index in start ..< lines.count {
-      let line = lines[index]
-      if let closer = stringCloser {
-        // only whitespace comes before a closing delimiter, and the code after it can open another literal, as in
-        // `""" + """`
-        let trimmed = line.drop(while: \.isWhitespace)
-        if trimmed.hasPrefix(closer) {
-          stringCloser = multilineStringCloser(opening: code(of: String(trimmed.dropFirst(closer.count)), depth: &commentDepth))
-        }
-        continue
-      }
-
-      // a line that starts in a block comment isn't a directive, whatever follows the comment
-      let startsInComment = commentDepth > 0
-      if let closer = multilineStringCloser(opening: code(of: line, depth: &commentDepth)) {
-        stringCloser = closer
-      } else if !startsInComment {
-        if isDirective(line, "#if") {
-          depth += 1
-        } else if isDirective(line, "#endif") {
-          depth -= 1
-          if depth == 0 {
-            return index
-          }
+      if isDirective(lines[index], "#if") {
+        depth += 1
+      } else if isDirective(lines[index], "#endif") {
+        depth -= 1
+        if depth == 0 {
+          return index
         }
       }
     }
     return nil
-  }
-
-  /// Returns the closing delimiter of the multiline string literal that a line's code opens, such as `"""#` for one that
-  /// opens with `#"""`, `nil` when the code opens none.
-  ///
-  /// The literal's content starts on the next line, so the last `"""` in the code is the one that opens it.
-  ///
-  /// - Parameter code: The line's code, in which a multiline string literal's opening delimiter stands for itself.
-  /// - Returns: The closing delimiter.
-  private static func multilineStringCloser(opening code: String) -> String? {
-    guard let range = code.range(of: Constants.multilineStringDelimiter, options: .backwards) else {
-      return nil
-    }
-    let hashes = code[..<range.lowerBound].reversed().prefix(while: { $0 == "#" }).count
-    return Constants.multilineStringDelimiter + String(repeating: "#", count: hashes)
   }
 
   /// Returns whether only blank lines, and the `#endif` lines of the blocks around a block, follow its `#endif` to the
@@ -770,8 +747,8 @@ enum ImportGroups {
   ///   - lines: The file's lines.
   ///   - index: The index of the block's `#endif`.
   /// - Returns: Whether the block's `#endif` ends the file.
-  private static func endsTheFile(_ lines: [String], after index: Int) -> Bool {
-    lines[(index + 1)...].allSatisfy { isBlank($0) || isDirective($0, "#endif") }
+  private static func endsTheFile(_ lines: [Line], after index: Int) -> Bool {
+    lines[(index + 1)...].allSatisfy { isBlank($0.text) || isDirective($0.text, "#endif") }
   }
 
   /// Returns whether an import, read or not, or an `#if` block with one, comes first from a line on, after comments and
@@ -781,12 +758,11 @@ enum ImportGroups {
   ///   - lines: The file's lines.
   ///   - index: The index of the line.
   /// - Returns: Whether an import follows.
-  private static func importFollows(_ lines: [String], from index: Int) -> Bool {
-    var next = index
-    while next < lines.count {
+  private static func importFollows(_ lines: [Line], from index: Int) -> Bool {
+    for next in index ..< lines.count {
       switch lineKind(lines, at: next) {
-      case .comment(let after):
-        next = after
+      case .comment:
+        continue
       case .import,
            .unsupportedImport:
         return true
@@ -802,7 +778,8 @@ enum ImportGroups {
   /// - Parameter text: The text.
   /// - Returns: The lines, with each run of consecutive import lines sorted.
   private static func sortingRunsOfImports(_ text: String) -> [String] {
-    var lines = text.components(separatedBy: "\n")
+    let lines = ImportGroups.lines(of: text)
+    var texts = lines.map(\.text)
     var start = 0
     while start < lines.count {
       guard isImport(lines, at: start) else {
@@ -813,44 +790,36 @@ enum ImportGroups {
       while end < lines.count, isImport(lines, at: end) {
         end += 1
       }
-      lines[start ..< end].sort()
+      texts[start ..< end].sort()
       start = end
     }
-    return lines
+    return texts
   }
 
-  /// Returns whether a line is a compiler directive, such as `#if` or `#endif`, with or without a condition.
+  /// Returns whether a line is a compiler directive, such as `#if` or `#endif`, from its code, so that a comment after the
+  /// directive doesn't matter, and a line that starts in a block comment or a multiline string literal isn't one.
   ///
   /// - Parameters:
   ///   - line: The line.
   ///   - directive: The directive, such as `#if`.
   /// - Returns: Whether the line is the directive.
-  private static func isDirective(_ line: String, _ directive: String) -> Bool {
-    let trimmed = line.trimmingCharacters(in: .whitespaces)
+  private static func isDirective(_ line: Line, _ directive: String) -> Bool {
+    !line.startsInCommentOrString && isDirective(line.code, directive)
+  }
+
+  /// Returns whether a text is a compiler directive, such as `#if` or `#endif`, with or without a condition.
+  ///
+  /// - Parameters:
+  ///   - text: The text, such as a line.
+  ///   - directive: The directive, such as `#if`.
+  /// - Returns: Whether the text is the directive.
+  private static func isDirective(_ text: String, _ directive: String) -> Bool {
+    let trimmed = text.trimmingCharacters(in: .whitespaces)
     guard trimmed.hasPrefix(directive) else {
       return false
     }
     let next = trimmed.dropFirst(directive.count).first
     return next == nil || next == "(" || next?.isWhitespace == true
-  }
-
-  /// Returns the index of the line after the blank line or the comments at a line, `nil` for a line with code.
-  ///
-  /// A block comment is skipped whole, as the lines in it, such as the code of a template, aren't the file's.
-  ///
-  /// - Parameters:
-  ///   - lines: The file's lines.
-  ///   - index: The index of the line.
-  /// - Returns: The index of the line after the comments.
-  private static func lineAfterComment(_ lines: [String], at index: Int) -> Int? {
-    switch lineKind(lines, at: index) {
-    case .comment(let next):
-      return next
-    case .import,
-         .unsupportedImport,
-         .code:
-      return nil
-    }
   }
 
   /// Returns whether a line is an import that can be grouped.
@@ -859,7 +828,7 @@ enum ImportGroups {
   ///   - lines: The file's lines.
   ///   - index: The index of the line.
   /// - Returns: Whether the line is an import.
-  private static func isImport(_ lines: [String], at index: Int) -> Bool {
+  private static func isImport(_ lines: [Line], at index: Int) -> Bool {
     switch lineKind(lines, at: index) {
     case .import:
       return true
@@ -870,12 +839,12 @@ enum ImportGroups {
     }
   }
 
-  /// Returns whether a line is blank.
+  /// Returns whether a text is blank.
   ///
-  /// - Parameter line: The line.
-  /// - Returns: Whether the line is blank.
-  private static func isBlank(_ line: String) -> Bool {
-    line.allSatisfy(\.isWhitespace)
+  /// - Parameter text: The text, such as a line.
+  /// - Returns: Whether the text is blank.
+  private static func isBlank(_ text: String) -> Bool {
+    text.allSatisfy(\.isWhitespace)
   }
 
   /// Returns whether a character can be part of an identifier.
@@ -910,5 +879,8 @@ enum ImportGroups {
 
     /// The delimiter of a multiline string literal.
     static let multilineStringDelimiter = "\"\"\""
+
+    /// What a literal stands for in a line's code.
+    static let literalCode = "\"\""
   }
 }

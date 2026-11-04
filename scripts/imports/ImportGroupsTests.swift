@@ -719,6 +719,43 @@ class ImportGroupsTests: XCTestCase {
     """##)
   }
 
+  func test_group_fileWideIf_withAMultilineStringInAnInterpolation_endsAtItsEndif() {
+    // given: a file in an #if block, with a multiline string literal in an interpolation in a multiline string literal,
+    // with an #endif
+    let text = ##"""
+    #if canImport(UIKit)
+    import ChouTiTest
+    import UIKit
+
+    let sample = """
+      \(f("""
+        #endif
+        """))
+      """
+    #endif
+    """##
+
+    // when: grouping its imports
+    let outcome = ImportGroups.group(text, config: Constants.config)
+
+    // then: the inner literal ends before the outer one, so the #if wraps the file, and the imports are grouped
+    expect(outcome) == .grouped(##"""
+    #if canImport(UIKit)
+
+    import UIKit
+
+    import ChouTiTest
+
+    let sample = """
+      \(f("""
+        #endif
+        """))
+      """
+
+    #endif
+    """##)
+  }
+
   func test_group_fileWideIf_withEscapedDelimitersInAMultilineString_endsAtItsEndif() {
     // given: a file in an #if block, with a multiline string literal whose sample escapes its own `"""`, with an #endif
     let text = ##"""
@@ -1103,7 +1140,7 @@ class ImportGroupsTests: XCTestCase {
     // lines, and the block with the comment that ends on its line moves with it
     expect(ImportGroups.group(onTheEndif, config: Constants.config)) == .unsupported(line: 4, reason: "a directive with a block comment that spans lines")
     expect(ImportGroups.group(onTheIf, config: Constants.config)) == .unsupported(line: 2, reason: "a directive with a block comment that spans lines")
-    expect(ImportGroups.group(importAfterTheComment, config: Constants.config)) == .unsupported(line: 2, reason: "a directive with a block comment that spans lines")
+    expect(ImportGroups.group(importAfterTheComment, config: Constants.config)) == .unsupported(line: 3, reason: "an import with a block comment that spans lines")
     expect(ImportGroups.group(onOneLine, config: Constants.config)) == .grouped("""
     #if canImport(Dispatch)
     import Dispatch
@@ -1114,9 +1151,57 @@ class ImportGroupsTests: XCTestCase {
     """)
   }
 
+  func test_group_directiveWithAMultilineBlockComment_onTheElse_isUnsupported() {
+    // given: an #if block of imports whose #else starts a block comment that goes on to the next line, after an import
+    let text = """
+    import Foundation
+    #if os(iOS)
+    import UIKit
+    #else /* the other platforms,
+     for now */
+    import AppKit
+    #endif
+
+    let a = 1
+    """
+
+    // then: the imports can't be grouped, as the block can't move without the comment's other lines
+    expect(ImportGroups.group(text, config: Constants.config)) == .unsupported(line: 4, reason: "a directive with a block comment that spans lines")
+  }
+
+  func test_group_fileWideIf_withABlockCommentOnItsIf_keepsTheCommentWithIt() {
+    // given: a file in an #if block whose #if starts a block comment that goes on to the next line
+    let text = """
+    #if canImport(UIKit) /* the whole file,
+     on UIKit */
+    import ChouTiTest
+    import UIKit
+
+    class A {}
+    #endif
+    """
+
+    // when: grouping its imports
+    let outcome = ImportGroups.group(text, config: Constants.config)
+
+    // then: the comment stays with the #if above the imports, which are grouped
+    expect(outcome) == .grouped("""
+    #if canImport(UIKit) /* the whole file,
+     on UIKit */
+
+    import UIKit
+
+    import ChouTiTest
+
+    class A {}
+
+    #endif
+    """)
+  }
+
   func test_group_directiveWithAMultilineBlockComment_inAnIfBlockOfCode_isLeftAlone() {
     // given: imports before an #if block of code whose #if starts a block comment that goes on to the next line, the same
-    // after a comment, and a file in an #if block whose #if does
+    // after a comment, and an #if block with an import whose #else starts one with code on its last line
     let afterTheImports = """
     import ChouTiTest
     import UIKit
@@ -1135,17 +1220,17 @@ class ImportGroupsTests: XCTestCase {
     let debug = true
     #endif
     """
-    let fileWide = """
-    #if canImport(UIKit) /* the whole file,
-     on UIKit */
+    let codeAfterTheComment = """
+    import ChouTiTest
+    import Foundation
+    #if os(iOS)
     import UIKit
-
-    class A {}
+    #else /* the other platforms,
+     for now */ let a = 1
     #endif
     """
 
-    // then: the #if blocks of code start the code, so the imports before them are grouped, and the file in the #if block
-    // stays as it is
+    // then: the #if blocks of code start the code, so the imports before them are grouped
     expect(ImportGroups.group(afterTheImports, config: Constants.config)) == .grouped("""
     import UIKit
 
@@ -1157,7 +1242,63 @@ class ImportGroupsTests: XCTestCase {
     #endif
     """)
     expect(ImportGroups.group(afterAComment, config: Constants.config)) == .grouped(afterAComment)
-    expect(ImportGroups.group(fileWide, config: Constants.config)) == .grouped(fileWide)
+    expect(ImportGroups.group(codeAfterTheComment, config: Constants.config)) == .grouped("""
+    import Foundation
+
+    import ChouTiTest
+
+    #if os(iOS)
+    import UIKit
+    #else /* the other platforms,
+     for now */ let a = 1
+    #endif
+    """)
+  }
+
+  // MARK: - Lines
+
+  func test_lines_readTheCodeOfEachLine() {
+    // given: lines with comments, nested ones that span lines, and literals with what looks like code in them: a `//`, a
+    // `/*`, an interpolation with a string literal, a multiline string literal with an escaped delimiter and an #endif,
+    // an extended regular expression literal, and a multiline string literal in an interpolation in one
+    let text = ##"""
+    import UIKit // the views
+    /* a /* nested */
+     still */ let a = "//"
+    let b = #"a "/*" b"#
+    let c = "\(name ?? "")"
+    let d = """
+      \"""
+      #endif
+      """ + #/a/*b/#
+    let e = """
+      \(f("""
+        """))
+      """
+    """##
+
+    // when: reading its lines
+    let lines = ImportGroups.lines(of: text)
+
+    // then: each line's code is without its comments, with its literals standing for `""`, and a line in a comment or a
+    // multiline string literal is known
+    expect(lines.map(\.code)) == [
+      "import UIKit ",
+      " ",
+      " let a = \"\"",
+      "let b = \"\"",
+      "let c = \"\"",
+      "let d = \"\"",
+      "\"\"",
+      "\"\"",
+      "\"\" + \"\"",
+      "let e = \"\"",
+      "\"\"",
+      "\"\"",
+      "\"\"",
+    ]
+    expect(lines.map(\.startsInCommentOrString)) == [false, false, true, false, false, false, true, true, true, false, true, true, true]
+    expect(lines.map(\.endsInCommentOrString)) == [false, true, false, false, false, true, true, true, false, true, true, true, false]
   }
 
   // MARK: - Same Groups
