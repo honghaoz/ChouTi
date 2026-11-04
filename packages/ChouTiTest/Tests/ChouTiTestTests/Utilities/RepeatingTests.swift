@@ -34,9 +34,10 @@ import XCTest
 class RepeatingTests: XCTestCase {
 
   func testRepeating() {
+    // the three invocations need about 20 ms, the 1 s timeouts leave room for a loaded machine running the queue late
     let expectation = XCTestExpectation()
     var count = 0
-    repeating(interval: 0.01, timeout: 0.1, queue: .main) { _ in
+    repeating(interval: 0.01, timeout: 1, queue: .main) { _ in
       count += 1
       if count == 3 {
         expectation.fulfill()
@@ -44,7 +45,11 @@ class RepeatingTests: XCTestCase {
       }
       return false
     }
-    wait(for: [expectation], timeout: 0.1)
+    wait(for: [expectation], timeout: 1)
+
+    // returning true stops the repetition, so no invocation comes after the third one
+    wait(timeout: 0.05)
+    expect(count) == 3
   }
 
   func test_repeating_stopsAtTheTimeout_whenInvocationsRunLate() {
