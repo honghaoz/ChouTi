@@ -15,8 +15,9 @@ You are an expert iOS/macOS developer with a passion for writing clean, maintain
 
 ## Build, Test, and Development Commands
 - `make build` — build root package in release mode.
-- `make format` (via `scripts/format.sh`) — format code using SwiftFormat and SwiftLint.
-- `make lint` (via `scripts/lint.sh`) — lint code using SwiftFormat and SwiftLint.
+- `make format` (via `scripts/format.sh`) — format code using SwiftFormat and SwiftLint, after grouping the imports with `scripts/imports/group-imports.sh` in a repository that has `configs/.import-groups`.
+- `make lint` (via `scripts/lint.sh`) — lint code using SwiftFormat and SwiftLint, after checking the import groups in a repository that has `configs/.import-groups`.
+- `swift test --package-path scripts/imports` — test the import grouping's logic, `scripts/imports/ImportGroups.swift`. Repositories that download ChouTi's scripts download `group-imports.sh`, `group-imports.swift` and `ImportGroups.swift`, and opt in with a `configs/.import-groups` (see ComposeUI's), which needs SwiftFormat's `sortImports` on, as the grouping leaves the order in a group to it.
 - `make build-playgrounds` (or `build-playground-<platform>`) — build Xcode playground projects.
 - Per-package build commands are available in the respective package's Makefile.
 - During development, use `swift test` to run tests (use `--filter` for targeted tests).

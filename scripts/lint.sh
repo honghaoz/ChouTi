@@ -96,6 +96,18 @@ SWIFTLINT_REPO_ROOT_CONFIG="$REPO_ROOT/$SWIFTLINT_CONFIG_NAME"
 SWIFTLINT_CACHE_DIR="$REPO_ROOT/.temp/swiftlint-cache" && mkdir -p "$SWIFTLINT_CACHE_DIR"
 SWIFTLINT_BEAUTIFY="$REPO_ROOT/scripts/swiftlint-beautify"
 
+# the imports are checked only in a repository that has the config
+IMPORT_GROUPS_CONFIG="$CONFIG_PATH/.import-groups"
+GROUP_IMPORTS_DIR="$REPO_ROOT/scripts/imports"
+GROUP_IMPORTS="$GROUP_IMPORTS_DIR/group-imports.sh" && [[ -f "$IMPORT_GROUPS_CONFIG" && ! -f "$GROUP_IMPORTS" ]] && { echo "🛑 Error: group-imports.sh not found."; exit 1; }
+
+# the grouping's Swift files are ChouTi's, so a repository that downloads them, and ignores them, doesn't lint them
+# with its own file header and rules
+SWIFTFORMAT_EXCLUDE="$CONFIG_PATH"
+if (unset GIT_DIR; git check-ignore -q "$GROUP_IMPORTS_DIR/ImportGroups.swift"); then
+  SWIFTFORMAT_EXCLUDE="$SWIFTFORMAT_EXCLUDE,scripts/imports" # relative to the repository, where swiftformat runs
+fi
+
 ERROR_CODE=0
 
 if [[ "$LINT_ALL" == "true" ]]; then
@@ -117,12 +129,22 @@ if [[ "$LINT_ALL" == "true" ]]; then
   }
   trap cleanup EXIT
 
+  # import groups
+  if [[ -f "$IMPORT_GROUPS_CONFIG" ]]; then
+    echo ""
+    echo "➡️  Checking import groups..."
+
+    measure_start
+    "$GROUP_IMPORTS" --check || ERROR_CODE=$?
+    measure_end "group-imports"
+  fi
+
   # swiftformat
   echo ""
   echo "➡️  Executing swiftformat ($SWIFTFORMAT_VERSION)..."
 
   measure_start
-  set -o pipefail && "$SWIFTFORMAT_BIN" --lint --exclude "$CONFIG_PATH" --cache "$SWIFTFORMAT_CACHE" "$REPO_ROOT" 2>&1 | "$SWIFTFORMAT_BEAUTIFY" || ERROR_CODE=$?
+  set -o pipefail && "$SWIFTFORMAT_BIN" --lint --exclude "$SWIFTFORMAT_EXCLUDE" --cache "$SWIFTFORMAT_CACHE" "$REPO_ROOT" 2>&1 | "$SWIFTFORMAT_BEAUTIFY" || ERROR_CODE=$?
   measure_end "swiftformat"
 
   # swiftlint
