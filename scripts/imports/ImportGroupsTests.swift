@@ -687,6 +687,75 @@ class ImportGroupsTests: XCTestCase {
     """##)
   }
 
+  func test_group_fileWideIf_withStringsInInterpolations_endsAtItsEndif() {
+    // given: a file in an #if block, with string literals in interpolations, in a call in one, and in a raw string's
+    let text = ##"""
+    #if canImport(UIKit)
+    import ChouTiTest
+    import UIKit
+
+    let title = "\(name ?? "")"
+    let nested = "\(f("a", g("")))"
+    let raw = #"\#(name ?? "")"#
+    #endif
+    """##
+
+    // when: grouping its imports
+    let outcome = ImportGroups.group(text, config: Constants.config)
+
+    // then: each literal ends after its interpolations, so the #if wraps the file, and the imports are grouped
+    expect(outcome) == .grouped(##"""
+    #if canImport(UIKit)
+
+    import UIKit
+
+    import ChouTiTest
+
+    let title = "\(name ?? "")"
+    let nested = "\(f("a", g("")))"
+    let raw = #"\#(name ?? "")"#
+
+    #endif
+    """##)
+  }
+
+  func test_group_fileWideIf_withEscapedDelimitersInAMultilineString_endsAtItsEndif() {
+    // given: a file in an #if block, with a multiline string literal whose sample escapes its own `"""`, with an #endif
+    let text = ##"""
+    #if canImport(UIKit)
+    import ChouTiTest
+    import UIKit
+
+    let sample = """
+      let s = \"""
+      #endif
+      \"""
+      """
+    #endif
+    """##
+
+    // when: grouping its imports
+    let outcome = ImportGroups.group(text, config: Constants.config)
+
+    // then: the literal ends at its closing delimiter, which starts its line, so the #if wraps the file, and the imports
+    // are grouped
+    expect(outcome) == .grouped(##"""
+    #if canImport(UIKit)
+
+    import UIKit
+
+    import ChouTiTest
+
+    let sample = """
+      let s = \"""
+      #endif
+      \"""
+      """
+
+    #endif
+    """##)
+  }
+
   func test_group_fileWideIf_withARawMultilineString_endsAtItsEndif() {
     // given: a file in an #if block, with a raw multiline string literal that has a multiline string literal in it, with
     // an #endif, and a multiline string literal that closes on the line where another opens

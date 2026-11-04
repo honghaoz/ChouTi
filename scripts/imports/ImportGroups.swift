@@ -460,7 +460,8 @@ enum ImportGroups {
   /// Returns the code of a line, with each of its comments replaced by a space.
   ///
   /// The literals on the line stand for `""`, so that what's in them, such as a `//`, a `/*` or a `"""`, isn't read as
-  /// code. A multiline string literal's delimiter stands for `"""`, and the lines in the literal are left to the caller.
+  /// code. A multiline string literal's opening delimiter, as in `"""` or `#"""`, stands for itself, and the lines in the
+  /// literal are left to the caller.
   ///
   /// - Parameters:
   ///   - line: The line.
@@ -501,8 +502,10 @@ enum ImportGroups {
   /// literal starts there.
   ///
   /// A string literal, raw or not, as in `#"a "quoted" word"#`, and an extended regular expression literal, as in
-  /// `#/a/*b/#`, stand for `""`, and go to the end of the text when they don't end in it. A multiline string literal's
-  /// opening delimiter, as in `"""` or `#"""`, stands for itself, so that its `#` give its closing delimiter.
+  /// `#/a/*b/#`, stand for `""`, and go to the end of the text when they don't end in it. A string literal's
+  /// interpolations are read to their closing parenthesis, with the literals in them, as in `"\(name ?? "")"`. A
+  /// multiline string literal's opening delimiter, as in `"""` or `#"""`, stands for itself, so that its `#` give its
+  /// closing delimiter.
   ///
   /// - Parameter text: The text.
   /// - Returns: The code that the literal stands for, and the index after it.
@@ -517,15 +520,49 @@ enum ImportGroups {
       return nil
     }
 
-    // the literal ends at its quote or slash followed by as many `#` as it starts with. in a literal without `#`, a
-    // backslash escapes the next character, as in `\"`
+    // the literal ends at its quote or slash followed by as many `#` as it starts with. in a string literal, a
+    // backslash followed by as many `#` escapes the next character, as in `\"` or `\#"`, or starts an interpolation, as
+    // in `\(name)` or `\#(name)`
     let close = String(open) + String(repeating: "#", count: hashes)
+    let escape = "\\" + String(repeating: "#", count: hashes)
     var index = rest.index(after: rest.startIndex)
     while index < rest.endIndex, !rest[index...].hasPrefix(close) {
-      index = rest.index(index, offsetBy: hashes == 0 && rest[index] == "\\" ? 2 : 1, limitedBy: rest.endIndex) ?? rest.endIndex
+      if open == "\"", rest[index...].hasPrefix(escape), let escaped = rest.index(index, offsetBy: escape.count, limitedBy: rest.endIndex), escaped < rest.endIndex {
+        index = rest[escaped] == "(" ? endOfInterpolation(in: rest, from: rest.index(after: escaped)) : rest.index(after: escaped)
+      } else {
+        index = rest.index(after: index)
+      }
     }
     let end = rest.index(index, offsetBy: close.count, limitedBy: rest.endIndex) ?? rest.endIndex
     return ("\"\"", end)
+  }
+
+  /// Returns the index after the parenthesis that closes an interpolation in a string literal, whose code can have
+  /// parentheses and literals, as in `\(f("a", g("")))`, or the end of the text when it doesn't close in it.
+  ///
+  /// - Parameters:
+  ///   - text: The text.
+  ///   - start: The index after the interpolation's opening parenthesis.
+  /// - Returns: The index after the interpolation.
+  private static func endOfInterpolation(in text: Substring, from start: Substring.Index) -> Substring.Index {
+    var depth = 1
+    var index = start
+    while index < text.endIndex {
+      if let literal = literal(at: text[index...]) {
+        index = literal.end
+        continue
+      }
+      if text[index] == "(" {
+        depth += 1
+      } else if text[index] == ")" {
+        depth -= 1
+        if depth == 0 {
+          return text.index(after: index)
+        }
+      }
+      index = text.index(after: index)
+    }
+    return text.endIndex
   }
 
   /// Returns the module that an import imports, empty when the module isn't on the line, and `nil` when more code follows
@@ -669,7 +706,8 @@ enum ImportGroups {
   /// The lines of block comments and multiline string literals are skipped, as an `#if` in them, such as in a template
   /// or a test's sample code, isn't a directive. The `"""` that opens a multiline string literal is looked for in a
   /// line's code, so that the quotes in its comments and its string literals don't open one, and the literal ends at
-  /// its own closing delimiter, such as `"""#` for a raw one, which a `"""` in it doesn't end.
+  /// its own closing delimiter, such as `"""#` for a raw one, which starts its line, so that a `"""` in it, such as an
+  /// escaped `\"""`, doesn't end it.
   ///
   /// - Parameters:
   ///   - lines: The file's lines.
@@ -683,9 +721,11 @@ enum ImportGroups {
     for index in start ..< lines.count {
       let line = lines[index]
       if let closer = stringCloser {
-        // the code after the closing delimiter can open another literal, as in `""" + """`
-        if let range = line.range(of: closer) {
-          stringCloser = multilineStringCloser(opening: code(of: String(line[range.upperBound...]), depth: &commentDepth))
+        // only whitespace comes before a closing delimiter, and the code after it can open another literal, as in
+        // `""" + """`
+        let trimmed = line.drop(while: \.isWhitespace)
+        if trimmed.hasPrefix(closer) {
+          stringCloser = multilineStringCloser(opening: code(of: String(trimmed.dropFirst(closer.count)), depth: &commentDepth))
         }
         continue
       }
