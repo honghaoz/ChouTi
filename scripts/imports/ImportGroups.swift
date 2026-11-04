@@ -324,17 +324,18 @@ enum ImportGroups {
 
   /// Returns the Swift files that a configuration applies to, relative to the repository, in order.
   ///
-  /// The walk of a directory doesn't go into a file or folder whose name starts with a dot, such as `.build`, where
-  /// SwiftPM puts generated Swift files, or into an excluded one. A file listed in the paths is kept, whatever its name.
-  /// A symbolic link to a file outside the repository is left out, as the file isn't the repository's, and a directory
-  /// that can't be read throws, so that its files aren't left out without a word.
+  /// The walk of a directory doesn't follow a symbolic link, so that a file is grouped where it is, when the paths have
+  /// it, and doesn't go into a file or folder whose name starts with a dot, such as `.build`, where SwiftPM puts
+  /// generated Swift files, or into an excluded one. A file listed in the paths is kept, whatever its name, when it's in
+  /// the repository, and a directory that can't be read throws, so that its files aren't left out without a word.
   ///
   /// - Parameters:
   ///   - config: The configuration.
   ///   - repository: The repository, with its symbolic links resolved.
   /// - Returns: The files' paths.
   static func swiftFiles(config: Config, repository: URL) throws -> [String] {
-    // the path of a file relative to the repository, with its symbolic links resolved, `nil` for a file outside it
+    // the path of a file relative to the repository, with the symbolic links on its path resolved, as the repository's
+    // are, `nil` for a file outside it
     func relativePath(of url: URL) -> String? {
       let path = url.resolvingSymlinksInPath().path
       return path.hasPrefix(repository.path + "/") ? String(path.dropFirst(repository.path.count + 1)) : nil
@@ -355,7 +356,7 @@ enum ImportGroups {
       var urls: [URL] = []
       if isDirectory.boolValue {
         var enumerationError: Error?
-        let enumerator = fileManager.enumerator(at: url, includingPropertiesForKeys: nil, options: [], errorHandler: { _, error in
+        let enumerator = fileManager.enumerator(at: url, includingPropertiesForKeys: [.isSymbolicLinkKey], options: [], errorHandler: { _, error in
           enumerationError = error
           return false
         })
@@ -365,7 +366,8 @@ enum ImportGroups {
         while let item = enumerator.nextObject() as? URL {
           // a skipped folder isn't walked, so that one that can't be read doesn't stop the run. the name is checked
           // rather than skipping hidden files, which on macOS also skips the files flagged as hidden
-          if item.lastPathComponent.hasPrefix(".") || relativePath(of: item).map(isExcluded) == true {
+          let isLink = (try? item.resourceValues(forKeys: [.isSymbolicLinkKey]).isSymbolicLink) == true
+          if isLink || item.lastPathComponent.hasPrefix(".") || relativePath(of: item).map(isExcluded) == true {
             enumerator.skipDescendants()
           } else {
             urls.append(item)
@@ -568,7 +570,8 @@ enum ImportGroups {
   /// Returns what a line is, from its code.
   ///
   /// An import can't be grouped when it shares a line with a block comment that spans lines, as it can't move without
-  /// the comment's other lines, and neither can a comment whose last line has an import.
+  /// the comment's other lines, and neither can a comment whose last line has an import, or a line of only attributes
+  /// that an import follows.
   ///
   /// - Parameters:
   ///   - lines: The file's lines.
@@ -593,6 +596,12 @@ enum ImportGroups {
       } else {
         return .unsupportedImport(Constants.unreadableImportReason)
       }
+    } else if restAfterAttributes(line.code)?.isEmpty == true,
+              let next = lines[(index + 1)...].firstIndex(where: { !isBlank($0.code) }),
+              restAfterImportKeyword(lines[next].code) != nil
+    {
+      // a line of only attributes is the start of the import that comes next, after comments
+      return .unsupportedImport(Constants.importWithItsAttributesOnAnotherLineReason)
     } else {
       return .code
     }
@@ -630,6 +639,19 @@ enum ImportGroups {
   /// - Parameter code: The code of the line, without its comments.
   /// - Returns: The rest of the code, without its leading whitespace.
   private static func restAfterImportKeyword(_ code: String) -> Substring? {
+    // the keyword can end the line, when the module is on the next line
+    guard let rest = restAfterAttributes(code), rest.hasPrefix("import"), rest.dropFirst("import".count).first.map(\.isWhitespace) ?? true else {
+      return nil
+    }
+    return rest.dropFirst("import".count).drop(while: \.isWhitespace)
+  }
+
+  /// Returns the rest of the code of a line after its attributes, such as `@testable` or `@_spi(Private)`, `nil` when an
+  /// attribute's arguments go on to the next line.
+  ///
+  /// - Parameter code: The code of the line, without its comments.
+  /// - Returns: The rest of the code, without its leading whitespace.
+  private static func restAfterAttributes(_ code: String) -> Substring? {
     var rest = code.drop(while: \.isWhitespace)
     while rest.first == "@" {
       rest = rest.dropFirst().drop(while: isIdentifierCharacter)
@@ -641,12 +663,7 @@ enum ImportGroups {
       }
       rest = rest.drop(while: \.isWhitespace)
     }
-
-    // the keyword can end the line, when the module is on the next line
-    guard rest.hasPrefix("import"), rest.dropFirst("import".count).first.map(\.isWhitespace) ?? true else {
-      return nil
-    }
-    return rest.dropFirst("import".count).drop(while: \.isWhitespace)
+    return rest
   }
 
   /// What an `#if` block at the top of a file contains.
@@ -872,6 +889,10 @@ enum ImportGroups {
     /// Why an import whose module is on another line, as in `import` followed by a line with `UIKit`, makes the imports
     /// unsupported, as the import can't move without its module's line.
     static let importWithoutItsModuleReason = "an import whose module isn't on its line"
+
+    /// Why an import whose attributes are on another line, as in a line with `@testable` followed by `import UIKit`,
+    /// makes the imports unsupported, as the import can't move without its attributes' line.
+    static let importWithItsAttributesOnAnotherLineReason = "an import whose attributes are on another line"
 
     /// Why a directive that starts a block comment that spans lines, in an `#if` block at the top of a file, makes the
     /// imports unsupported, as the block can't move without the comment's other lines.

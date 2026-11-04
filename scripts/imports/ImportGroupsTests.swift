@@ -1081,6 +1081,41 @@ class ImportGroupsTests: XCTestCase {
     expect(ImportGroups.group(declaration, config: Constants.config)) == .unsupported(line: 2, reason: "an import whose module isn't on its line")
   }
 
+  func test_group_importWithItsAttributesOnTheLineBefore_isUnsupported() {
+    // given: an import whose attribute is on the line before it, after another import, one with a comment between them,
+    // and one at the top of an #if block of imports
+    let afterAnImport = """
+    import UIKit
+    @testable
+    import ComposeUI
+
+    let x = 1
+    """
+    let withAComment = """
+    import UIKit
+    @testable @_spi(Private)
+    // the module under test
+    import ComposeUI
+
+    let x = 1
+    """
+    let inAnIfBlock = """
+    import ComposeUI
+    #if canImport(UIKit)
+    @preconcurrency
+    import UIKit
+    #endif
+
+    let x = 1
+    """
+
+    // then: the imports can't be grouped, as the import can't move without its attributes' line, while an attribute
+    // before a declaration stays code
+    expect(ImportGroups.group(afterAnImport, config: Constants.config)) == .unsupported(line: 2, reason: "an import whose attributes are on another line")
+    expect(ImportGroups.group(withAComment, config: Constants.config)) == .unsupported(line: 2, reason: "an import whose attributes are on another line")
+    expect(ImportGroups.group(inAnIfBlock, config: Constants.config)) == .unsupported(line: 3, reason: "an import whose attributes are on another line")
+  }
+
   func test_group_ifBlockOfModulesOfDifferentGroups_isUnsupported() {
     // given: an #if block that imports a system framework and a test framework
     let text = """
@@ -1354,6 +1389,26 @@ class ImportGroupsTests: XCTestCase {
     // then: the walk goes into neither the dot folder nor the excluded folder, so their unreadable folders don't throw,
     // leaves out the dot file and the link, and keeps the paths it's given, whatever their names
     expect(files) == [".github/G.swift", "Sources/.hidden.swift", "Sources/A.swift"]
+  }
+
+  func test_swiftFiles_leavesOutLinks() throws {
+    // given: a repository with Swift files in and out of its paths, and symbolic links in its paths to a Swift file in
+    // them, one out of them, a text file, and a folder out of them
+    let repository = try makeDirectory()
+    try write("let a = 1", to: "Sources/A.swift", in: repository)
+    try write("let b = 1", to: "Other/B.swift", in: repository)
+    try write("b", to: "Other/B.txt", in: repository)
+    let links = ["Sources/ToA.swift": "Sources/A.swift", "Sources/ToB.swift": "Other/B.swift", "Sources/ToText.swift": "Other/B.txt", "Sources/ToOther": "Other"]
+    for (link, destination) in links {
+      try FileManager.default.createSymbolicLink(at: repository.appendingPathComponent(link), withDestinationURL: repository.appendingPathComponent(destination))
+    }
+    let config = try ImportGroups.Config(parsing: "paths: Sources\ngroup: *")
+
+    // when: listing its Swift files
+    let files = try ImportGroups.swiftFiles(config: config, repository: repository)
+
+    // then: the links aren't followed, so each file is grouped where it is, when the paths have it
+    expect(files) == ["Sources/A.swift"]
   }
 
   func test_swiftFiles_unreadableFolder_throws() throws {
