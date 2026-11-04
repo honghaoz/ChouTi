@@ -35,9 +35,9 @@
 
 import Foundation
 import ObjectiveC
-import XCTest
 
 import ChouTiTest
+import XCTest
 
 @testable import ChouTi
 

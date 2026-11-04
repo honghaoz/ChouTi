@@ -28,8 +28,8 @@
 //  IN THE SOFTWARE.
 //
 
-@testable import ChouTiTest
 import XCTest
+@testable import ChouTiTest
 
 class RepeatingTests: XCTestCase {
 

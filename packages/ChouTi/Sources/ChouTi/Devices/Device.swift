@@ -32,11 +32,9 @@
 import AppKit
 import IOKit
 #endif
-
 #if canImport(UIKit)
 import UIKit
 #endif
-
 #if canImport(WatchKit)
 import WatchKit
 #endif

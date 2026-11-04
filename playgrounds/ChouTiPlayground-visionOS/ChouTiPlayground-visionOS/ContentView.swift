@@ -28,9 +28,9 @@
 //  IN THE SOFTWARE.
 //
 
-import SwiftUI
 import RealityKit
 import RealityKitContent
+import SwiftUI
 
 import ChouTi
 

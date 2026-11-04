@@ -28,8 +28,8 @@
 //  IN THE SOFTWARE.
 //
 
-import XCTest
 import ChouTiTest
+import XCTest
 
 /// Helper class to capture XCTFail messages
 class FailureCapturingTestCase: XCTestCase {

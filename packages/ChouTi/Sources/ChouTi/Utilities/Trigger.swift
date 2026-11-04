@@ -28,8 +28,8 @@
 //  IN THE SOFTWARE.
 //
 
-import Foundation
 import Combine
+import Foundation
 
 /**
  A generic class that allows for decoupled communication between components through a fire-and-react mechanism.
