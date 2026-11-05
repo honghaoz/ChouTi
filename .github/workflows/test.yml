@@ -83,7 +83,9 @@ jobs:
       matrix:
         platform: [iOS, tvOS, visionOS, watchOS]
     timeout-minutes: 30
-    runs-on: ${{ vars.MACOS }}
+    runs-on: ${{ (contains(fromJSON('["iOS", "visionOS"]'), matrix.platform) && vars.SELF_HOSTED_MACOS) || vars.MACOS }}
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_${{ (contains(fromJSON('["iOS", "visionOS"]'), matrix.platform) && vars.SELF_HOSTED_MACOS && vars.SELF_HOSTED_XCODE_VERSION) || vars.XCODE_VERSION }}.app/Contents/Developer
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
@@ -91,7 +93,7 @@ jobs:
         uses: ./.github/actions/cache
         with:
           kind: test-${{ matrix.platform }}
-          xcode-version: ${{ vars.XCODE_VERSION }}
+          xcode-version: ${{ (contains(fromJSON('["iOS", "visionOS"]'), matrix.platform) && vars.SELF_HOSTED_MACOS && vars.SELF_HOSTED_XCODE_VERSION) || vars.XCODE_VERSION }}
       - name: Bootstrap
         uses: ./.github/actions/bootstrap
 
@@ -104,4 +106,11 @@ jobs:
       - name: Build for testing
         run: make test-ci OS=${{ matrix.platform }} PHASE=build -C packages/ChouTi
       - name: Test
+        timeout-minutes: ${{ runner.environment == 'self-hosted' && 10 || 30 }}
         run: make test-ci OS=${{ matrix.platform }} PHASE=test -C packages/ChouTi
+
+      # shut down simulators only on self-hosted runners to avoid simulators taking memory and processor time after the job.
+      - name: Shut down simulators
+        if: ${{ always() && runner.environment == 'self-hosted' }}
+        continue-on-error: true
+        run: xcrun simctl shutdown all
