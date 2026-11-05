@@ -18,7 +18,8 @@ function check_error {
 }
 
 # refresh the index so git diff-files compares content, not just stat info
-git update-index -q --refresh
+# best-effort: the check below still runs if the index is locked
+git update-index -q --refresh >/dev/null 2>&1 || true
 if test -z "$(git ls-files --exclude-standard --others)" && git diff-files --quiet; then
   # no unstaged changes, run formater
   echo "${CYAN}[$FILE_NAME]${RESET} 🧹 Running code formatter..."
@@ -30,7 +31,7 @@ if test -z "$(git ls-files --exclude-standard --others)" && git diff-files --qui
   check_error
   popd >/dev/null 2>&1 || exit 0
 
-  git update-index -q --refresh
+  git update-index -q --refresh >/dev/null 2>&1 || true
   if ! ( test -z "$(git ls-files --exclude-standard --others)" && git diff-files --quiet ); then
     echo "${CYAN}[$FILE_NAME]${RESET} ⚠️  Code formatted, please stage the changes and commit again."
     exit 1
