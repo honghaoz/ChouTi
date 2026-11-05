@@ -84,9 +84,9 @@ jobs:
         platform: [iOS, tvOS, visionOS, watchOS]
     timeout-minutes: 30
     # iOS and visionOS run on the self-hosted Mac, except for pull requests from forks, whose code shouldn't run there.
-    runs-on: ${{ (contains(fromJSON('["iOS", "visionOS"]'), matrix.platform) && vars.SELF_HOSTED_MACOS && !github.event.pull_request.head.repo.fork) || vars.MACOS }}
+    runs-on: ${{ (contains(fromJSON('["iOS", "visionOS"]'), matrix.platform) && !github.event.pull_request.head.repo.fork && vars.SELF_HOSTED_MACOS) || vars.MACOS }}
     env:
-      DEVELOPER_DIR: /Applications/Xcode_${{ (contains(fromJSON('["iOS", "visionOS"]'), matrix.platform) && vars.SELF_HOSTED_MACOS && !github.event.pull_request.head.repo.fork && vars.SELF_HOSTED_XCODE_VERSION) || vars.XCODE_VERSION }}.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_${{ (contains(fromJSON('["iOS", "visionOS"]'), matrix.platform) && !github.event.pull_request.head.repo.fork && vars.SELF_HOSTED_MACOS && vars.SELF_HOSTED_XCODE_VERSION) || vars.XCODE_VERSION }}.app/Contents/Developer
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
@@ -94,7 +94,7 @@ jobs:
         uses: ./.github/actions/cache
         with:
           kind: test-${{ matrix.platform }}
-          xcode-version: ${{ (contains(fromJSON('["iOS", "visionOS"]'), matrix.platform) && vars.SELF_HOSTED_MACOS && !github.event.pull_request.head.repo.fork && vars.SELF_HOSTED_XCODE_VERSION) || vars.XCODE_VERSION }}
+          xcode-version: ${{ (contains(fromJSON('["iOS", "visionOS"]'), matrix.platform) && !github.event.pull_request.head.repo.fork && vars.SELF_HOSTED_MACOS && vars.SELF_HOSTED_XCODE_VERSION) || vars.XCODE_VERSION }}
       - name: Bootstrap
         uses: ./.github/actions/bootstrap
 
