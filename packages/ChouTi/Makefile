@@ -70,7 +70,7 @@ test-watchOS: # Run tests on watchOS.
 	@$(REPO_ROOT)/scripts/swift-package/test-package-xcodebuild.sh --package "$(MAKEFILE_DIR)" --os "watchOS"
 
 .PHONY: test-ci
-test-ci: # Run tests with CI-optimized caching path. Usage: make test-ci OS=iOS [PHASE=pick|boot|build|test].
+test-ci: # Run tests with CI-optimized caching path. Usage: make test-ci OS=iOS [PHASE=pick|boot|build|test|shutdown].
 	@echo test ci: $(MAKEFILE_DIR_NAME)
 	@$(REPO_ROOT)/scripts/swift-package/test-package-xcodebuild.sh --package "$(MAKEFILE_DIR)" --os "$(OS)" --derived-data-path "$(CURDIR)/.derived-data" $(if $(PHASE),--phase $(PHASE),)
 

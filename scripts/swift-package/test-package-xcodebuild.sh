@@ -29,6 +29,8 @@ RESET=$(safe_tput sgr0)
 #           xcodebuild test-without-building
 #   all   - run all phases in order (default). Local machines have enough
 #           cores for the detached boot to overlap the build.
+#   shutdown - shut down the picked simulator, and no other, such as at the
+#           end of a CI job on a shared machine. Not part of `all`.
 
 print_help() {
   echo "${BOLD}OVERVIEW:${RESET} Test a Swift package with xcodebuild, no workspace needed."
@@ -41,7 +43,7 @@ print_help() {
   echo "  --os <macOS iOS tvOS visionOS watchOS>  The list of OS to test for. Optional. Default is 'macOS iOS tvOS visionOS watchOS'."
   echo "  --beautify [true|false]                 Use xcbeautify to beautify the output. Optional. Default is true."
   echo "  --derived-data-path <path>              Use a fixed DerivedData path. Optional. Default is Xcode's DerivedData."
-  echo "  --phase <pick|boot|build|test|all>      Run one phase of the test flow. Optional. Default is 'all'."
+  echo "  --phase <pick|boot|build|test|all|shutdown>  Run one phase of the test flow. Optional. Default is 'all'."
   echo "  --help, -h                              Show this help message."
   echo ""
   echo "${BOLD}PHASES:${RESET}"
@@ -54,6 +56,8 @@ print_help() {
   echo "  test   Boot the simulator if needed, wait for it to be ready, then run the"
   echo "         built tests (xcodebuild test-without-building)."
   echo "  all    Run all phases in order in one go (default)."
+  echo "  shutdown"
+  echo "         Shut down the picked simulator, and no other. Not part of 'all'."
   echo ""
   echo "${BOLD}EXAMPLES:${RESET}"
   echo "  $0 --package path/to/Package --os macOS iOS tvOS visionOS watchOS"
@@ -180,9 +184,9 @@ if [ -z "$OS" ]; then
 fi
 
 case "$PHASE" in
-pick | boot | build | test | all) ;;
+pick | boot | build | test | all | shutdown) ;;
 *)
-  echo "🛑 Invalid --phase: $PHASE (expected pick|boot|build|test|all)"
+  echo "🛑 Invalid --phase: $PHASE (expected pick|boot|build|test|all|shutdown)"
   exit 1
   ;;
 esac
@@ -495,6 +499,18 @@ phase_test() {
   return $test_status
 }
 
+phase_shutdown() {
+  load_state "$1"
+  if [ -z "$DEVICE_UDID" ]; then
+    echo "ℹ️  No simulator to shut down for $CURRENT_OS"
+    return
+  fi
+  # only the picked simulator, since other simulators on the machine may be in use
+  echo "⏹️  Shutting down simulator: $DEVICE_NAME ($DEVICE_OS_VERSION)..."
+  xcrun simctl shutdown "$DEVICE_UDID" 2>/dev/null || true
+  echo "✅ Simulator shut down"
+}
+
 # single-phase mode: run one phase for a single OS and exit
 if [ "$PHASE" != "all" ]; then
   case "$PHASE" in
@@ -509,6 +525,9 @@ if [ "$PHASE" != "all" ]; then
     ;;
   test)
     phase_test "$OS"
+    ;;
+  shutdown)
+    phase_shutdown "$OS"
     ;;
   esac
   exit 0
