@@ -141,6 +141,9 @@ public enum Device {
       "Mac17,2",                                   // MacBook Pro (14-inch, M5)
       "Mac17,6", "Mac17,8",                        // MacBook Pro (16-inch, M5 Pro or M5 Max)
       "Mac17,7", "Mac17,9",                        // MacBook Pro (14-inch, M5 Pro or M5 Max)
+      "Mac18,1",                                   // MacBook Pro (14-inch, M6)
+
+      // PROLED XDR models (Mac17,10, Mac17,11, Mac17,12, Mac17,13) use Dynamic Island, not a notch.
 
       /// MacBook Air: https://support.apple.com/en-us/102869
       "Mac14,2",  // MacBook Air (M2, 2022)
