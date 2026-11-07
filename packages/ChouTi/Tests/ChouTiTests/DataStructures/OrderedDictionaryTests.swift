@@ -88,6 +88,41 @@ class OrderedDictionaryTests: XCTestCase {
     expect(dict.values) == [1, 2, 3]
   }
 
+  func test_initLiteral_duplicateKeys() {
+    var assertionCount = 0
+    Assert.setTestAssertionFailureHandler { message, metadata, file, line, column in
+      expect(message) == "OrderedDictionary literal contains duplicate keys"
+      expect(metadata) == ["key": "a"]
+      assertionCount += 1
+    }
+
+    // swiftlint:disable:next duplicated_key_in_dictionary_literal
+    var dict: OrderedDictionary<String, Int> = ["a": 1, "b": 2, "a": 3]
+    Assert.resetTestAssertionFailureHandler()
+
+    expect(assertionCount) == 1
+    expect(dict.count) == 2
+    expect(dict.keys) == ["a", "b"]
+    expect(dict.values) == [3, 2]
+    expect(dict["a"]) == 3
+    expect(dict["b"]) == 2
+    expect(dict[0].0) == "a"
+    expect(dict[0].1) == 3
+    expect(dict[1].0) == "b"
+    expect(dict[1].1) == 2
+    expect(dict.map(\.0)) == ["a", "b"]
+    expect(dict.map(\.1)) == [3, 2]
+
+    // removal leaves no dangling keys
+    expect(dict.popLast()?.0) == "b"
+    expect(dict.keys) == ["a"]
+    expect(dict.values) == [3]
+    expect(dict.removeValue(forKey: "a")) == 3
+    expect(dict.count) == 0
+    expect(dict.keys) == []
+    expect(dict.values) == []
+  }
+
   func testSubscript() {
     dict = OrderedDictionary<String, Int>(keys: ["a", "b", "c"], values: [1, 2, 3])
     // test get

@@ -342,6 +342,10 @@ extension OrderedDictionary: Collection {
 
 extension OrderedDictionary: ExpressibleByDictionaryLiteral {
 
+  /// Create an ordered dictionary from a dictionary literal.
+  ///
+  /// - Note: Keys in the literal should be unique. If a key appears more than once, an assertion failure is raised,
+  ///   the key keeps the position of its first occurrence, and the last value wins.
   public init(dictionaryLiteral elements: (KeyType, ValueType)...) {
     /// https://www.vadimbulavin.com/initialization-with-literals/
 
@@ -351,8 +355,11 @@ extension OrderedDictionary: ExpressibleByDictionaryLiteral {
     dictionary = [KeyType: ValueType](minimumCapacity: elements.count)
 
     for (key, value) in elements {
-      keys.append(key)
-      dictionary[key] = value
+      if dictionary.updateValue(value, forKey: key) == nil {
+        keys.append(key)
+      } else {
+        ChouTi.assertFailure("OrderedDictionary literal contains duplicate keys", metadata: ["key": "\(key)"])
+      }
     }
   }
 }
