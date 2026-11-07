@@ -114,21 +114,12 @@ public enum Device {
     /// https://stackoverflow.com/questions/32370037/is-there-a-way-of-getting-a-macs-icon-given-its-model-number/32381289#32381289
   }
 
-  /// Check if the MacBook has a notch.
+  /// Model identifiers for Macs that have a notch.
   ///
-  /// This method may trigger a network request to fetch the latest known models. You should call this method in a background thread and save the result to a local cache.
-  ///
-  /// - Returns: true if the MacBook has a notch, false otherwise.
-  public static func hasNotch() -> Bool {
-    guard let modelIdentifier = modelIdentifier() else {
-      guard let menuBarHeight = NSApplication.shared.mainMenu?.menuBarHeight else {
-        return false
-      }
-      return menuBarHeight > 24
-    }
-
+  /// Older builds fetch `Device.json` from `master` when this set does not contain the current model, so `macWithNotch` in that file must match.
+  static let knownNotchModels: Set<String> =
     // swiftformat:disable spaceAroundComments consecutiveSpaces
-    let notchModels = Set([
+    [
       /// MacBook Pro: https://support.apple.com/en-us/108052
       "MacBookPro18,1", "MacBookPro18,2",          // MacBook Pro (16-inch, 2021), M1
       "MacBookPro18,3", "MacBookPro18,4",          // MacBook Pro (14-inch, 2021), M1
@@ -154,10 +145,23 @@ public enum Device {
       "Mac16,13", // MacBook Air (15-inch, M4, 2025)
       "Mac17,3",  // MacBook Air (13-inch, M5)
       "Mac17,4",  // MacBook Air (15-inch, M5)
-    ])
-    // swiftformat:enable spaceAroundComments consecutiveSpaces
+    ]
+  // swiftformat:enable spaceAroundComments consecutiveSpaces
 
-    if notchModels.contains(modelIdentifier) {
+  /// Check if the MacBook has a notch.
+  ///
+  /// This method may trigger a network request to fetch the latest known models. You should call this method in a background thread and save the result to a local cache.
+  ///
+  /// - Returns: true if the MacBook has a notch, false otherwise.
+  public static func hasNotch() -> Bool {
+    guard let modelIdentifier = modelIdentifier() else {
+      guard let menuBarHeight = NSApplication.shared.mainMenu?.menuBarHeight else {
+        return false
+      }
+      return menuBarHeight > 24
+    }
+
+    if knownNotchModels.contains(modelIdentifier) {
       return true
     }
 
