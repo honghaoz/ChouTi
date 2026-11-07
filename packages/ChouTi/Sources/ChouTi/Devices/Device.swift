@@ -114,6 +114,40 @@ public enum Device {
     /// https://stackoverflow.com/questions/32370037/is-there-a-way-of-getting-a-macs-icon-given-its-model-number/32381289#32381289
   }
 
+  /// Model identifiers for Macs that have a notch.
+  ///
+  /// Older builds fetch `Device.json` from `master` when this set does not contain the current model, so `macWithNotch` in that file must match.
+  static let knownNotchModels: Set<String> =
+    // swiftformat:disable spaceAroundComments consecutiveSpaces
+    [
+      /// MacBook Pro: https://support.apple.com/en-us/108052
+      "MacBookPro18,1", "MacBookPro18,2",          // MacBook Pro (16-inch, 2021), M1
+      "MacBookPro18,3", "MacBookPro18,4",          // MacBook Pro (14-inch, 2021), M1
+      "Mac14,6", "Mac14,10",                       // MacBook Pro (16-inch, 2023), M2
+      "Mac14,5", "Mac14,9",                        // MacBook Pro (14-inch, 2023), M2
+      "Mac15,7", "Mac15,9", "Mac15,11",            // MacBook Pro (16-inch, Nov 2023), M3
+      "Mac15,6", "Mac15,8", "Mac15,10", "Mac15,3", // MacBook Pro (14-inch, Nov 2023), M3
+      "Mac16,7", "Mac16,5",                        // MacBook Pro (16-inch, 2024), M4
+      "Mac16,6", "Mac16,8", "Mac16,1",             // MacBook Pro (14-inch, 2024), M4
+      "Mac17,2",                                   // MacBook Pro (14-inch, M5)
+      "Mac17,6", "Mac17,8",                        // MacBook Pro (16-inch, M5 Pro or M5 Max)
+      "Mac17,7", "Mac17,9",                        // MacBook Pro (14-inch, M5 Pro or M5 Max)
+      "Mac18,1",                                   // MacBook Pro (14-inch, M6)
+
+      // PROLED XDR models (Mac17,10, Mac17,11, Mac17,12, Mac17,13) use Dynamic Island, not a notch.
+
+      /// MacBook Air: https://support.apple.com/en-us/102869
+      "Mac14,2",  // MacBook Air (M2, 2022)
+      "Mac14,15", // MacBook Air (15-inch, M2, 2023)
+      "Mac15,12", // MacBook Air (13-inch, M3, 2024)
+      "Mac15,13", // MacBook Air (15-inch, M3, 2024)
+      "Mac16,12", // MacBook Air (13-inch, M4, 2025)
+      "Mac16,13", // MacBook Air (15-inch, M4, 2025)
+      "Mac17,3",  // MacBook Air (13-inch, M5)
+      "Mac17,4",  // MacBook Air (15-inch, M5)
+    ]
+  // swiftformat:enable spaceAroundComments consecutiveSpaces
+
   /// Check if the MacBook has a notch.
   ///
   /// This method may trigger a network request to fetch the latest known models. You should call this method in a background thread and save the result to a local cache.
@@ -127,34 +161,7 @@ public enum Device {
       return menuBarHeight > 24
     }
 
-    // swiftformat:disable spaceAroundComments consecutiveSpaces
-    let notchModels = Set([
-      /// MacBook Pro: https://support.apple.com/en-us/108052
-      "MacBookPro18,1", "MacBookPro18,2",          // MacBook Pro (16-inch, 2021), M1
-      "MacBookPro18,3", "MacBookPro18,4",          // MacBook Pro (14-inch, 2021), M1
-      "Mac14,6", "Mac14,10",                       // MacBook Pro (16-inch, 2023), M2
-      "Mac14,5", "Mac14,9",                        // MacBook Pro (14-inch, 2023), M2
-      "Mac15,7", "Mac15,9", "Mac15,11",            // MacBook Pro (16-inch, Nov 2023), M3
-      "Mac15,6", "Mac15,8", "Mac15,10", "Mac15,3", // MacBook Pro (14-inch, Nov 2023), M3
-      "Mac16,7", "Mac16,5",                        // MacBook Pro (16-inch, 2024), M4
-      "Mac16,6", "Mac16,8", "Mac16,1",             // MacBook Pro (14-inch, 2024), M4
-      "Mac17,2",                                   // MacBook Pro (14-inch, M5)
-      "Mac17,6", "Mac17,8",                        // MacBook Pro (16-inch, M5 Pro or M5 Max)
-      "Mac17,7", "Mac17,9",                        // MacBook Pro (14-inch, M5 Pro or M5 Max)
-
-      /// MacBook Air: https://support.apple.com/en-us/102869
-      "Mac14,2",  // MacBook Air (M2, 2022)
-      "Mac14,15", // MacBook Air (15-inch, M2, 2023)
-      "Mac15,12", // MacBook Air (13-inch, M3, 2024)
-      "Mac15,13", // MacBook Air (15-inch, M3, 2024)
-      "Mac16,12", // MacBook Air (13-inch, M4, 2025)
-      "Mac16,13", // MacBook Air (15-inch, M4, 2025)
-      "Mac17,3",  // MacBook Air (13-inch, M5)
-      "Mac17,4",  // MacBook Air (15-inch, M5)
-    ])
-    // swiftformat:enable spaceAroundComments consecutiveSpaces
-
-    if notchModels.contains(modelIdentifier) {
+    if knownNotchModels.contains(modelIdentifier) {
       return true
     }
 

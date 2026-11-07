@@ -37,7 +37,7 @@ import UIKit
 
 import ChouTiTest
 
-import ChouTi
+@testable import ChouTi
 
 final class DeviceTests: XCTestCase {
 
@@ -96,6 +96,24 @@ final class DeviceTests: XCTestCase {
     _ = Device.hasNotch() // just test the method exists
     DeviceTests.checkIfMacNotchModelsNeedUpdate()
   }
+
+  /// Older builds fetch `Device.json` when `knownNotchModels` misses the current model, so the two lists must match.
+  func testKnownNotchModelsMatchDeviceJSON() throws {
+    let jsonURL = URL(fileURLWithPath: #filePath)
+      .deletingLastPathComponent() // Devices
+      .deletingLastPathComponent() // ChouTiTests
+      .deletingLastPathComponent() // Tests
+      .deletingLastPathComponent() // ChouTi package
+      .appendingPathComponent("Sources/ChouTi/Devices/Device.json")
+
+    let data = try Data(contentsOf: jsonURL)
+    let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+    let models = try (json?["macWithNotch"] as? [String]).unwrap()
+    let jsonModels = Set(models)
+
+    expect(jsonModels.subtracting(Device.knownNotchModels).sorted()) == []
+    expect(Device.knownNotchModels.subtracting(jsonModels).sorted()) == []
+  }
   #endif
 
   func testFreeDiskSpaceInBytes() {
@@ -152,8 +170,8 @@ private extension DeviceTests {
     let calendar = Calendar.current
     var components = DateComponents()
     components.year = 2026
-    components.month = 9
-    components.day = 14
+    components.month = 11
+    components.day = 5
     guard let lastCheckedDate = calendar.date(from: components) else {
       throw RuntimeError.reason("Failed to create date")
     }
