@@ -2,7 +2,7 @@
 
 REPO_ROOT = $(shell git rev-parse --show-toplevel)
 MAKEFILE_DIR = $(shell cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-MAKEFILE_DIR_NAME = $(shell basename $(MAKEFILE_DIR))
+MAKEFILE_DIR_NAME = $(shell basename "$(MAKEFILE_DIR)")
 
 .PHONY: build
 build: # Build with debug configuration.
@@ -17,13 +17,13 @@ build-release: # Build with release configuration.
 .PHONY: test
 test: # Run tests.
 	@echo test: $(MAKEFILE_DIR_NAME)
-	swift test | $(REPO_ROOT)/bin/xcbeautify
+	swift test | "$(REPO_ROOT)/bin/xcbeautify"
 
 .PHONY: test-codecov
 test-codecov: # Run tests with code coverage.
 	@echo test with code coverage: $(MAKEFILE_DIR_NAME)
-	@$(REPO_ROOT)/scripts/swift-package/test-package.sh --package "$(MAKEFILE_DIR)" --max-attempts 3 --delay 3 --beautifier "$(REPO_ROOT)/bin/xcbeautify" --summary "$${GITHUB_STEP_SUMMARY:-}" --coverage-lcov .build/debug/codecov/coverage.lcov
-	$(REPO_ROOT)/scripts/filter-lcov.sh .build/debug/codecov/coverage.lcov --keep-pattern '.+packages/ChouTiTest/Sources/.+'
+	@"$(REPO_ROOT)/scripts/swift-package/test-package.sh" --package "$(MAKEFILE_DIR)" --max-attempts 3 --delay 3 --beautifier "$(REPO_ROOT)/bin/xcbeautify" --summary "$${GITHUB_STEP_SUMMARY:-}" --coverage-lcov .build/debug/codecov/coverage.lcov
+	"$(REPO_ROOT)/scripts/filter-lcov.sh" .build/debug/codecov/coverage.lcov --keep-pattern '.+packages/ChouTiTest/Sources/.+'
 
 .PHONY: clean
 clean: # Clean build data.
