@@ -52,6 +52,7 @@ class Expectation_BeApproximatelyEqualTests: XCTestCase {
     expect([1.5, 1.5]).to(beApproximatelyEqual(to: [1.0, 2.0], within: 0.5))
     expect([1.75, 2.0]).toNot(beApproximatelyEqual(to: [1.0, 2.0], within: 0.5))
     expect([1.0, 1.25]).toNot(beApproximatelyEqual(to: [1.0, 2.0], within: 0.5))
+    expect([2.0, 1.0]).toNot(beApproximatelyEqual(to: [1.0, 2.0], within: 0))
     expect([Double]()).to(beApproximatelyEqual(to: [], within: 0.5))
     expect(beApproximatelyEqual(to: [1.0, 2.0], within: 0.5).description) == #"be approximately equal to "[1.0, 2.0] ± 0.5""#
   }
