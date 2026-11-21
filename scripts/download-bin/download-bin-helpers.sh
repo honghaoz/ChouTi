@@ -19,11 +19,33 @@ download_with_progress() {
     is_desired_width_set=1
   fi
 
-  # check if url is valid
-  if ! curl -L --output /dev/null --silent --head --fail "$url"; then
-    return 1
-  fi
+  # --retry covers timeouts and HTTP 408/429/5xx. --retry-all-errors is required
+  # for a dropped connection (curl 56), and with -f it also retries 4xx.
+  # --connect-timeout and --max-time turn a stall into a retryable failure.
+  # --retry-max-time only limits when a new retry may start.
+  #
+  # keep this array in sync with the same flags in scripts/bootstrap.sh
+  local CURL_RETRY=(
+    -fsSL
+    --retry 5
+    --retry-all-errors
+    --retry-delay 2
+    --retry-max-time 90
+    --connect-timeout 10
+    --max-time 30
+  )
 
+  # write to a temp file next to the destination so a failed or truncated
+  # response can't replace a previously downloaded file
+  #
+  # this helper is sourced, so don't install an EXIT trap that would
+  # replace the caller's
+  local tmp
+  tmp=$(mktemp "$output_path.XXXXXX") || return 1
+
+  # --no-silent undoes -s from CURL_RETRY so --progress-bar still draws
+  # and errors still print
+  local status=0
   if [ -t 1 ]; then
     terminal_width=$(tput cols) # get the terminal width
     final_width=$terminal_width
@@ -45,21 +67,39 @@ download_with_progress() {
       fi
     fi
 
-    # Save the current terminal width and suppress any errors
-    local original_stty_settings=$(stty -g 2>/dev/null) || true
+    # save the current terminal settings and column width
+    local original_cols original_stty_settings
+    original_cols=$(tput cols 2>/dev/null) || true
+    original_stty_settings=$(stty -g 2>/dev/null) || true
 
     # Change the terminal width and suppress any errors
     stty cols "$final_width" 2>/dev/null || true
 
     # Download with progress bar
-    curl -L "$url" -o "$output_path" --progress-bar
+    curl "${CURL_RETRY[@]}" --no-silent --progress-bar "$url" -o "$tmp"
+    status=$?
 
-    # Restore the original terminal width and suppress any errors
-    stty "$original_stty_settings" 2>/dev/null || true
+    # always restore the terminal, even when curl fails
+    #
+    # stty -g does not include the window size, so the column width is
+    # restored separately
+    if [ -n "$original_stty_settings" ]; then
+      stty "$original_stty_settings" 2>/dev/null || true
+    fi
+    if [ -n "$original_cols" ]; then
+      stty cols "$original_cols" 2>/dev/null || true
+    fi
   else
     # Download without changing terminal width
-    curl -L "$url" -o "$output_path" --progress-bar
+    curl "${CURL_RETRY[@]}" --no-silent --progress-bar "$url" -o "$tmp"
+    status=$?
   fi
+
+  if [ "$status" -ne 0 ]; then
+    rm -f "$tmp"
+    return "$status"
+  fi
+  mv "$tmp" "$output_path"
 }
 
 # get_human_readable_size
