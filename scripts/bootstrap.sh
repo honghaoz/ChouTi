@@ -2,13 +2,8 @@
 
 set -e
 
-# change to the directory in which this script is located
-pushd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
-
-# ===------ BEGIN ------===
-
 # OVERVIEW:
-# This script is used to bootstrap the development environment.
+# Bootstraps the development environment.
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
 
@@ -28,8 +23,39 @@ case "$OS" in
       echo "📦 jq already present, skipping download"
     else
       echo "📦 Download jq..."
-      curl -sL https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-macos-arm64 -o "$REPO_ROOT/bin/jq"
-      chmod +x "$REPO_ROOT/bin/jq"
+      mkdir -p "$REPO_ROOT/bin"
+
+      # download to a temp file so a failed or truncated response can't leave a
+      # broken jq that the "already present" check would then skip. the EXIT trap
+      # removes the temp file if the run is interrupted before the move.
+      #
+      # --retry covers timeouts and HTTP 408/429/5xx. --retry-all-errors is
+      # required for a dropped connection (curl 56), and with -f it also retries
+      # 4xx. --connect-timeout and --max-time turn a stall into a retryable
+      # failure. --retry-max-time only limits when a new retry may start.
+      #
+      # keep this array in sync with the same flags in scripts/download-bin/download-bin-helpers.sh
+      CURL_RETRY=(
+        -fsSL
+        --retry 5
+        --retry-all-errors
+        --retry-delay 2
+        --retry-max-time 90
+        --connect-timeout 10
+        --max-time 30
+      )
+      tmp=$(mktemp "$REPO_ROOT/bin/jq.XXXXXX")
+      trap 'rm -f "$tmp"' EXIT
+      curl "${CURL_RETRY[@]}" \
+        "https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-macos-arm64" \
+        -o "$tmp"
+
+      # mktemp creates 0600, so chmod +x would leave 0711, and a script can't run
+      # without the read bit if another user executes it
+      chmod 755 "$tmp"
+
+      mv "$tmp" "$REPO_ROOT/bin/jq"
+      trap - EXIT
     fi
 
     # download bins
@@ -45,20 +71,6 @@ case "$OS" in
       echo ""
       echo "🪝 Install git hooks..."
       "$REPO_ROOT/scripts/git/install-git-hooks.sh"
-    fi
-
-    # update packages if needed
-    echo ""
-    if [ "${CI:-}" = "true" ]; then
-      echo "Skipping package update in CI"
-    else
-      echo "🔄 Update packages..."
-      "$REPO_ROOT/scripts/swift-package/update-packages.sh" \
-        "$REPO_ROOT/playgrounds/ChouTiPlayground-iOS/ChouTiPlayground-iOS.xcodeproj" \
-        "$REPO_ROOT/playgrounds/ChouTiPlayground-macOS/ChouTiPlayground-macOS.xcodeproj" \
-        "$REPO_ROOT/playgrounds/ChouTiPlayground-tvOS/ChouTiPlayground-tvOS.xcodeproj" \
-        "$REPO_ROOT/playgrounds/ChouTiPlayground-watchOS/ChouTiPlayground-watchOS.xcodeproj" \
-        "$REPO_ROOT/playgrounds/ChouTiPlayground-visionOS/ChouTiPlayground-visionOS.xcodeproj"
     fi
 
     echo ""
@@ -79,8 +91,3 @@ case "$OS" in
   echo "Unknown OS: $OS"
   ;;
 esac
-
-# ===------ END ------===
-
-# return to whatever directory we were in when this script was run
-popd >/dev/null 2>&1 || exit 0
