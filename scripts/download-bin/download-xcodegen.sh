@@ -54,7 +54,20 @@ fi
 # Define download URL and temporary directory
 url="https://github.com/yonaskolb/XcodeGen/releases/download/$version/xcodegen.zip"
 temp_dir=$(mktemp -d)
-trap 'rm -rf $temp_dir' EXIT
+pending_old=""
+cleanup() {
+  if [ -n "${pending_old:-}" ] && [ -e "$download_folder/xcodegen.old" ]; then
+    # a failed or interrupted mv can leave a partial folder that would nest the backup
+    rm -rf "$download_folder/xcodegen"
+    if mv -f "$download_folder/xcodegen.old" "$download_folder/xcodegen"; then
+      echo "Restored the previous xcodegen to $download_folder/xcodegen"
+    else
+      echo "Failed to restore the previous xcodegen. The backup is at $download_folder/xcodegen.old"
+    fi
+  fi
+  rm -rf "$temp_dir"
+}
+trap cleanup EXIT
 
 # Download the binary
 set +e
@@ -107,16 +120,11 @@ if [ -e "$download_folder/xcodegen" ]; then
   # a leftover backup would block the rename
   rm -rf "$download_folder/xcodegen.old"
   mv -f "$download_folder/xcodegen" "$download_folder/xcodegen.old"
+  pending_old=1
   if mv -f xcodegen "$download_folder"; then
+    pending_old=""
     rm -rf "$download_folder/xcodegen.old"
   else
-    # a failed mv can leave a partial folder that would nest the backup
-    rm -rf "$download_folder/xcodegen"
-    if mv -f "$download_folder/xcodegen.old" "$download_folder/xcodegen"; then
-      echo "Restored the previous xcodegen to $download_folder/xcodegen"
-    else
-      echo "Failed to restore the previous xcodegen. The backup is at $download_folder/xcodegen.old"
-    fi
     exit 1
   fi
 else

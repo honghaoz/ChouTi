@@ -147,6 +147,7 @@ cleanup() {
     fi
   fi
 }
+pending_backup=""
 trap cleanup EXIT
 
 # read the versions file and download binaries
