@@ -83,10 +83,10 @@ process_bin "$binary_name"
 mkdir -p "$download_folder"
 
 # Move to the download folder
-# overwrite without asking when stdin is not a terminal or when CI is set,
+# overwrite without asking when stdin is not a terminal or when CI is true,
 # since nobody can answer the prompt
 if [ -e "$download_folder/$binary_name" ]; then
-  if [ -z "${CI:-}" ] && [ -t 0 ]; then
+  if [ "${CI:-}" != "true" ] && [ -t 0 ]; then
     read -p "$binary_name already exists in $download_folder, do you want to replace it? [y/n] " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -97,7 +97,7 @@ if [ -e "$download_folder/$binary_name" ]; then
 fi
 
 # move the binary to the download folder
-mv "$binary_name" "$download_folder"
+mv -f "$binary_name" "$download_folder"
 
 echo "$binary_name ($version) saved to $download_folder/$binary_name"
 

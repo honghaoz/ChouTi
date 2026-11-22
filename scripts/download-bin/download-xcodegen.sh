@@ -89,10 +89,10 @@ CDPATH= cd -- ".." >/dev/null
 mkdir -p "$download_folder"
 
 # Move to the download folder
-# overwrite without asking when stdin is not a terminal or when CI is set,
+# overwrite without asking when stdin is not a terminal or when CI is true,
 # since nobody can answer the prompt
 if [ -e "$download_folder/xcodegen" ]; then
-  if [ -z "${CI:-}" ] && [ -t 0 ]; then
+  if [ "${CI:-}" != "true" ] && [ -t 0 ]; then
     read -p "xcodegen already exists in $download_folder, do you want to replace it? [y/n] " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -102,8 +102,12 @@ if [ -e "$download_folder/xcodegen" ]; then
   fi
 fi
 
-# move xcodegen folder to the download folder
-mv xcodegen "$download_folder"
+# remove an existing xcodegen folder so mv can replace it.
+# BSD mv cannot overwrite a non-empty directory
+if [ -e "$download_folder/xcodegen" ]; then
+  rm -rf "$download_folder/xcodegen"
+fi
+mv -f xcodegen "$download_folder"
 
 echo "XcodeGen ($version) saved to $download_folder/xcodegen"
 

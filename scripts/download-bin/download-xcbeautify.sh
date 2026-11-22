@@ -78,10 +78,10 @@ process_bin xcbeautify
 mkdir -p "$download_folder"
 
 # Move to the download folder
-# overwrite without asking when stdin is not a terminal or when CI is set,
+# overwrite without asking when stdin is not a terminal or when CI is true,
 # since nobody can answer the prompt
 if [ -e "$download_folder/xcbeautify" ]; then
-  if [ -z "${CI:-}" ] && [ -t 0 ]; then
+  if [ "${CI:-}" != "true" ] && [ -t 0 ]; then
     read -p "xcbeautify already exists in $download_folder, do you want to replace it? [y/n] " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -92,7 +92,7 @@ if [ -e "$download_folder/xcbeautify" ]; then
 fi
 
 # move xcbeautify folder to the download folder
-mv xcbeautify "$download_folder"
+mv -f xcbeautify "$download_folder"
 
 echo "xcbeautify ($version) saved to $download_folder/xcbeautify"
 
