@@ -143,3 +143,119 @@ process_bin() {
   AFTER_SIZE=$(du -k "$bin_name" | cut -f1)
   echo "Before: $(get_human_readable_size "$BEFORE_SIZE"), After: $(get_human_readable_size "$AFTER_SIZE")"
 }
+
+
+# install_bin
+#
+# Installs a staged file or directory into a destination folder. The staged
+# path should already be on the same filesystem as the destination, so the
+# final rename is atomic. An existing install is renamed aside and restored
+# if the swap fails or is interrupted.
+#
+# This function temporarily replaces the EXIT trap. It runs any previous EXIT
+# trap after its own cleanup, and puts the previous trap back before a
+# normal return, so a caller's staging cleanup is not lost.
+#
+# Arguments:
+#   $1 - Path to the staged file or directory
+#   $2 - Destination folder
+#   $3 - Name of the install in the destination folder
+#
+# Example:
+#   install_bin "$staging/swiftformat" "$download_folder" swiftformat
+_install_bin_pending=""
+_install_bin_dest=""
+_install_bin_backup=""
+_install_bin_saved_trap=""
+
+_install_bin_restore() {
+  if [ -z "${_install_bin_pending:-}" ] || [ ! -e "$_install_bin_backup" ]; then
+    return 0
+  fi
+  # a failed or interrupted mv can leave a partial dest that would nest the backup
+  rm -rf "$_install_bin_dest"
+  if mv -f "$_install_bin_backup" "$_install_bin_dest"; then
+    echo "Restored the previous $_install_bin_pending to $_install_bin_dest"
+    _install_bin_pending=""
+  else
+    echo "Failed to restore the previous $_install_bin_pending. The backup is at $_install_bin_backup"
+  fi
+}
+
+_install_bin_run_saved_trap() {
+  if [ -z "${_install_bin_saved_trap:-}" ]; then
+    return 0
+  fi
+  # trap -p EXIT prints: trap -- 'command' EXIT
+  eval "set -- $_install_bin_saved_trap"
+  if [ -n "${3:-}" ]; then
+    eval "$3"
+  fi
+}
+
+_install_bin_on_exit() {
+  _install_bin_restore
+  _install_bin_run_saved_trap
+}
+
+_install_bin_release_trap() {
+  if [ -n "${_install_bin_saved_trap:-}" ]; then
+    eval "$_install_bin_saved_trap"
+  else
+    trap - EXIT
+  fi
+}
+
+install_bin() {
+  local staged_path=$1
+  local dest_folder=$2
+  local bin_name=$3
+
+  if [ -z "$staged_path" ] || [ -z "$dest_folder" ] || [ -z "$bin_name" ]; then
+    echo "🛑 ERROR: install_bin requires a staged path, destination folder, and name."
+    return 1
+  fi
+  if [ ! -e "$staged_path" ]; then
+    echo "🛑 ERROR: staged path not found: $staged_path"
+    return 1
+  fi
+  if [ "$(basename "$staged_path")" != "$bin_name" ]; then
+    echo "🛑 ERROR: staged path must be named $bin_name: $staged_path"
+    return 1
+  fi
+
+  # initialize swap state inside this helper, do not reuse caller environment
+  _install_bin_pending=""
+  _install_bin_dest="$dest_folder/$bin_name"
+  _install_bin_backup=""
+  _install_bin_saved_trap=$(trap -p EXIT || true)
+
+  if [ -e "$_install_bin_dest" ]; then
+    # unique name in the dest folder, do not create a file
+    while [ -z "$_install_bin_backup" ] || [ -e "$_install_bin_backup" ]; do
+      _install_bin_backup=$(mktemp -u "$dest_folder/.$bin_name.backup.XXXXXX") || return 1
+    done
+  fi
+
+  trap _install_bin_on_exit EXIT
+
+  if [ -n "$_install_bin_backup" ]; then
+    # set pending before the rename so an interrupt can restore
+    _install_bin_pending="$bin_name"
+    mv -f "$_install_bin_dest" "$_install_bin_backup"
+  fi
+
+  if mv -f "$staged_path" "$dest_folder"; then
+    # the new install is in place
+    _install_bin_pending=""
+    if [ -n "$_install_bin_backup" ]; then
+      rm -rf "$_install_bin_backup"
+    fi
+    _install_bin_release_trap
+    return 0
+  fi
+
+  _install_bin_restore
+  _install_bin_release_trap
+  return 1
+}
