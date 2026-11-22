@@ -112,7 +112,10 @@ download_and_install() {
 
   # backup old binary if exists
   if [ -e "$BIN_DIR/$name" ]; then
-    mv "$BIN_DIR/$name" "$BIN_DIR/$name.backup"
+    # a leftover backup would block the rename
+    rm -rf "$BIN_DIR/$name.backup"
+    mv -f "$BIN_DIR/$name" "$BIN_DIR/$name.backup"
+    pending_backup="$name"
   fi
 
   echo "Downloading ${CYAN}$name ($version)${RESET}..."
@@ -127,19 +130,20 @@ download_and_install() {
   if [ -e "$BIN_DIR/$name.backup" ]; then
     rm -rf "$BIN_DIR/$name.backup"
   fi
+  pending_backup=""
 
   echo "✅ ${CYAN}$name ($version)${RESET} is installed."
 }
 
 cleanup() {
-  # restore a backed-up install if a later download failed
-  if [ -n "${name:-}" ] && [ -e "$BIN_DIR/$name.backup" ]; then
+  # restore only a backup this run created
+  if [ -n "${pending_backup:-}" ] && [ -e "$BIN_DIR/$pending_backup.backup" ]; then
     # a failed mv can leave a partial file or folder that would nest the backup
-    rm -rf "$BIN_DIR/$name"
-    if mv -f "$BIN_DIR/$name.backup" "$BIN_DIR/$name"; then
-      echo "Restored the previous $name to $BIN_DIR/$name"
+    rm -rf "$BIN_DIR/$pending_backup"
+    if mv -f "$BIN_DIR/$pending_backup.backup" "$BIN_DIR/$pending_backup"; then
+      echo "Restored the previous $pending_backup to $BIN_DIR/$pending_backup"
     else
-      echo "Failed to restore the previous $name. The backup is at $BIN_DIR/$name.backup"
+      echo "Failed to restore the previous $pending_backup. The backup is at $BIN_DIR/$pending_backup.backup"
     fi
   fi
 }
