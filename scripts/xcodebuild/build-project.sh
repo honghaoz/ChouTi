@@ -153,13 +153,14 @@ fi
 # resolve the repo from this script's location so the script works from any
 # directory.
 #
-# unset GIT_DIR so a linked worktree hook cannot make --show-toplevel
-# return the current directory
+# CDPATH= and >/dev/null keep an exported CDPATH from printing the
+# directory into REPO_ROOT. unset GIT_DIR so a linked worktree hook cannot
+# make --show-toplevel return the current directory
 if [ -z "${BASH_SOURCE[0]:-}" ]; then
   echo "Error: build-project must be run as a file, not piped to bash." >&2
   exit 1
 fi
-REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && unset GIT_DIR && git rev-parse --show-toplevel) || exit 1
+REPO_ROOT=$(CDPATH= cd -- "$(dirname "${BASH_SOURCE[0]}")/../.." >/dev/null && unset GIT_DIR && git rev-parse --show-toplevel) || exit 1
 if [ ! -f "$REPO_ROOT/scripts/xcodebuild/build-project.sh" ]; then
   echo "Error: resolved $REPO_ROOT does not look like the repository root." >&2
   exit 1
