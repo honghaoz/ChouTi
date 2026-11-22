@@ -227,22 +227,30 @@ install_bin() {
   # initialize swap state inside this helper, do not reuse caller environment
   _install_bin_pending=""
   _install_bin_dest="$dest_folder/$bin_name"
-  _install_bin_backup="$dest_folder/$bin_name.backup"
+  _install_bin_backup=""
   _install_bin_saved_trap=$(trap -p EXIT || true)
+
+  if [ -e "$_install_bin_dest" ]; then
+    # unique name in the dest folder, do not create a file
+    while [ -z "$_install_bin_backup" ] || [ -e "$_install_bin_backup" ]; do
+      _install_bin_backup=$(mktemp -u "$dest_folder/.$bin_name.backup.XXXXXX") || return 1
+    done
+  fi
 
   trap _install_bin_on_exit EXIT
 
-  # a leftover backup would block the rename
-  rm -rf "$_install_bin_backup"
-  if [ -e "$_install_bin_dest" ]; then
-    mv -f "$_install_bin_dest" "$_install_bin_backup"
+  if [ -n "$_install_bin_backup" ]; then
+    # set pending before the rename so an interrupt can restore
     _install_bin_pending="$bin_name"
+    mv -f "$_install_bin_dest" "$_install_bin_backup"
   fi
 
   if mv -f "$staged_path" "$dest_folder"; then
     # the new install is in place
     _install_bin_pending=""
-    rm -rf "$_install_bin_backup"
+    if [ -n "$_install_bin_backup" ]; then
+      rm -rf "$_install_bin_backup"
+    fi
     _install_bin_release_trap
     return 0
   fi
