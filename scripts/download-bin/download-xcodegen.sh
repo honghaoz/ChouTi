@@ -110,7 +110,13 @@ if [ -e "$download_folder/xcodegen" ]; then
   if mv -f xcodegen "$download_folder"; then
     rm -rf "$download_folder/xcodegen.old"
   else
-    mv -f "$download_folder/xcodegen.old" "$download_folder/xcodegen"
+    # a failed mv can leave a partial folder that would nest the backup
+    rm -rf "$download_folder/xcodegen"
+    if mv -f "$download_folder/xcodegen.old" "$download_folder/xcodegen"; then
+      echo "Restored the previous xcodegen to $download_folder/xcodegen"
+    else
+      echo "Failed to restore the previous xcodegen. The backup is at $download_folder/xcodegen.old"
+    fi
     exit 1
   fi
 else
