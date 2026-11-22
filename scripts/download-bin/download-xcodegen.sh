@@ -3,7 +3,7 @@
 set -e
 
 # change to the directory in which this script is located
-pushd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
+CDPATH= pushd -- "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
 
 # ===------ BEGIN ------===
 
@@ -54,7 +54,20 @@ fi
 # Define download URL and temporary directory
 url="https://github.com/yonaskolb/XcodeGen/releases/download/$version/xcodegen.zip"
 temp_dir=$(mktemp -d)
-trap 'rm -rf $temp_dir' EXIT
+pending_old=""
+cleanup() {
+  if [ -n "${pending_old:-}" ] && [ -e "$download_folder/xcodegen.old" ]; then
+    # a failed or interrupted mv can leave a partial folder that would nest the backup
+    rm -rf "$download_folder/xcodegen"
+    if mv -f "$download_folder/xcodegen.old" "$download_folder/xcodegen"; then
+      echo "Restored the previous xcodegen to $download_folder/xcodegen"
+    else
+      echo "Failed to restore the previous xcodegen. The backup is at $download_folder/xcodegen.old"
+    fi
+  fi
+  rm -rf "$temp_dir"
+}
+trap cleanup EXIT
 
 # Download the binary
 set +e
@@ -74,33 +87,49 @@ echo "Unzipping..."
 unzip -q xcodegen.zip
 
 # cd into the binary directory
-cd xcodegen/bin || (echo "Failed to navigate to xcodegen/bin" && exit 1)
+CDPATH= cd -- "xcodegen/bin" >/dev/null || (echo "Failed to navigate to xcodegen/bin" && exit 1)
 
 process_bin xcodegen
 
-cd ..
+CDPATH= cd -- ".." >/dev/null
 
 # remove install.sh and LICENSE
 rm install.sh LICENSE
 
-cd ..
+CDPATH= cd -- ".." >/dev/null
 
 # Ensure the download folder exists
 mkdir -p "$download_folder"
 
 # Move to the download folder
-# if there is existing xcodegen in the download folder, either file or folder, ask for confirmation
+# overwrite without asking when stdin is not a terminal or when CI is true,
+# since nobody can answer the prompt
 if [ -e "$download_folder/xcodegen" ]; then
-  read -p "xcodegen already exists in $download_folder, do you want to replace it? [y/n] " -n 1 -r
-  echo
-  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Aborted."
-    exit 1
+  if [ "${CI:-}" != "true" ] && [ -t 0 ]; then
+    read -p "xcodegen already exists in $download_folder, do you want to replace it? [y/n] " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      echo "Aborted."
+      exit 1
+    fi
   fi
 fi
 
-# move xcodegen folder to the download folder
-mv xcodegen "$download_folder"
+# rename any existing install aside so a failed mv can put it back
+if [ -e "$download_folder/xcodegen" ]; then
+  # a leftover backup would block the rename
+  rm -rf "$download_folder/xcodegen.old"
+  mv -f "$download_folder/xcodegen" "$download_folder/xcodegen.old"
+  pending_old=1
+  if mv -f xcodegen "$download_folder"; then
+    pending_old=""
+    rm -rf "$download_folder/xcodegen.old"
+  else
+    exit 1
+  fi
+else
+  mv -f xcodegen "$download_folder"
+fi
 
 echo "XcodeGen ($version) saved to $download_folder/xcodegen"
 

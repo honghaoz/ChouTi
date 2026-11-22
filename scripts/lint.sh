@@ -3,7 +3,7 @@
 set -e
 
 # change to the directory in which this script is located
-pushd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
+CDPATH= pushd -- "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
 
 # ===------ BEGIN ------===
 
@@ -80,7 +80,7 @@ REPO_ROOT=$(unset GIT_DIR; git rev-parse --show-toplevel)
 cd "$REPO_ROOT" || exit 1
 
 CONFIG_PATH="$REPO_ROOT/configs"
-SWIFTFORMAT_BIN="$REPO_ROOT/bin/swiftformat" && [[ ! -f "$SWIFTFORMAT_BIN" ]] && { echo "🛑 Error: swiftformat not found."; exit 1; }
+SWIFTFORMAT_BIN="$REPO_ROOT/bin/swiftformat" && [[ ! -f "$SWIFTFORMAT_BIN" ]] && { echo "🛑 Error: swiftformat not found. Run ${GREEN}make bootstrap${RESET} first."; exit 1; }
 SWIFTFORMAT_VERSION=$("$SWIFTFORMAT_BIN" --version)
 SWIFTFORMAT_CONFIG_NAME=".swiftformat"
 SWIFTFORMAT_CONFIG="$CONFIG_PATH/$SWIFTFORMAT_CONFIG_NAME" && [[ ! -f "$SWIFTFORMAT_CONFIG" ]] && { echo "🛑 Error: swiftformat config not found."; exit 1; }
@@ -88,7 +88,7 @@ SWIFTFORMAT_REPO_ROOT_CONFIG="$REPO_ROOT/$SWIFTFORMAT_CONFIG_NAME"
 SWIFTFORMAT_CACHE="$REPO_ROOT/.temp/swiftformat-cache" && mkdir -p "$REPO_ROOT/.temp"
 SWIFTFORMAT_BEAUTIFY="$REPO_ROOT/scripts/swiftformat-beautify"
 
-SWIFTLINT_BIN="$REPO_ROOT/bin/swiftlint" && [[ ! -f "$SWIFTLINT_BIN" ]] && { echo "🛑 Error: swiftlint not found."; exit 1; }
+SWIFTLINT_BIN="$REPO_ROOT/bin/swiftlint" && [[ ! -f "$SWIFTLINT_BIN" ]] && { echo "🛑 Error: swiftlint not found. Run ${GREEN}make bootstrap${RESET} first."; exit 1; }
 SWIFTLINT_VERSION=$("$SWIFTLINT_BIN" version)
 SWIFTLINT_CONFIG_NAME=".swiftlint.yml"
 SWIFTLINT_CONFIG="$CONFIG_PATH/$SWIFTLINT_CONFIG_NAME" && [[ ! -f "$SWIFTLINT_CONFIG" ]] && { echo "🛑 Error: swiftlint config not found."; exit 1; }

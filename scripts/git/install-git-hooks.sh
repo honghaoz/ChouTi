@@ -3,7 +3,7 @@
 set -e
 
 # change to the directory in which this script is located
-pushd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
+CDPATH= pushd -- "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
 
 # ===------ BEGIN ------===
 
@@ -17,7 +17,7 @@ TAG="ChouTi"
 HOOKS_DIR=$(git rev-parse --git-path hooks)
 
 mkdir -p "$HOOKS_DIR"
-cd "$HOOKS_DIR" || exit 1
+CDPATH= cd -- "$HOOKS_DIR" >/dev/null || exit 1
 
 function write-hook-script-content() {
   HOOK_NAME="$1"

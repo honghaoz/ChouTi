@@ -6,7 +6,7 @@ set -e
 ORIGINAL_DIR=$(pwd)
 
 # change to the directory in which this script is located
-pushd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
+CDPATH= pushd -- "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
 
 # ===------ BEGIN ------===
 
@@ -60,7 +60,7 @@ fi
 if [[ "$BIN_DIR" != /* ]]; then
   BIN_DIR="$ORIGINAL_DIR/$BIN_DIR"
 fi
-if ! BIN_DIR="$(cd "$BIN_DIR" 2>/dev/null && pwd)"; then
+if ! BIN_DIR="$(CDPATH= cd -- "$BIN_DIR" >/dev/null 2>&1 && pwd)"; then
   echo "🔴 ERROR: $BIN_DIR is not a valid directory."
   exit 1
 fi
@@ -112,7 +112,10 @@ download_and_install() {
 
   # backup old binary if exists
   if [ -e "$BIN_DIR/$name" ]; then
-    mv "$BIN_DIR/$name" "$BIN_DIR/$name.backup"
+    # a leftover backup would block the rename
+    rm -rf "$BIN_DIR/$name.backup"
+    mv -f "$BIN_DIR/$name" "$BIN_DIR/$name.backup"
+    pending_backup="$name"
   fi
 
   echo "Downloading ${CYAN}$name ($version)${RESET}..."
@@ -123,6 +126,8 @@ download_and_install() {
     chmod +x "$BIN_DIR/$name"
   fi
 
+  # the new install is already in place, so do not roll it back if this rm is interrupted
+  pending_backup=""
   # remove old binary backup
   if [ -e "$BIN_DIR/$name.backup" ]; then
     rm -rf "$BIN_DIR/$name.backup"
@@ -132,11 +137,18 @@ download_and_install() {
 }
 
 cleanup() {
-  # if backup exists, restore the binary
-  if [ -e "$BIN_DIR/$name.backup" ]; then
-    mv "$BIN_DIR/$name.backup" "$BIN_DIR/$name"
+  # restore only a backup this run created
+  if [ -n "${pending_backup:-}" ] && [ -e "$BIN_DIR/$pending_backup.backup" ]; then
+    # a failed mv can leave a partial file or folder that would nest the backup
+    rm -rf "$BIN_DIR/$pending_backup"
+    if mv -f "$BIN_DIR/$pending_backup.backup" "$BIN_DIR/$pending_backup"; then
+      echo "Restored the previous $pending_backup to $BIN_DIR/$pending_backup"
+    else
+      echo "Failed to restore the previous $pending_backup. The backup is at $BIN_DIR/$pending_backup.backup"
+    fi
   fi
 }
+pending_backup=""
 trap cleanup EXIT
 
 # read the versions file and download binaries

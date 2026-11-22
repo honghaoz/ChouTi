@@ -170,7 +170,7 @@ ERROR_CODE=0
 PROJECT_DIR=$(dirname "$PROJECT_PATH")
 PROJECT=$(basename "$PROJECT_PATH")
 
-cd "$PROJECT_DIR" || exit 1
+CDPATH= cd -- "$PROJECT_DIR" >/dev/null || exit 1
 
 # == Update Package ==
 # https://stackoverflow.com/a/79035750/3164091
