@@ -110,14 +110,6 @@ download_and_install() {
     chmod +x "$CURRENT_DIR/download-$name.sh"
   fi
 
-  # backup old binary if exists
-  if [ -e "$BIN_DIR/$name" ]; then
-    # a leftover backup would block the rename
-    rm -rf "$BIN_DIR/$name.backup"
-    mv -f "$BIN_DIR/$name" "$BIN_DIR/$name.backup"
-    pending_backup="$name"
-  fi
-
   echo "Downloading ${CYAN}$name ($version)${RESET}..."
   "$CURRENT_DIR/download-$name.sh" --version "$version" --to-folder "$BIN_DIR"
 
@@ -126,30 +118,8 @@ download_and_install() {
     chmod +x "$BIN_DIR/$name"
   fi
 
-  # the new install is already in place, so do not roll it back if this rm is interrupted
-  pending_backup=""
-  # remove old binary backup
-  if [ -e "$BIN_DIR/$name.backup" ]; then
-    rm -rf "$BIN_DIR/$name.backup"
-  fi
-
   echo "✅ ${CYAN}$name ($version)${RESET} is installed."
 }
-
-cleanup() {
-  # restore only a backup this run created
-  if [ -n "${pending_backup:-}" ] && [ -e "$BIN_DIR/$pending_backup.backup" ]; then
-    # a failed mv can leave a partial file or folder that would nest the backup
-    rm -rf "$BIN_DIR/$pending_backup"
-    if mv -f "$BIN_DIR/$pending_backup.backup" "$BIN_DIR/$pending_backup"; then
-      echo "Restored the previous $pending_backup to $BIN_DIR/$pending_backup"
-    else
-      echo "Failed to restore the previous $pending_backup. The backup is at $BIN_DIR/$pending_backup.backup"
-    fi
-  fi
-}
-pending_backup=""
-trap cleanup EXIT
 
 # read the versions file and download binaries
 while read -r line || [[ -n "$line" ]]; do

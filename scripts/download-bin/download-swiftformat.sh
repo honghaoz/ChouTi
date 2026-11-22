@@ -2,6 +2,9 @@
 
 set -e
 
+# remember the directory where the script was invoked
+ORIGINAL_DIR=$(pwd)
+
 # change to the directory in which this script is located
 CDPATH= pushd -- "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
 
@@ -52,15 +55,26 @@ fi
 
 binary_name="swiftformat"
 
-# Define download URL and temporary directory
+# resolve a relative destination against the invocation dir, then make it
+# absolute before cd into the staging directory
+if [[ "$download_folder" != /* ]]; then
+  download_folder="$ORIGINAL_DIR/$download_folder"
+fi
+mkdir -p "$download_folder"
+if ! download_folder="$(CDPATH= cd -- "$download_folder" >/dev/null 2>&1 && pwd)"; then
+  echo "🛑 ERROR: $download_folder is not a valid directory."
+  exit 1
+fi
+
+# Define download URL and staging directory
 url="https://github.com/chouti-dev/SwiftFormat/releases/download/$version-chouti/$binary_name-arm64.zip"
-temp_dir=$(mktemp -d)
-trap 'rm -rf $temp_dir' EXIT
+staging=$(mktemp -d "$download_folder/.tmp.XXXXXX") || exit 1
+trap 'rm -rf -- "$staging"' EXIT
 
 # Download the binary
 set +e
-echo "Downloading $binary_name ($version) to $temp_dir"
-download_with_progress "$url" "$temp_dir/$binary_name.zip"
+echo "Downloading $binary_name ($version) to $staging"
+download_with_progress "$url" "$staging/$binary_name.zip"
 
 # exit if download failed
 if [ $? -ne 0 ]; then
@@ -69,8 +83,8 @@ if [ $? -ne 0 ]; then
 fi
 set -e
 
-# Navigate to temporary directory and unzip
-cd "$temp_dir" || (echo "Failed to navigate to $temp_dir" && exit 1)
+# Navigate to staging directory and unzip
+CDPATH= cd -- "$staging" >/dev/null || { echo "Failed to navigate to $staging"; exit 1; }
 echo "Unzipping..."
 unzip -q "$binary_name.zip"
 
@@ -79,10 +93,6 @@ mv "$binary_name-arm64" "$binary_name"
 
 process_bin "$binary_name"
 
-# Ensure the download folder exists
-mkdir -p "$download_folder"
-
-# Move to the download folder
 # overwrite without asking when stdin is not a terminal or when CI is true,
 # since nobody can answer the prompt
 if [ -e "$download_folder/$binary_name" ]; then
@@ -96,8 +106,7 @@ if [ -e "$download_folder/$binary_name" ]; then
   fi
 fi
 
-# move the binary to the download folder
-mv -f "$binary_name" "$download_folder"
+install_bin "$staging/$binary_name" "$download_folder" "$binary_name"
 
 echo "$binary_name ($version) saved to $download_folder/$binary_name"
 

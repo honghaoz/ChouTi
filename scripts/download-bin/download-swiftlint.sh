@@ -2,6 +2,9 @@
 
 set -e
 
+# remember the directory where the script was invoked
+ORIGINAL_DIR=$(pwd)
+
 # change to the directory in which this script is located
 CDPATH= pushd -- "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
 
@@ -80,13 +83,24 @@ if [ -z "$URL" ]; then
   exit 1
 fi
 
-temp_dir=$(mktemp -d)
-trap 'rm -rf $temp_dir' EXIT
+# resolve a relative destination against the invocation dir, then make it
+# absolute before cd into the staging directory
+if [[ "$download_folder" != /* ]]; then
+  download_folder="$ORIGINAL_DIR/$download_folder"
+fi
+mkdir -p "$download_folder"
+if ! download_folder="$(CDPATH= cd -- "$download_folder" >/dev/null 2>&1 && pwd)"; then
+  echo "🛑 ERROR: $download_folder is not a valid directory."
+  exit 1
+fi
+
+staging=$(mktemp -d "$download_folder/.tmp.XXXXXX") || exit 1
+trap 'rm -rf -- "$staging"' EXIT
 
 # Download the binary
 set +e
-echo "Downloading swiftlint ($version) to $temp_dir"
-download_with_progress "$URL" "$temp_dir/swiftlint.zip"
+echo "Downloading swiftlint ($version) to $staging"
+download_with_progress "$URL" "$staging/swiftlint.zip"
 
 # exit if download failed
 if [ $? -ne 0 ]; then
@@ -96,8 +110,8 @@ if [ $? -ne 0 ]; then
 fi
 set -e
 
-# Navigate to temporary directory and unzip
-cd "$temp_dir" || (echo "Failed to navigate to $temp_dir" && exit 1)
+# Navigate to staging directory and unzip
+CDPATH= cd -- "$staging" >/dev/null || { echo "Failed to navigate to $staging"; exit 1; }
 echo "Unzipping..."
 unzip -q swiftlint.zip
 
@@ -121,13 +135,9 @@ mv "$BINARY_PATH" .
 
 process_bin swiftlint
 
-# Ensure the download folder exists
-mkdir -p "$download_folder"
-
-# Move to the download folder
 # overwrite without asking when stdin is not a terminal or when CI is true,
 # since nobody can answer the prompt
-if [ -f "$download_folder/swiftlint" ]; then
+if [ -e "$download_folder/swiftlint" ]; then
   if [ "${CI:-}" != "true" ] && [ -t 0 ]; then
     read -p "swiftlint already exists in $download_folder, do you want to replace it? [y/n] " -n 1 -r
     echo
@@ -138,8 +148,7 @@ if [ -f "$download_folder/swiftlint" ]; then
   fi
 fi
 
-# move swiftlint to the download folder
-mv -f swiftlint "$download_folder"
+install_bin "$staging/swiftlint" "$download_folder" swiftlint
 
 echo "SwiftLint ($version) saved to $download_folder/swiftlint"
 

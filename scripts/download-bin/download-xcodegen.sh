@@ -2,6 +2,9 @@
 
 set -e
 
+# remember the directory where the script was invoked
+ORIGINAL_DIR=$(pwd)
+
 # change to the directory in which this script is located
 CDPATH= pushd -- "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
 
@@ -51,28 +54,26 @@ if [ -z "$download_folder" ]; then
   print_help
 fi
 
-# Define download URL and temporary directory
+# resolve a relative destination against the invocation dir, then make it
+# absolute before cd into the staging directory
+if [[ "$download_folder" != /* ]]; then
+  download_folder="$ORIGINAL_DIR/$download_folder"
+fi
+mkdir -p "$download_folder"
+if ! download_folder="$(CDPATH= cd -- "$download_folder" >/dev/null 2>&1 && pwd)"; then
+  echo "🛑 ERROR: $download_folder is not a valid directory."
+  exit 1
+fi
+
+# Define download URL and staging directory
 url="https://github.com/yonaskolb/XcodeGen/releases/download/$version/xcodegen.zip"
-temp_dir=$(mktemp -d)
-pending_old=""
-cleanup() {
-  if [ -n "${pending_old:-}" ] && [ -e "$download_folder/xcodegen.old" ]; then
-    # a failed or interrupted mv can leave a partial folder that would nest the backup
-    rm -rf "$download_folder/xcodegen"
-    if mv -f "$download_folder/xcodegen.old" "$download_folder/xcodegen"; then
-      echo "Restored the previous xcodegen to $download_folder/xcodegen"
-    else
-      echo "Failed to restore the previous xcodegen. The backup is at $download_folder/xcodegen.old"
-    fi
-  fi
-  rm -rf "$temp_dir"
-}
-trap cleanup EXIT
+staging=$(mktemp -d "$download_folder/.tmp.XXXXXX") || exit 1
+trap 'rm -rf -- "$staging"' EXIT
 
 # Download the binary
 set +e
-echo "Downloading xcodegen ($version) to $temp_dir"
-download_with_progress "$url" "$temp_dir/xcodegen.zip"
+echo "Downloading xcodegen ($version) to $staging"
+download_with_progress "$url" "$staging/xcodegen.zip"
 
 # exit if download failed
 if [ $? -ne 0 ]; then
@@ -81,13 +82,13 @@ if [ $? -ne 0 ]; then
 fi
 set -e
 
-# Navigate to temporary directory and unzip
-cd "$temp_dir" || (echo "Failed to navigate to $temp_dir" && exit 1)
+# Navigate to staging directory and unzip
+CDPATH= cd -- "$staging" >/dev/null || { echo "Failed to navigate to $staging"; exit 1; }
 echo "Unzipping..."
 unzip -q xcodegen.zip
 
 # cd into the binary directory
-CDPATH= cd -- "xcodegen/bin" >/dev/null || (echo "Failed to navigate to xcodegen/bin" && exit 1)
+CDPATH= cd -- "xcodegen/bin" >/dev/null || { echo "Failed to navigate to xcodegen/bin"; exit 1; }
 
 process_bin xcodegen
 
@@ -98,10 +99,6 @@ rm install.sh LICENSE
 
 CDPATH= cd -- ".." >/dev/null
 
-# Ensure the download folder exists
-mkdir -p "$download_folder"
-
-# Move to the download folder
 # overwrite without asking when stdin is not a terminal or when CI is true,
 # since nobody can answer the prompt
 if [ -e "$download_folder/xcodegen" ]; then
@@ -115,21 +112,7 @@ if [ -e "$download_folder/xcodegen" ]; then
   fi
 fi
 
-# rename any existing install aside so a failed mv can put it back
-if [ -e "$download_folder/xcodegen" ]; then
-  # a leftover backup would block the rename
-  rm -rf "$download_folder/xcodegen.old"
-  mv -f "$download_folder/xcodegen" "$download_folder/xcodegen.old"
-  pending_old=1
-  if mv -f xcodegen "$download_folder"; then
-    pending_old=""
-    rm -rf "$download_folder/xcodegen.old"
-  else
-    exit 1
-  fi
-else
-  mv -f xcodegen "$download_folder"
-fi
+install_bin "$staging/xcodegen" "$download_folder" xcodegen
 
 echo "XcodeGen ($version) saved to $download_folder/xcodegen"
 
