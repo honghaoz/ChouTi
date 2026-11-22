@@ -3,7 +3,7 @@
 set -e
 
 # change to the directory in which this script is located
-pushd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
+CDPATH= pushd -- "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
 
 # ===------ BEGIN ------===
 
@@ -74,28 +74,31 @@ echo "Unzipping..."
 unzip -q xcodegen.zip
 
 # cd into the binary directory
-cd xcodegen/bin || (echo "Failed to navigate to xcodegen/bin" && exit 1)
+CDPATH= cd -- "xcodegen/bin" >/dev/null || (echo "Failed to navigate to xcodegen/bin" && exit 1)
 
 process_bin xcodegen
 
-cd ..
+CDPATH= cd -- ".." >/dev/null
 
 # remove install.sh and LICENSE
 rm install.sh LICENSE
 
-cd ..
+CDPATH= cd -- ".." >/dev/null
 
 # Ensure the download folder exists
 mkdir -p "$download_folder"
 
 # Move to the download folder
-# if there is existing xcodegen in the download folder, either file or folder, ask for confirmation
+# overwrite without asking when stdin is not a terminal or when CI is set,
+# since nobody can answer the prompt
 if [ -e "$download_folder/xcodegen" ]; then
-  read -p "xcodegen already exists in $download_folder, do you want to replace it? [y/n] " -n 1 -r
-  echo
-  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Aborted."
-    exit 1
+  if [ -z "${CI:-}" ] && [ -t 0 ]; then
+    read -p "xcodegen already exists in $download_folder, do you want to replace it? [y/n] " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      echo "Aborted."
+      exit 1
+    fi
   fi
 fi
 

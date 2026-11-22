@@ -133,7 +133,7 @@ if [ ! -d "$package_path" ]; then
   exit 1
 fi
 
-package_path=$(cd "$package_path" && pwd) || exit 1
+package_path=$(CDPATH= cd -- "$package_path" >/dev/null && pwd) || exit 1
 package_name=$(basename "$package_path")
 
 if [ ! -f "$package_path/Package.swift" ]; then
@@ -320,7 +320,7 @@ write_summary() {
 # the tests ran with, and the test bundles are in the folder that contains it.
 export_coverage() {
   local codecov_path
-  codecov_path=$(cd "$package_path" && swift test "$@" --show-codecov-path)
+  codecov_path=$(CDPATH= cd -- "$package_path" >/dev/null && swift test "$@" --show-codecov-path)
   codecov_path=$(dirname "$codecov_path")
 
   local profile="$codecov_path/default.profdata"

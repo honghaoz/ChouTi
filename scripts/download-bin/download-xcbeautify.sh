@@ -3,7 +3,7 @@
 set -e
 
 # change to the directory in which this script is located
-pushd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
+CDPATH= pushd -- "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
 
 # ===------ BEGIN ------===
 
@@ -78,13 +78,16 @@ process_bin xcbeautify
 mkdir -p "$download_folder"
 
 # Move to the download folder
-# if there is existing xcodegen in the download folder, either file or folder, ask for confirmation
+# overwrite without asking when stdin is not a terminal or when CI is set,
+# since nobody can answer the prompt
 if [ -e "$download_folder/xcbeautify" ]; then
-  read -p "xcbeautify already exists in $download_folder, do you want to replace it? [y/n] " -n 1 -r
-  echo
-  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Aborted."
-    exit 1
+  if [ -z "${CI:-}" ] && [ -t 0 ]; then
+    read -p "xcbeautify already exists in $download_folder, do you want to replace it? [y/n] " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      echo "Aborted."
+      exit 1
+    fi
   fi
 fi
 

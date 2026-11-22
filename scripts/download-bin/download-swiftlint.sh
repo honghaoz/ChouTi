@@ -3,7 +3,7 @@
 set -e
 
 # change to the directory in which this script is located
-pushd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
+CDPATH= pushd -- "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
 
 # ===------ BEGIN ------===
 
@@ -125,13 +125,16 @@ process_bin swiftlint
 mkdir -p "$download_folder"
 
 # Move to the download folder
-# if there is existing swiftlint in the download folder, ask for confirmation
+# overwrite without asking when stdin is not a terminal or when CI is set,
+# since nobody can answer the prompt
 if [ -f "$download_folder/swiftlint" ]; then
-  read -p "swiftlint already exists in $download_folder, do you want to replace it? [y/n] " -n 1 -r
-  echo
-  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Aborted."
-    exit 1
+  if [ -z "${CI:-}" ] && [ -t 0 ]; then
+    read -p "swiftlint already exists in $download_folder, do you want to replace it? [y/n] " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      echo "Aborted."
+      exit 1
+    fi
   fi
 fi
 

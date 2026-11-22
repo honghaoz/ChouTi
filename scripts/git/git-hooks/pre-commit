@@ -11,6 +11,12 @@ RESET=$(safe_tput sgr0)
 REPO_ROOT=$(git rev-parse --show-toplevel)
 FILE_NAME=$(basename "$0")
 
+# the formatter and linter binaries live in bin/, which bootstrap downloads
+if [ ! -f "$REPO_ROOT/bin/swiftformat" ] || [ ! -f "$REPO_ROOT/bin/swiftlint" ]; then
+  echo "${CYAN}[$FILE_NAME]${RESET} ⚠️  Formatter or linter not found. Run ${GREEN}make bootstrap${RESET} first."
+  exit 1
+fi
+
 function check_error {
   if [ $? -ne 0 ]; then
     exit 1

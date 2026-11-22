@@ -387,7 +387,7 @@ update_xcworkspace() {
 
     # Change to workspace directory (which should be the package directory)
     local original_dir=$(pwd)
-    cd "$workspace_dir"
+    CDPATH= cd -- "$workspace_dir" >/dev/null
 
     # The package-level Package.resolved path
     local package_level_resolved="$workspace_dir/Package.resolved"
@@ -443,7 +443,7 @@ update_swift_package() {
 
     # Change to project directory
     local original_dir=$(pwd)
-    cd "$project_path"
+    CDPATH= cd -- "$project_path" >/dev/null
 
     local backup=""
     if [ -f "$package_resolved_path" ]; then

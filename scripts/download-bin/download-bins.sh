@@ -6,7 +6,7 @@ set -e
 ORIGINAL_DIR=$(pwd)
 
 # change to the directory in which this script is located
-pushd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
+CDPATH= pushd -- "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
 
 # ===------ BEGIN ------===
 
@@ -60,7 +60,7 @@ fi
 if [[ "$BIN_DIR" != /* ]]; then
   BIN_DIR="$ORIGINAL_DIR/$BIN_DIR"
 fi
-if ! BIN_DIR="$(cd "$BIN_DIR" 2>/dev/null && pwd)"; then
+if ! BIN_DIR="$(CDPATH= cd -- "$BIN_DIR" >/dev/null 2>&1 && pwd)"; then
   echo "🔴 ERROR: $BIN_DIR is not a valid directory."
   exit 1
 fi
