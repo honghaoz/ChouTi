@@ -111,7 +111,8 @@ download_and_install() {
   fi
 
   echo "Downloading ${CYAN}$name ($version)${RESET}..."
-  "$CURRENT_DIR/download-$name.sh" --version "$version" --to-folder "$BIN_DIR"
+  # bootstrap always overwrites a mismatched install
+  "$CURRENT_DIR/download-$name.sh" --version "$version" --to-folder "$BIN_DIR" --force
 
   # make sure the binary is executable
   if [ -f "$BIN_DIR/$name" ] && [ ! -x "$BIN_DIR/$name" ]; then

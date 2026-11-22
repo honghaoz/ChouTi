@@ -13,7 +13,10 @@ CDPATH= pushd -- "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 || exit 1
 print_help() {
   echo "OVERVIEW: Download SwiftLint CLI (macOS, arm64)."
   echo ""
-  echo "Usage: $0 --version <version> --to-folder <folder>"
+  echo "Usage: $0 --version <version> --to-folder <folder> [--force]"
+  echo ""
+  echo "OPTIONS:"
+  echo "  --force  Overwrite an existing install without prompting."
   echo ""
   echo "EXAMPLES:"
   echo "  $0 --version 0.55.0 --to-folder ~/Downloads"
@@ -26,6 +29,7 @@ source ./download-bin-helpers.sh
 # Variables
 version=""
 download_folder=""
+force=""
 
 # Parse command line arguments
 while [[ "$#" -gt 0 ]]; do
@@ -37,6 +41,9 @@ while [[ "$#" -gt 0 ]]; do
   --to-folder)
     download_folder="$2"
     shift
+    ;;
+  --force)
+    force=1
     ;;
   *) print_help ;;
   esac
@@ -135,10 +142,9 @@ mv "$BINARY_PATH" .
 
 process_bin swiftlint
 
-# overwrite without asking when stdin is not a terminal or when CI is true,
-# since nobody can answer the prompt
+# prompt only for a direct interactive run
 if [ -e "$download_folder/swiftlint" ]; then
-  if [ "${CI:-}" != "true" ] && [ -t 0 ]; then
+  if [ -z "${force:-}" ] && [ "${CI:-}" != "true" ] && [ -t 0 ]; then
     read -p "swiftlint already exists in $download_folder, do you want to replace it? [y/n] " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
