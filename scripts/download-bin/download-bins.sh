@@ -132,9 +132,15 @@ download_and_install() {
 }
 
 cleanup() {
-  # if backup exists, restore the binary
-  if [ -e "$BIN_DIR/$name.backup" ]; then
-    mv "$BIN_DIR/$name.backup" "$BIN_DIR/$name"
+  # restore a backed-up install if a later download failed
+  if [ -n "${name:-}" ] && [ -e "$BIN_DIR/$name.backup" ]; then
+    # a failed mv can leave a partial file or folder that would nest the backup
+    rm -rf "$BIN_DIR/$name"
+    if mv -f "$BIN_DIR/$name.backup" "$BIN_DIR/$name"; then
+      echo "Restored the previous $name to $BIN_DIR/$name"
+    else
+      echo "Failed to restore the previous $name. The backup is at $BIN_DIR/$name.backup"
+    fi
   fi
 }
 trap cleanup EXIT
