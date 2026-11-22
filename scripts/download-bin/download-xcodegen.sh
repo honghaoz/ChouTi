@@ -102,12 +102,20 @@ if [ -e "$download_folder/xcodegen" ]; then
   fi
 fi
 
-# remove an existing xcodegen folder so mv can replace it.
-# BSD mv cannot overwrite a non-empty directory
+# rename any existing install aside so a failed mv can put it back
 if [ -e "$download_folder/xcodegen" ]; then
-  rm -rf "$download_folder/xcodegen"
+  # a leftover backup would block the rename
+  rm -rf "$download_folder/xcodegen.old"
+  mv -f "$download_folder/xcodegen" "$download_folder/xcodegen.old"
+  if mv -f xcodegen "$download_folder"; then
+    rm -rf "$download_folder/xcodegen.old"
+  else
+    mv -f "$download_folder/xcodegen.old" "$download_folder/xcodegen"
+    exit 1
+  fi
+else
+  mv -f xcodegen "$download_folder"
 fi
-mv -f xcodegen "$download_folder"
 
 echo "XcodeGen ($version) saved to $download_folder/xcodegen"
 
