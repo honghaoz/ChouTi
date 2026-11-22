@@ -14,14 +14,26 @@
 
 set -euo pipefail
 
+# resolve the repo from this script's location so group-imports works from any
+# directory.
+#
+# unset GIT_DIR so a linked worktree hook cannot make --show-toplevel
+# return the current directory
+if [ -z "${BASH_SOURCE[0]:-}" ]; then
+  echo "Error: group-imports must be run as a file, not piped to bash." >&2
+  exit 1
+fi
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd) || exit 1
+REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && unset GIT_DIR && git rev-parse --show-toplevel) || exit 1
+if [ ! -f "$REPO_ROOT/scripts/imports/group-imports.sh" ]; then
+  echo "Error: resolved $REPO_ROOT does not look like the repository root." >&2
+  exit 1
+fi
+
 if [[ $# -ne 1 || ("$1" != "--fix" && "$1" != "--check") ]]; then
   echo "usage: $0 --fix|--check"
   exit 2
 fi
-
-# git hooks in a linked worktree export GIT_DIR, which makes `--show-toplevel` return the current directory
-REPO_ROOT=$(unset GIT_DIR; git rev-parse --show-toplevel)
-SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 LOGIC="$SCRIPT_DIR/ImportGroups.swift"
 ENTRY="$SCRIPT_DIR/group-imports.swift"
 CONFIG="$REPO_ROOT/configs/.import-groups"

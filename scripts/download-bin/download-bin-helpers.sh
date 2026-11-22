@@ -21,7 +21,10 @@ download_with_progress() {
 
   # --retry covers timeouts and HTTP 408/429/5xx. --retry-all-errors is required
   # for a dropped connection (curl 56), and with -f it also retries 4xx.
-  # --connect-timeout and --max-time turn a stall into a retryable failure.
+  # --connect-timeout bounds a hung connect. --speed-limit 1024 and
+  # --speed-time 30 abort a transfer slower than 1024 bytes/s for 30 seconds,
+  # so a stall is retryable without capping a slow but progressing download.
+  #
   # --retry-max-time only limits when a new retry may start.
   #
   # keep this array in sync with the same flags in scripts/bootstrap.sh
@@ -32,7 +35,8 @@ download_with_progress() {
     --retry-delay 2
     --retry-max-time 90
     --connect-timeout 10
-    --max-time 30
+    --speed-limit 1024
+    --speed-time 30
   )
 
   # write to a temp file next to the destination so a failed or truncated
@@ -45,7 +49,13 @@ download_with_progress() {
 
   # --no-silent undoes -s from CURL_RETRY so --progress-bar still draws
   # and errors still print
-  local status=0
+  #
+  # COLUMNS is honored by curl's progress bar, so the bar can be narrowed
+  # without changing the terminal via stty
+  #
+  # || curl_status=$? keeps going under set -e so the temp file can be removed
+  local curl_status=0
+  local final_width=""
   if [ -t 1 ]; then
     terminal_width=$(tput cols) # get the terminal width
     final_width=$terminal_width
@@ -66,38 +76,17 @@ download_with_progress() {
         final_width=80
       fi
     fi
-
-    # save the current terminal settings and column width
-    local original_cols original_stty_settings
-    original_cols=$(tput cols 2>/dev/null) || true
-    original_stty_settings=$(stty -g 2>/dev/null) || true
-
-    # Change the terminal width and suppress any errors
-    stty cols "$final_width" 2>/dev/null || true
-
-    # Download with progress bar
-    curl "${CURL_RETRY[@]}" --no-silent --progress-bar "$url" -o "$tmp"
-    status=$?
-
-    # always restore the terminal, even when curl fails
-    #
-    # stty -g does not include the window size, so the column width is
-    # restored separately
-    if [ -n "$original_stty_settings" ]; then
-      stty "$original_stty_settings" 2>/dev/null || true
-    fi
-    if [ -n "$original_cols" ]; then
-      stty cols "$original_cols" 2>/dev/null || true
-    fi
-  else
-    # Download without changing terminal width
-    curl "${CURL_RETRY[@]}" --no-silent --progress-bar "$url" -o "$tmp"
-    status=$?
   fi
 
-  if [ "$status" -ne 0 ]; then
+  if [ -n "$final_width" ]; then
+    COLUMNS="$final_width" curl "${CURL_RETRY[@]}" --no-silent --progress-bar "$url" -o "$tmp" || curl_status=$?
+  else
+    curl "${CURL_RETRY[@]}" --no-silent --progress-bar "$url" -o "$tmp" || curl_status=$?
+  fi
+
+  if [ "$curl_status" -ne 0 ]; then
     rm -f "$tmp"
-    return "$status"
+    return "$curl_status"
   fi
   mv "$tmp" "$output_path"
 }
