@@ -126,11 +126,12 @@ download_and_install() {
     chmod +x "$BIN_DIR/$name"
   fi
 
+  # the new install is already in place, so do not roll it back if this rm is interrupted
+  pending_backup=""
   # remove old binary backup
   if [ -e "$BIN_DIR/$name.backup" ]; then
     rm -rf "$BIN_DIR/$name.backup"
   fi
-  pending_backup=""
 
   echo "✅ ${CYAN}$name ($version)${RESET} is installed."
 }
