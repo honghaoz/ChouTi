@@ -267,7 +267,15 @@ class AssertTests: XCTestCase {
   }
 
   func test_xctestFailureHandlerIsAvailableWhenRunningUnderXCTest() {
-    // do not call recordXCTestFailure here, it would fail this test
     expect(Assert.isXCTestFailureHandlerAvailable) == true
+  }
+
+  func test_defaultHandler_recordsAnXCTestFailure() {
+    Assert.resetTestAssertionFailureHandler()
+    let options = XCTExpectedFailure.Options()
+    options.issueMatcher = { $0.compactDescription.contains("expected assertion") }
+    XCTExpectFailure("default handler records the assertion", options: options) {
+      ChouTi.assertFailure("expected assertion")
+    }
   }
 }

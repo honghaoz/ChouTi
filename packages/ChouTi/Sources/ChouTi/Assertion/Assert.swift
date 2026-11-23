@@ -92,7 +92,7 @@ public enum Assert {
 
   /// Whether the XCTest runtime failure handler symbols can be resolved.
   ///
-  /// This is used by tests to check availability. Do not call `recordXCTestFailure` from a passing test.
+  /// This is used by tests to check availability.
   static var isXCTestFailureHandlerAvailable: Bool {
     dlsym(rtldDefault, "_XCTPreformattedFailureHandler") != nil
       && dlsym(rtldDefault, "_XCTCurrentTestCase") != nil
@@ -103,11 +103,18 @@ public enum Assert {
   /// Downstream test targets that depend on ChouTi as a regular library often cannot compile ChouTi with `-DTEST`.
   /// This looks up `_XCTPreformattedFailureHandler` at runtime instead of using a compile-time `TEST` flag.
   ///
-  /// - Returns: `true` if the XCTest runtime accepted the failure.
+  /// - Returns: `true` if both XCTest symbols resolved and the handler was invoked.
+  ///   The current test case may be nil; on current XCTest, `_XCTCurrentTestCase` is a stub that always returns nil.
   static func recordXCTestFailure(_ message: String, file: StaticString, line: UInt) -> Bool {
     guard let handlerSymbol = dlsym(rtldDefault, "_XCTPreformattedFailureHandler") else {
       return false
     }
+    guard let currentTestSymbol = dlsym(rtldDefault, "_XCTCurrentTestCase") else {
+      return false
+    }
+
+    typealias CurrentTestCase = @convention(c) () -> AnyObject?
+    let testCase = unsafeBitCast(currentTestSymbol, to: CurrentTestCase.self)()
 
     typealias PreformattedFailureHandler = @convention(c) (
       AnyObject?, // XCTestCase, nullable
@@ -118,12 +125,6 @@ public enum Assert {
       AnyObject // message
     ) -> Void
     let handler = unsafeBitCast(handlerSymbol, to: PreformattedFailureHandler.self)
-
-    var testCase: AnyObject?
-    if let currentTestSymbol = dlsym(rtldDefault, "_XCTCurrentTestCase") {
-      typealias CurrentTestCase = @convention(c) () -> AnyObject?
-      testCase = unsafeBitCast(currentTestSymbol, to: CurrentTestCase.self)()
-    }
 
     let filePath = file.description as NSString
     let text = message as NSString
