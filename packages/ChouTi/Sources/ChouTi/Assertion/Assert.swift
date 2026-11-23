@@ -99,9 +99,8 @@ public enum Assert {
 
   /// Records a failure on the current XCTest case via the XCTest runtime, without linking XCTest.
   ///
-  /// Downstream test targets that depend on ChouTi as a regular library often cannot compile ChouTi
-  /// with `-DTEST`. This looks up `_XCTPreformattedFailureHandler` at runtime instead of using a
-  /// compile-time `TEST` flag.
+  /// Downstream test targets that depend on ChouTi as a regular library often cannot compile ChouTi with `-DTEST`.
+  /// This looks up `_XCTPreformattedFailureHandler` at runtime instead of using a compile-time `TEST` flag.
   ///
   /// - Returns: `true` if the XCTest runtime accepted the failure.
   static func recordXCTestFailure(_ message: String, file: StaticString, line: UInt) -> Bool {
