@@ -265,4 +265,17 @@ class AssertTests: XCTestCase {
     // clean up after test
     try? FileManager.default.removeItem(at: errorFolderURL)
   }
+
+  func test_xctestFailureHandlerIsAvailableWhenRunningUnderXCTest() {
+    expect(Assert.isXCTestFailureHandlerAvailable) == true
+  }
+
+  func test_defaultHandler_recordsAnXCTestFailure() {
+    Assert.resetTestAssertionFailureHandler()
+    let options = XCTExpectedFailure.Options()
+    options.issueMatcher = { $0.compactDescription.contains("expected assertion") }
+    XCTExpectFailure("default handler records the assertion", options: options) {
+      ChouTi.assertFailure("expected assertion")
+    }
+  }
 }
