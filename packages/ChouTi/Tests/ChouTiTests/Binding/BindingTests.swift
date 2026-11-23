@@ -774,6 +774,95 @@ class BindingTests: XCTestCase {
     expect(binding2.value) == 0
   }
 
+  func test_setValue_doesNotDetectLoop_whenGetterWritesBackOnFirstRead() {
+    var stored = 0
+    var binding: Binding<Int>!
+    var getCount = 0
+    binding = Binding(
+      get: {
+        getCount += 1
+        if getCount == 1 {
+          // a read can flush a pending write back into the binding, like UserDefaults KVO
+          binding.value = stored
+        }
+        return stored
+      },
+      set: { stored = $0 }
+    )
+
+    var capturedMessage = ""
+    Assert.setTestAssertionFailureHandler { message, _, _, _, _ in
+      capturedMessage = message
+    }
+    defer {
+      Assert.resetTestAssertionFailureHandler()
+    }
+
+    // do not access publisher first, so the subject is created during this invoke
+    binding.value = 1
+
+    expect(capturedMessage) == ""
+    expect(stored) == 1
+    expect(binding.value) == 1
+
+    var received: [Int] = []
+    let subscription = binding.publisher.sink { received.append($0) }
+    expect(received) == [1]
+    binding.value = 2
+    expect(received) == [1, 2]
+    withExtendedLifetime(subscription) {}
+  }
+
+  func test_firstSet_reachesPublisherSubscribedInObservation() {
+    let binding = Binding(0)
+    var received: [Int] = []
+    var subscription: AnyCancellable?
+    let observation = binding.observe { _, cancel in
+      subscription = binding.publisher.dropFirst().sink { received.append($0) }
+      cancel()
+    }
+
+    binding.value = 1
+
+    expect(received) == [1]
+    withExtendedLifetime((observation, subscription)) {}
+  }
+
+  func test_publisherAccess_doesNotDropSubject_whenGetterWritesBack() {
+    var stored = 0
+    var binding: Binding<Int>!
+    var getCount = 0
+    binding = Binding(
+      get: {
+        getCount += 1
+        if getCount == 1 {
+          // a read can flush a pending write back into the binding, like UserDefaults KVO
+          binding.value = stored
+        }
+        return stored
+      },
+      set: { stored = $0 }
+    )
+
+    var received: [Int] = []
+    var subscription: AnyCancellable?
+    let observation = binding.observe { _, cancel in
+      // unwrap so this is Binding.publisher, not Optional.publisher
+      // swiftlint:disable:next force_unwrapping
+      subscription = binding!.publisher.dropFirst().sink { received.append($0) }
+      cancel()
+    }
+
+    // read publisher first so get() writes back and invoke installs the subject
+    // swiftlint:disable:next force_unwrapping
+    _ = binding!.publisher
+
+    expect(received) == [0]
+    binding.value = 1
+    expect(received) == [0, 1]
+    withExtendedLifetime((observation, subscription)) {}
+  }
+
   // MARK: - Map
 
   func test_map() {
