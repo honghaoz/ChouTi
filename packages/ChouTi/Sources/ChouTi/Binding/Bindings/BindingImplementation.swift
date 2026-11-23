@@ -44,7 +44,12 @@ final class BindingImplementation<T> {
     }
     // used when the publisher is accessed before the first invoke
     // swiftlint:disable:next force_unwrapping
-    let subject = CurrentValueSubject<T, Never>(binding!.value)
+    let value = binding!.value
+    // a get() side effect can create the subject via invoke
+    if let subjectStorage {
+      return subjectStorage
+    }
+    let subject = CurrentValueSubject<T, Never>(value)
     subjectStorage = subject
     return subject
   }
@@ -88,8 +93,7 @@ final class BindingImplementation<T> {
     }
 
     // initialize from the value already in hand so a get() side effect cannot re-enter invoke
-    let isNewSubject = subjectStorage == nil
-    if isNewSubject {
+    if subjectStorage == nil {
       subjectStorage = CurrentValueSubject(value)
     }
 
@@ -97,9 +101,8 @@ final class BindingImplementation<T> {
       box.object.assertNotNil()?.invoke(with: value)
     }
 
-    if !isNewSubject {
-      subjectStorage?.send(value)
-    }
+    // always send so a subscriber added during this invoke still receives the update
+    subjectStorage?.send(value)
   }
 
   func removeRegisteredObservation(_ observation: BindingObservation) {

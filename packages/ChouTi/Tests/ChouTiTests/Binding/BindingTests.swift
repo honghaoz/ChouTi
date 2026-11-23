@@ -804,6 +804,28 @@ class BindingTests: XCTestCase {
     expect(capturedMessage) == ""
     expect(stored) == 1
     expect(binding.value) == 1
+
+    var received: [Int] = []
+    let subscription = binding.publisher.sink { received.append($0) }
+    expect(received) == [1]
+    binding.value = 2
+    expect(received) == [1, 2]
+    withExtendedLifetime(subscription) {}
+  }
+
+  func test_firstSet_reachesPublisherSubscribedInObservation() {
+    let binding = Binding(0)
+    var received: [Int] = []
+    var subscription: AnyCancellable?
+    let observation = binding.observe { _, cancel in
+      subscription = binding.publisher.dropFirst().sink { received.append($0) }
+      cancel()
+    }
+
+    binding.value = 1
+
+    expect(received) == [1]
+    withExtendedLifetime((observation, subscription)) {}
   }
 
   // MARK: - Map
