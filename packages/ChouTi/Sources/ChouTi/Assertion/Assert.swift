@@ -90,11 +90,12 @@ public enum Assert {
     }
   }
 
-  /// Whether the XCTest runtime failure handler can be resolved.
+  /// Whether the XCTest runtime failure handler symbols can be resolved.
   ///
   /// This is used by tests to check availability. Do not call `recordXCTestFailure` from a passing test.
   static var isXCTestFailureHandlerAvailable: Bool {
     dlsym(rtldDefault, "_XCTPreformattedFailureHandler") != nil
+      && dlsym(rtldDefault, "_XCTCurrentTestCase") != nil
   }
 
   /// Records a failure on the current XCTest case via the XCTest runtime, without linking XCTest.
