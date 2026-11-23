@@ -774,6 +774,38 @@ class BindingTests: XCTestCase {
     expect(binding2.value) == 0
   }
 
+  func test_setValue_doesNotDetectLoop_whenGetterWritesBackOnFirstRead() {
+    var stored = 0
+    var binding: Binding<Int>!
+    var getCount = 0
+    binding = Binding(
+      get: {
+        getCount += 1
+        if getCount == 1 {
+          // a read can flush a pending write back into the binding, like UserDefaults KVO
+          binding.value = stored
+        }
+        return stored
+      },
+      set: { stored = $0 }
+    )
+
+    var capturedMessage = ""
+    Assert.setTestAssertionFailureHandler { message, _, _, _, _ in
+      capturedMessage = message
+    }
+    defer {
+      Assert.resetTestAssertionFailureHandler()
+    }
+
+    // do not access publisher first, so the subject is created during this invoke
+    binding.value = 1
+
+    expect(capturedMessage) == ""
+    expect(stored) == 1
+    expect(binding.value) == 1
+  }
+
   // MARK: - Map
 
   func test_map() {

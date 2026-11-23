@@ -36,8 +36,18 @@ final class BindingImplementation<T> {
 
   private(set) lazy var publisher: AnyPublisher<T, Never> = subject.eraseToAnyPublisher()
 
-  // swiftlint:disable:next force_unwrapping
-  private lazy var subject = CurrentValueSubject<T, Never>(binding!.value)
+  private var subjectStorage: CurrentValueSubject<T, Never>?
+
+  private var subject: CurrentValueSubject<T, Never> {
+    if let subjectStorage {
+      return subjectStorage
+    }
+    // used when the publisher is accessed before the first invoke
+    // swiftlint:disable:next force_unwrapping
+    let subject = CurrentValueSubject<T, Never>(binding!.value)
+    subjectStorage = subject
+    return subject
+  }
 
   /// For notifying.
   private lazy var registeredObservations: OrderedDictionary<ObjectIdentifier, WeakBox<PrivateBindingObservation<T>>> = [:]
@@ -77,11 +87,19 @@ final class BindingImplementation<T> {
       BindingLoopDetector.leave(binding: binding)
     }
 
+    // initialize from the value already in hand so a get() side effect cannot re-enter invoke
+    let isNewSubject = subjectStorage == nil
+    if isNewSubject {
+      subjectStorage = CurrentValueSubject(value)
+    }
+
     registeredObservations.values.forEach { box in
       box.object.assertNotNil()?.invoke(with: value)
     }
 
-    subject.send(value)
+    if !isNewSubject {
+      subjectStorage?.send(value)
+    }
   }
 
   func removeRegisteredObservation(_ observation: BindingObservation) {
