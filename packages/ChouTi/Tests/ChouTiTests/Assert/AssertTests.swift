@@ -265,4 +265,9 @@ class AssertTests: XCTestCase {
     // clean up after test
     try? FileManager.default.removeItem(at: errorFolderURL)
   }
+
+  func test_xctestFailureHandlerIsAvailableWhenRunningUnderXCTest() {
+    // do not call recordXCTestFailure here, it would fail this test
+    expect(Assert.isXCTestFailureHandlerAvailable) == true
+  }
 }

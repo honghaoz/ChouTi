@@ -28,15 +28,14 @@
 //  IN THE SOFTWARE.
 //
 
+import Darwin
 import Foundation
-
-#if TEST
-// Run test with `swift test -Xswiftc -DTEST` to enable `import XCTest`.
-import XCTest
-#endif
 
 #if DEBUG
 public enum Assert {
+
+  // RTLD_DEFAULT on Darwin
+  private static let rtldDefault = UnsafeMutableRawPointer(bitPattern: -2)
 
   /// If assertions are enabled. Set this flag to `false` to disable assertions.
   public static var isAssertEnabled = true
@@ -86,11 +85,50 @@ public enum Assert {
     let message = """
     🛑 Assertion Failure 🛑 💾 Source: \(file):\(line):\(column), 🗯️ Message: "\(message)", 📝 metadata: \(metadata)
     """
-    #if TEST
-    XCTFail(message, file: file, line: line)
-    #else
-    assertionFailure(message)
-    #endif
+    if !recordXCTestFailure(message, file: file, line: line) {
+      assertionFailure(message)
+    }
+  }
+
+  /// Whether the XCTest runtime failure handler can be resolved.
+  ///
+  /// This is used by tests to check availability. Do not call `recordXCTestFailure` from a passing test.
+  static var isXCTestFailureHandlerAvailable: Bool {
+    dlsym(rtldDefault, "_XCTPreformattedFailureHandler") != nil
+  }
+
+  /// Records a failure on the current XCTest case via the XCTest runtime, without linking XCTest.
+  ///
+  /// Downstream test targets that depend on ChouTi as a regular library often cannot compile ChouTi
+  /// with `-DTEST`. This looks up `_XCTPreformattedFailureHandler` at runtime instead of using a
+  /// compile-time `TEST` flag.
+  ///
+  /// - Returns: `true` if the XCTest runtime accepted the failure.
+  static func recordXCTestFailure(_ message: String, file: StaticString, line: UInt) -> Bool {
+    guard let handlerSymbol = dlsym(rtldDefault, "_XCTPreformattedFailureHandler") else {
+      return false
+    }
+
+    typealias PreformattedFailureHandler = @convention(c) (
+      AnyObject?, // XCTestCase, nullable
+      Bool, // expected
+      AnyObject, // file path
+      UInt, // line
+      AnyObject, // condition
+      AnyObject // message
+    ) -> Void
+    let handler = unsafeBitCast(handlerSymbol, to: PreformattedFailureHandler.self)
+
+    var testCase: AnyObject?
+    if let currentTestSymbol = dlsym(rtldDefault, "_XCTCurrentTestCase") {
+      typealias CurrentTestCase = @convention(c) () -> AnyObject?
+      testCase = unsafeBitCast(currentTestSymbol, to: CurrentTestCase.self)()
+    }
+
+    let filePath = file.description as NSString
+    let text = message as NSString
+    handler(testCase, true, filePath, line, text, "" as NSString)
+    return true
   }
 
   public static let __logDateFormatter: DateFormatter = {
