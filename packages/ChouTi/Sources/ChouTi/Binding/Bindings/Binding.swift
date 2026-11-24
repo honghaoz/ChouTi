@@ -52,6 +52,9 @@ public final class Binding<T>: MutableBindingType, InternalBindingType {
 
   private lazy var implementation = BindingImplementation<T>(binding: self)
 
+  /// Whether the binding is reading the settled value after a set, before invoking observers.
+  private var isSettlingValue = false
+
   // MARK: - Init (self contained value)
 
   private var _value: T?
@@ -148,6 +151,9 @@ public final class Binding<T>: MutableBindingType, InternalBindingType {
   // MARK: - BindingType
 
   /// The current value of the binding.
+  ///
+  /// Setting this value updates the source and then notifies observers with the value the getter returns.
+  /// That settled value can differ from the assigned value if the source normalizes or rejects the write.
   public var value: T {
     get {
       if let value = _value {
@@ -171,7 +177,16 @@ public final class Binding<T>: MutableBindingType, InternalBindingType {
         fatalError("unexpected") // swiftlint:disable:this fatal_error
       }
 
-      implementation.invoke(with: newValue)
+      // a get() during settling can write back into the binding, so skip this invoke and let the outer set deliver the settled value
+      if isSettlingValue {
+        return
+      }
+
+      // an external source can normalize or reject the write, so invoke with the getter's value instead of the request
+      isSettlingValue = true
+      let settledValue = value
+      isSettlingValue = false
+      implementation.invoke(with: settledValue)
     }
   }
 

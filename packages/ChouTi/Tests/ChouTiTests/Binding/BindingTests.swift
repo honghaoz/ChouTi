@@ -155,6 +155,83 @@ class BindingTests: XCTestCase {
     expect(receivedValue) == "new"
   }
 
+  func test_setValue_invokesWithTheValueTheGetterReturns() {
+    // given: a source that clamps writes to 10
+    var store = 0
+    let binding = Binding<Int>(
+      get: { store },
+      set: { store = min($0, 10) }
+    )
+    var received: [Int] = []
+    var published: [Int] = []
+    binding.observe { received.append($0) }
+      .store(in: self)
+    let subscription = binding.publisher.sink { published.append($0) }
+
+    // when: a value above the clamp is assigned
+    binding.value = 15
+
+    // then: observers receive the settled value
+    expect(store) == 10
+    expect(binding.value) == 10
+    expect(received) == [10]
+    expect(published) == [0, 10]
+    withExtendedLifetime(subscription) {}
+  }
+
+  func test_setValue_invokesWithTheExistingValue_whenTheSourceRejectsTheWrite() {
+    // given: a source that ignores negative writes
+    var store = 5
+    let binding = Binding<Int>(
+      get: { store },
+      set: { newValue in
+        if newValue >= 0 {
+          store = newValue
+        }
+      }
+    )
+    var received: [Int] = []
+    binding.observe { received.append($0) }
+      .store(in: self)
+
+    // when: a rejected value is assigned
+    binding.value = -1
+
+    // then: observers receive the unchanged settled value
+    expect(store) == 5
+    expect(binding.value) == 5
+    expect(received) == [5]
+  }
+
+  func test_setValue_invokesOnce_whenGetterWritesBackOnFirstRead() {
+    // given: a getter that flushes a write back on first read
+    var stored = 0
+    var binding: Binding<Int>!
+    var getCount = 0
+    binding = Binding(
+      get: {
+        getCount += 1
+        if getCount == 1 {
+          // a read can flush a pending write back into the binding, like UserDefaults KVO
+          binding.value = stored
+        }
+        return stored
+      },
+      set: { stored = $0 }
+    )
+    var received: [Int] = []
+    binding.observe { received.append($0) }
+      .store(in: self)
+
+    // when: the binding is set and the getter writes back while settling
+    binding.value = 1
+
+    // then: observers are invoked once with the settled value
+    expect(received) == [1]
+    expect(stored) == 1
+    expect(binding.value) == 1
+  }
+
   func test_observe() {
     let observeExpectation1 = XCTestExpectation(description: "observe1")
     observeExpectation1.assertForOverFulfill = true
